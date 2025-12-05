@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block body %}
+
+<!-- YELLOW TOP HEADER -->
+<div class="top-banner">
+    <div>
+        <h2>Dr. {{ session['user'] }}</h2>
+        <p>Add a new patient</p>
+    </div>
+
+    <div class="right-buttons">
+        <a href="{{ url_for('patients_bp.patients') }}" class="btn-secondary">
+            Back to Patients
+        </a>
+    </div>
+</div>
+
+<!-- FORM CARD -->
+<div class="form-card">
+    <h2 class="form-title">New Patient Registration</h2>
+
+    <form method="POST">
+
+        <label>Name</label>
+        <input type="text" name="name" class="input-box" required>
+
+        <label>Phone</label>
+        <input type="text" name="phone" class="input-box" required>
+
+        <label>Gender</label>
+        <select name="gender" class="input-box">
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+        </select>
+
+        <label>Age</label>
+        <input type="number" name="age" class="input-box" required>
+
+        <label>Category / Complaint</label>
+        <input type="text" name="disease" class="input-box">
+
+        <button type="submit" class="btn-primary full-btn">Add Patient</button>
+
+    </form>
+</div>
+
+{% endblock %}

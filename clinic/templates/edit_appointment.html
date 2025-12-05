@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2 class="page-title">Edit Appointment</h2>
+
+<div class="form-container">
+
+    <form method="POST" action="{{ url_for('appointments_bp.edit_appointment', id=app.id) }}">
+
+        <label>Patient Name</label>
+        <input 
+            type="text"
+            name="patient_name"
+            value="{{ app.patient_name }}"
+            required
+        >
+
+        <label>Doctor</label>
+        <input 
+            type="text"
+            name="doctor"
+            value="{{ app.doctor }}"
+            required
+        >
+
+        <label>Date</label>
+        <input 
+            type="date"
+            name="date"
+            value="{{ app.date }}"
+            required
+        >
+
+        <label>Time</label>
+        <input 
+            type="time"
+            name="time"
+            value="{{ app.time }}"
+            required
+        >
+
+        <label>Status</label>
+        <select name="status" required>
+            <option value="Active" {% if app.status == 'Active' %}selected{% endif %}>Active</option>
+            <option value="Completed" {% if app.status == 'Completed' %}selected{% endif %}>Completed</option>
+            <option value="Cancelled" {% if app.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+
+        <button class="btn-primary" type="submit">Update Appointment</button>
+
+    </form>
+
+</div>
+
+{% endblock %}

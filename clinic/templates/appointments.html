@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="appointments-page">
+
+    <div class="top-banner">
+        <div>
+            <h2>Dr. {{ session['user'] }}</h2>
+            <p>Manage your appointments efficiently</p>
+        </div>
+
+        <div>
+            <a href="{{ url_for('appointments_bp.add_appointment') }}" class="btn-primary">
+                + Add Appointment
+            </a>
+            <a href="#" class="btn-secondary">Start Walk-in Consultation</a>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <a href="{{ url_for('appointments_bp.appointments', tab='queue') }}"
+           class="tab-btn {{ 'active' if tab=='queue' else '' }}">
+            Queue ({{ queue_count }})
+        </a>
+
+        <a href="{{ url_for('appointments_bp.appointments', tab='finished') }}"
+           class="tab-btn {{ 'active' if tab=='finished' else '' }}">
+            Finished ({{ finished_count }})
+        </a>
+
+        <a href="{{ url_for('appointments_bp.appointments', tab='cancelled') }}"
+           class="tab-btn {{ 'active' if tab=='cancelled' else '' }}">
+            Cancelled ({{ cancelled_count }})
+        </a>
+    </div>
+
+    <!-- Search + Date -->
+    <div class="controls-bar">
+        <input type="text" placeholder="Search by patient or number" id="searchBox">
+        <input type="date" value="{{ date_selected }}">
+        <select>
+            <option value="">Visit Type</option>
+            <option>Follow-up</option>
+            <option>First Visit</option>
+            <option>Emergency</option>
+        </select>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Patient</th>
+                    <th>Phone</th>
+                    <th>Visit</th>
+                    <th>Slot</th>
+                    <th>Status</th>
+                    <th>View</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% if apps %}
+                    {% for a in apps %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ a.name }}</td>
+                        <td>{{ a.phone }}</td>
+                        <td>{{ a.type }}</td>
+                        <td>{{ a.time }}</td>
+                        <td>
+                            <span class="status-badge {{ a.status|lower }}">{{ a.status }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('patients_bp.patient_profile', id=a.patient_id) }}" class="btn-view">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <img src="{{ url_for('static', filename='images/empty.png') }}" width="140">
+                        <p>No appointments found.</p>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

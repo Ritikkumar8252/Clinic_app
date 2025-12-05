@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2 class="page-title">Settings</h2>
+
+<div class="settings-wrapper">
+
+    <!-- PERSONAL PROFILE -->
+    <section class="settings-card">
+        <h3>Personal Profile</h3>
+
+        <form method="POST">
+            <input type="hidden" name="update_profile">
+
+            <label>Full Name</label>
+            <input type="text" name="fullname" value="{{ user.fullname }}" required>
+
+            <label>Email</label>
+            <input type="email" name="email" value="{{ user.email }}" required>
+
+            <button class="btn-primary" type="submit">Save Changes</button>
+        </form>
+    </section>
+
+    <!-- CHANGE PASSWORD -->
+    <section class="settings-card">
+        <h3>Change Password</h3>
+
+        <form method="POST">
+            <input type="hidden" name="change_password">
+
+            <label>Old Password</label>
+            <input type="password" name="old_password" required>
+
+            <label>New Password</label>
+            <input type="password" name="new_password" required>
+
+            <button class="btn-primary" type="submit">Update Password</button>
+        </form>
+    </section>
+
+    <!-- CLINIC INFO (ADMIN ONLY) -->
+    {% if session["role"] == "admin" %}
+    <section class="settings-card">
+        <h3>Clinic Information</h3>
+
+        <form method="POST">
+            <input type="hidden" name="clinic_save">
+
+            <label>Clinic Name</label>
+            <input type="text" name="clinic_name" value="{{ session.get('clinic_name', 'ClinicCare') }}">
+
+            <label>Phone</label>
+            <input type="text" name="clinic_phone" value="{{ session.get('clinic_phone', '') }}">
+
+            <label>Address</label>
+            <input type="text" name="clinic_address" value="{{ session.get('clinic_address', '') }}">
+
+            <button class="btn-primary" type="submit">Save Clinic Details</button>
+        </form>
+    </section>
+    {% endif %}
+
+    <!-- THEME SETTINGS -->
+    <section class="settings-card">
+        <h3>Appearance</h3>
+
+        <form method="POST">
+            <label>Theme Mode</label>
+            <select name="theme">
+                <option value="light" {% if session.get('theme')=='light' %}selected{% endif %}>Light</option>
+                <option value="dark" {% if session.get('theme')=='dark' %}selected{% endif %}>Dark</option>
+            </select>
+
+            <button class="btn-primary" type="submit">Apply</button>
+        </form>
+    </section>
+
+</div>
+
+{% endblock %}

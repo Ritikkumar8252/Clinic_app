@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2 class="page-title">Edit User</h2>
+
+<div class="form-container">
+
+    <form method="POST" action="{{ url_for('admin_bp.edit_user', id=user.id) }}">
+
+        <label>Full Name</label>
+        <input type="text" name="fullname" value="{{ user.fullname }}" required>
+
+        <label>Email</label>
+        <input type="email" name="email" value="{{ user.email }}" required>
+
+        <label>Role</label>
+        <select name="role" required>
+            <option value="admin" {% if user.role=='admin' %}selected{% endif %}>Admin</option>
+            <option value="doctor" {% if user.role=='doctor' %}selected{% endif %}>Doctor</option>
+            <option value="staff" {% if user.role=='staff' %}selected{% endif %}>Staff</option>
+        </select>
+
+        <button class="btn-primary" type="submit">Update User</button>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2 class="page-title">Add Payment</h2>
+
+<div class="form-container">
+
+    <form method="POST" action="{{ url_for('billing_bp.pay_invoice', id=invoice.id) }}">
+
+        <label>Invoice Number</label>
+        <input type="text" value="{{ invoice.invoice_number }}" disabled>
+
+        <label>Pending Amount</label>
+        <input type="text" value="₹ {{ balance }}" disabled>
+
+        <label>Payment Amount</label>
+        <input 
+            type="number" 
+            name="amount" 
+            min="1"
+            step="0.01" 
+            placeholder="Enter payment amount"
+            required
+        >
+
+        <label>Payment Method</label>
+        <select name="method" required>
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Card">Card</option>
+            <option value="Online">Online</option>
+        </select>
+
+        <button class="btn-primary" type="submit">Record Payment</button>
+
+    </form>
+
+</div>
+
+{% endblock %}

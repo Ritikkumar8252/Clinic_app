@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block body %}
+
+<!-- TOP YELLOW BAR -->
+<div class="top-banner">
+    <div>
+        <h2>{{ patient.name }}</h2>
+        <p>MRN: {{ patient.id }} • Last Visit: {{ patient.last_visit }}</p>
+    </div>
+
+    <div class="right-buttons">
+        <a href="{{ url_for('appointments_bp.add_appointment') }}" class="btn-primary">
+            + Add Appointment
+        </a>
+
+        <a href="{{ url_for('patients_bp.edit_patient', id=patient.id) }}" class="btn-secondary">
+            Edit Patient
+        </a>
+
+        <a href="{{ url_for('patients_bp.delete_patient', id=patient.id) }}" 
+           class="btn-danger"
+           onclick="return confirm('Delete this patient?')">
+            Delete
+        </a>
+    </div>
+</div>
+
+<!-- PATIENT INFO CARD -->
+<div class="patient-info-card">
+    <h3>Patient Details</h3>
+
+    <div class="info-grid">
+        <div>
+            <label>Name</label>
+            <p>{{ patient.name }}</p>
+        </div>
+
+        <div>
+            <label>Mobile</label>
+            <p>{{ patient.phone }}</p>
+        </div>
+
+        <div>
+            <label>Category / Issue</label>
+            <p>{{ patient.disease }}</p>
+        </div>
+
+        <div>
+            <label>Last Visit</label>
+            <p>{{ patient.last_visit }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- APPOINTMENTS SECTION -->
+<div class="section-box">
+    <h3>Past Appointments</h3>
+
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Visit Type</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% if apps %}
+                {% for a in apps %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ a.type }}</td>
+                    <td>{{ a.date }}</td>
+                    <td>{{ a.time }}</td>
+                    <td>
+                        <span class="status-badge {{ a.status | lower }}">{{ a.status }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        <p>No appointments found.</p>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- MEDICAL RECORDS -->
+<div class="section-box">
+    <div class="record-header">
+        <h3>Medical Records</h3>
+        <a href="{{ url_for('patients_bp.upload_record', id=patient.id) }}" class="btn-primary">
+            Upload Record
+        </a>
+    </div>
+
+    {% if patient.records %}
+        <ul class="record-list">
+            {% for r in patient.records %}
+            <li>
+                <span>{{ r.filename }}</span>
+                <a href="{{ url_for('static', filename='records/' ~ r.filename) }}" target="_blank">View</a>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">No medical records uploaded.</p>
+    {% endif %}
+</div>
+
+<!-- CERTIFICATE SECTION -->
+<div class="section-box">
+    <h3>Certificates</h3>
+
+    <a href="{{ url_for('patients_bp.generate_certificate', id=patient.id) }}" 
+       class="btn-primary">
+        Generate Certificate
+    </a>
+</div>
+
+{% endblock %}

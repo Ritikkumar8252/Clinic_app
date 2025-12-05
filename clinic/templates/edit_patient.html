@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2 class="page-title">Edit Patient</h2>
+
+<div class="form-container">
+
+    <form method="POST" action="{{ url_for('patients_bp.edit_patient', id=patient.id) }}">
+
+        <label>Name</label>
+        <input 
+            type="text" 
+            name="name" 
+            value="{{ patient.name }}" 
+            required
+        >
+
+        <label>Disease</label>
+        <input 
+            type="text" 
+            name="disease" 
+            value="{{ patient.disease }}" 
+            required
+        >
+
+        <label>Last Visit</label>
+        <input 
+            type="date" 
+            name="last_visit" 
+            value="{{ patient.last_visit }}" 
+            required
+        >
+
+        <label>Status</label>
+        <select name="status" required>
+            <option value="Active" {% if patient.status == 'Active' %}selected{% endif %}>Active</option>
+            <option value="Follow-up" {% if patient.status == 'Follow-up' %}selected{% endif %}>Follow-up</option>
+        </select>
+
+        <button class="btn-primary" type="submit">Update Patient</button>
+
+    </form>
+
+</div>
+
+{% endblock %}

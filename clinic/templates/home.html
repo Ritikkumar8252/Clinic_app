@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClinicCare – Modern Clinic Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">Clinic<span>Care</span></div>
+
+    <nav>
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="#contact">Contact</a>
+
+      <!-- UPDATED URLs -->
+      <a href="{{ url_for('auth_bp.login') }}" class="btn login">Login</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Manage Your Clinic Seamlessly</h1>
+      <p>Smart patient records, appointment booking, billing, analytics & doctor management — all in one place.</p>
+
+      <!-- UPDATED URL -->
+      <a href="{{ url_for('auth_bp.signup') }}" class="btn start-btn">Get Started</a>
+    </div>
+
+    <div class="hero-image">
+      <img src="{{ url_for('static', filename='images/hero.png') }}" alt="Dashboard">
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="about-container">
+
+      <div class="about-img">
+        <img src="{{ url_for('static', filename='images/about.png') }}" alt="ClinicCare About">
+      </div>
+
+      <div class="about-text">
+        <h2>About ClinicCare</h2>
+        <p>
+          ClinicCare is a modern clinic management platform designed to make healthcare
+          operations faster, smarter, and more organized.
+        </p>
+
+        <div class="about-cards">
+          <div class="card">
+            <h3>Our Mission</h3>
+            <p>Helping clinics run smoothly so doctors focus more on patient care.</p>
+          </div>
+
+          <div class="card">
+            <h3>Our Vision</h3>
+            <p>Building a digital healthcare ecosystem for clinics across India.</p>
+          </div>
+
+          <div class="card">
+            <h3>Why Choose Us?</h3>
+            <p>Secure, user-friendly, automated and reliable platform trusted by clinics.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="features">
+    <h2>Features</h2>
+
+    <div class="grid">
+      <div class="card">
+        <img src="{{ url_for('static', filename='images/patient.png') }}">
+        <h3>Patient Records</h3>
+        <p>Maintain history, reports, prescriptions and personal details securely.</p>
+      </div>
+
+      <div class="card">
+        <img src="{{ url_for('static', filename='images/appointment.png') }}">
+        <h3>Appointment Booking</h3>
+        <p>Manage bookings, timings, and doctor availability easily.</p>
+      </div>
+
+      <div class="card">
+        <img src="{{ url_for('static', filename='images/billing.png') }}">
+        <h3>Billing & Invoices</h3>
+        <p>Generate receipts quickly and track payments in real time.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+    <h2>Get in Touch</h2>
+    <p>Email: support@cliniccare.com</p>
+    <p>Phone: +91 9876543210</p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+
+    <div class="footer-container">
+
+      <div class="footer-section">
+        <h2 class="footer-logo">Clinic<span>Care</span></h2>
+        <p class="footer-about">
+          A smart and easy-to-use platform to manage patients, appointments, billing
+          and clinic operations smoothly.
+        </p>
+      </div>
+
+      <div class="footer-section quick-links">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="#about">About ClinicCare</a></li>
+          <li><a href="#features">Our Features</a></li>
+
+          <!-- UPDATED URLs -->
+          <li><a href="{{ url_for('auth_bp.login') }}">Login</a></li>
+          <li><a href="{{ url_for('auth_bp.signup') }}">Create an Account</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Follow Us</h3>
+        <div class="social-icons">
+          <a href="#"><img src="https://i.ibb.co/3hJp7pD/facebook.png"></a>
+          <a href="#"><img src="https://i.ibb.co/VY2tt59/instagram.png"></a>
+          <a href="#"><img src="https://i.ibb.co/r0ZrkD3/linkedin.png"></a>
+          <a href="#"><img src="https://i.ibb.co/Tb7sbvn/twitter.png"></a>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="footer-bottom">© 2025 ClinicCare — All Rights Reserved</p>
+
+  </footer>
+
+</body>
+</html>

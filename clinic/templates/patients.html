@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h1 class="page-title">Patients</h1>
+
+<!-- TOP YELLOW HEADER -->
+<div class="top-banner">
+    <div>
+        <h2>Dr. {{ session['user'] }}</h2>
+        <p>Manage all patients from one place</p>
+    </div>
+
+    <div class="right-buttons">
+        <a href="{{ url_for('patients_bp.add_patient') }}" class="btn-primary">+ Add New Patient</a>
+    </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="controls-bar">
+
+    <!-- SEARCH -->
+    <input type="text" id="patientSearch" class="search-box" placeholder="Search by name, phone, or ID">
+
+    <!-- DATE FILTER -->
+    <input type="date" class="date-box" id="dateFilter">
+</div>
+
+<!-- PATIENT TABLE -->
+<table class="styled-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Category</th>
+            <th>Last Visit</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody id="patientTable">
+        {% if patients %}
+            {% for p in patients %}
+            <tr>
+                <td>{{ p.id }}</td>
+                <td>{{ p.name }}</td>
+                <td>{{ p.phone }}</td>
+                <td>{{ p.disease }}</td>
+                <td>{{ p.last_visit }}</td>
+
+                <td>
+                    <a href="{{ url_for('patients_bp.patient_profile', id=p.id) }}" class="btn-view">View</a>
+
+                    <a href="{{ url_for('patients_bp.upload_record', id=p.id) }}" 
+                       class="btn-secondary">Upload Record</a>
+
+                    <a href="{{ url_for('patients_bp.generate_certificate', id=p.id) }}" 
+                       class="btn-secondary">Certificate</a>
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="6" class="empty-state">
+                <img src="{{ url_for('static', filename='images/empty.png') }}" width="150">
+                <p>No patients found.</p>
+            </td>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>
+
+<!-- JS Search -->
+<script src="{{ url_for('static', filename='js/patient_search.js') }}"></script>
+
+{% endblock %}

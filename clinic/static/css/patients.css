@@ -1,0 +1,32 @@
+/* -------- PATIENT LIST PAGE ---------- */
+
+.patient-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.patient-icon {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+.visit-tag {
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: white;
+    background: #2563eb;
+}
+
+.actions a {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    text-decoration: none;
+    margin-right: 6px;
+    color: white;
+}
+
+.btn-edit { background: #22c55e; }
+.btn-delete { background: #ef4444; }

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+<div class="dashboard-container">
+
+    <!-- PAGE HEADER -->
+    <div class="page-top">
+        <h1 class="page-title">Dashboard Overview</h1>
+
+        <div class="actions">
+            <span class="user-badge">{{ session['user'] }}</span>
+            <button id="darkModeBtn" class="dark-toggle">🌙</button>
+
+            {% if session['role'] == "admin" %}
+            <a href="{{ url_for('admin_bp.admin_panel') }}" class="admin-btn">Admin Panel</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-section">
+
+        <div class="stat-card blue">
+            <p class="label">Total Patients</p>
+            <h2 class="value">{{ total_patients }}</h2>
+        </div>
+
+        <div class="stat-card green">
+            <p class="label">Today's Appointments</p>
+            <h2 class="value">{{ today_appointments }}</h2>
+        </div>
+
+        <div class="stat-card yellow">
+            <p class="label">Pending Bills</p>
+            <h2 class="value">{{ pending_bills }}</h2>
+        </div>
+
+        <div class="stat-card red">
+            <p class="label">Total Invoices</p>
+            <h2 class="value">{{ total_invoices }}</h2>
+        </div>
+
+    </div>
+
+    <!-- CHART SECTION -->
+    <div class="chart-wrapper">
+        <h2 class="section-title">Patient Growth</h2>
+        <canvas id="patientChart" class="chart-canvas"></canvas>
+    </div>
+
+    <!-- RECENT PATIENTS -->
+    <div class="table-wrapper">
+        <div class="table-header">
+            <h2 class="section-title">Recent Patients</h2>
+
+            <form method="GET" action="{{ url_for('patients_bp.patients') }}" class="search-bar">
+                <input type="text" name="q" placeholder="Search patient…">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Disease</th>
+                    <th>Last Visit</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for p in recent_patients %}
+                <tr>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.disease }}</td>
+                    <td>{{ p.last_visit }}</td>
+                    <td>
+                        <span class="status-badge {{ 'active' if p.status=='Active' else 'inactive' }}">
+                            {{ p.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2 class="page-title">Billing & Invoices</h2>
+
+<!-- Top Actions -->
+<div class="top-actions">
+
+    <a href="{{ url_for('billing_bp.create_invoice') }}" class="btn-primary">
+        + Create Invoice
+    </a>
+
+    <div class="due-box">
+        <strong>Due Invoices:</strong> {{ due_count }}
+    </div>
+
+</div>
+
+<!-- Invoice Table -->
+<table class="styled-table">
+    <thead>
+        <tr>
+            <th>Invoice No</th>
+            <th>Patient</th>
+            <th>Description</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Balance</th>
+            <th style="width: 200px;">Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for inv in invoices %}
+
+        {% set paid = inv.payments | sum(attribute='amount') %}
+        {% set balance = inv.total_amount - paid %}
+
+        <tr>
+            <td>{{ inv.invoice_number }}</td>
+
+            <td>{{ inv.patient.name }}</td>
+
+            <td>{{ inv.description }}</td>
+
+            <td>₹ {{ inv.total_amount }}</td>
+
+            <td>
+                <span class="status-badge 
+                    {% if inv.status == 'Paid' %} active 
+                    {% elif inv.status == 'Partial' %} yellow
+                    {% else %} inactive {% endif %}">
+                    {{ inv.status }}
+                </span>
+            </td>
+
+            <td>₹ {{ balance }}</td>
+
+            <td class="actions">
+
+                <!-- View -->
+                <a href="{{ url_for('billing_bp.view_invoice', id=inv.id) }}" class="btn-view">
+                    View
+                </a>
+
+                <!-- Download PDF -->
+                <a href="{{ url_for('billing_bp.download_invoice', id=inv.id) }}" class="btn-primary">
+                    PDF
+                </a>
+
+                <!-- Delete -->
+                <a href="{{ url_for('billing_bp.delete_invoice', id=inv.id) }}"
+                   class="btn-delete"
+                   onclick="return confirm('Delete this invoice?');">
+                    Delete
+                </a>
+
+            </td>
+        </tr>
+
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

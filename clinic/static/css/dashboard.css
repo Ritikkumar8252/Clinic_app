@@ -1,0 +1,662 @@
+/* -------------------------------------------------
+   GLOBAL
+---------------------------------------------------*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Inter", sans-serif;
+}
+
+:root {
+    --bg: #f7f9fc;
+    --text: #1e293b;
+    --card: #ffffff;
+    --primary: #2563eb;
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #334155;
+    --sidebar-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --shadow: rgba(0,0,0,0.06);
+}
+
+/* DARK MODE */
+body.dark {
+    --bg: #0f172a;
+    --text: #e5e8f0;
+    --card: #1e293b;
+    --sidebar-bg: #1e293b;
+    --sidebar-text: #f8fafc;
+    --sidebar-hover: #334155;
+    --border: #334155;
+    --shadow: rgba(0,0,0,0.3);
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    transition: all 0.3s ease;
+}
+
+/* -------------------------------------------------
+   SIDEBAR
+---------------------------------------------------*/
+.sidebar {
+    width: 240px;
+    height: 100vh;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 22px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    box-shadow: 2px 0 10px var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 25px;
+    color: var(--primary);
+}
+
+.menu {
+    list-style: none;
+}
+
+.menu li {
+    margin-bottom: 12px;
+}
+
+.menu li a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    padding: 12px;
+    gap: 12px;
+    border-radius: 8px;
+    color: var(--sidebar-text);
+    font-weight: 500;
+    transition: 0.25s ease;
+}
+
+.menu li a:hover {
+    background: var(--sidebar-hover);
+    transform: translateX(6px);
+}
+
+.menu li.active a {
+    background: var(--primary);
+    color: white;
+}
+
+/* -------------------------------------------------
+   MAIN CONTENT
+---------------------------------------------------*/
+.main-content {
+    margin-left: 260px;
+    padding: 25px;
+    width: calc(100% - 260px);
+    transition: all .3s ease;
+}
+
+/* -------------------------------------------------
+   TOPBAR
+---------------------------------------------------*/
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.user-badge {
+    background: var(--primary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: white;
+}
+
+.dark-toggle {
+    padding: 7px 12px;
+    background: var(--primary);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+}
+
+/* -------------------------------------------------
+   DASHBOARD CARDS
+---------------------------------------------------*/
+.cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: var(--card);
+    width: 240px;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px var(--shadow);
+    transition: 0.25s;
+    text-align: center;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card h3 {
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: var(--text);
+}
+
+.card p {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* -------------------------------------------------
+   TABLES
+---------------------------------------------------*/
+.table-section {
+    background: var(--card);
+    padding: 25px;
+    border-radius: 12px;
+    margin-top: 25px;
+    box-shadow: 0 4px 14px var(--shadow);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+thead th {
+    padding: 12px;
+    background: var(--sidebar-hover);
+    text-align: left;
+}
+
+tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+tbody tr:hover {
+    background: var(--sidebar-hover);
+}
+
+/* -------------------------------------------------
+   SEARCH BAR
+---------------------------------------------------*/
+.search-bar {
+    display: flex;
+    gap: 10px;
+}
+
+.search-bar input {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.search-bar button {
+    background: var(--primary);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+/* -------------------------------------------------
+   FORMS
+---------------------------------------------------*/
+.form-container {
+    background: var(--card);
+    width: 400px;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px var(--shadow);
+}
+
+.form-container label {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-container input,
+.form-container select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+
+/* -------------------------------------------------
+   STATUS BADGES
+---------------------------------------------------*/
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: white;
+}
+
+.status-badge.active { background: #22c55e; }
+.status-badge.inactive { background: #ef4444; }
+
+/* -------------------------------------------------
+   ACTION BUTTONS
+---------------------------------------------------*/
+.actions a {
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: white;
+    font-size: 13px;
+    text-decoration: none;
+    margin-right: 8px;
+}
+
+.btn-view { background: #0ea5e9; }
+.btn-edit { background: #22c55e; }
+.btn-delete { background: #ef4444; }
+
+.actions a:hover {
+    opacity: 0.85;
+}
+
+/* -------------------------------------------------
+   SETTINGS PAGE
+---------------------------------------------------*/
+.settings-wrapper {
+    max-width: 800px;
+    margin: auto;
+    display: grid;
+    gap: 25px;
+}
+
+.settings-card {
+    background: var(--card);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.settings-card input,
+.settings-card select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+/* -------------------------------------------------
+   RESPONSIVE
+---------------------------------------------------*/
+@media (max-width: 900px) {
+    .sidebar { width: 200px; }
+    .main-content { margin-left: 210px; }
+}
+
+@media (max-width: 600px) {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; width: 100%; }
+}
+
+/* --------------- */
+/* PREMIUM DASHBOARD LAYOUT */
+
+.dashboard-container {
+    padding: 10px;
+}
+
+.page-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+    margin-bottom: 35px;
+}
+
+.stat-card {
+    padding: 25px;
+    border-radius: 14px;
+    color: rgb(85, 55, 55);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transition: 0.25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card .label {
+    font-size: 15px;
+    opacity: 0.9;
+    margin-bottom: 6px;
+}
+
+.stat-card .value {
+    font-size: 36px;
+    font-weight: 700;
+}
+
+.chart-wrapper {
+    background:white;
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    margin-bottom: 35px;
+}
+
+.chart-canvas {
+    width: 100%;
+    height: 260px;
+}
+
+.table-wrapper {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.section-title {
+    margin-bottom: 10px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+/* ------ */
+/* YELLOW BANNER */
+.patient-banner {
+    background: #fde047;
+    padding: 20px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+}
+
+.patient-name {
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.patient-id,
+.patient-info {
+    font-size: 14px;
+    color: #4b5563;
+}
+
+/* BUTTONS */
+.banner-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+.edit-btn { background: #22c55e; }
+.delete-btn { background: #ef4444; }
+
+/* TABS */
+.tabs {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.tab-item {
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    background: #e5e7eb;
+    color: #374151;
+    font-weight: 500;
+}
+
+.tab-item.active {
+    background: #2563eb;
+    color: white;
+}
+
+/* INFO GRID */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+}
+
+.info-card {
+    background: white;
+    padding: 18px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.info-card h4 {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.info-card p {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* NOTES FORM */
+.notes-form textarea {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    height: 120px;
+    margin-bottom: 12px;
+}
+/* ---------------apppointment */
+.appointments-page {
+    width: 100%;
+}
+
+/* Yellow banner */
+.top-banner {
+    background: #fbbf24;
+    padding: 18px 22px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.top-banner h2 {
+    margin: 0;
+}
+
+.banner-right a {
+    margin-left: 10px;
+}
+
+/* Tabs */
+.tabs-container {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+}
+
+.tab-btn {
+    padding: 10px 16px;
+    background: #e5e7eb;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #374151;
+}
+
+.tab-btn.active {
+    background: #2563eb;
+    color: white;
+}
+
+/* Search bar */
+.controls-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.controls-bar input,
+.controls-bar select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+}
+
+/* Table wrapper */
+.table-wrapper {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-top: 10px;
+}
+/* ----patient */
+/* Patient Page Enhancement */
+.patient-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.patient-icon {
+    font-size: 20px;
+    color: #2563eb;
+}
+
+.visit-tag {
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: white;
+}
+
+.visit-tag.general {
+    background: #2563eb;
+}
+
+.actions a {
+    margin-right: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-view { background: #0ea5e9; color: white; }
+.btn-edit { background: #22c55e; color: white; }
+.btn-delete { background: #f59e0b; color: white; }
+
+.btn-view:hover, .btn-edit:hover, .btn-delete:hover {
+    opacity: 0.85;
+}
+/* --------patient profile */
+.patient-info-card, .section-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.info-grid label {
+    font-weight: bold;
+    color: #444;
+}
+
+.record-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.record-list {
+    list-style: none;
+    padding: 0;
+}
+
+.record-list li {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+/* ------ */
+.form-card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    max-width: 550px;
+    margin: 25px auto;
+}
+
+.form-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.input-box {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0 18px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.input-box:focus {
+    border-color: #ffb400;
+    outline: none;
+    box-shadow: 0 0 4px rgba(255,180,0,0.4);
+}
+
+.full-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+}

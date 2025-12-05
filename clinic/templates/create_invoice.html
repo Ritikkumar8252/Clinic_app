@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2 class="page-title">Create Invoice</h2>
+
+<div class="form-container">
+
+    <form action="{{ url_for('billing_bp.create_invoice') }}" method="POST">
+
+        <!-- Patient Dropdown -->
+        <label>Patient</label>
+        <select name="patient_id" required>
+            <option value="" disabled selected>Select patient</option>
+
+            {% for p in patients %}
+            <option value="{{ p.id }}">{{ p.name }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Description -->
+        <label>Description</label>
+        <input 
+            type="text"
+            name="description"
+            placeholder="Consultation / Medicine / Lab Test etc."
+        >
+
+        <!-- Total Amount -->
+        <label>Total Amount (₹)</label>
+        <input 
+            type="number"
+            name="total_amount"
+            min="0"
+            step="0.01"
+            placeholder="Enter amount"
+            required
+        >
+
+        <!-- Due Date -->
+        <label>Due Date</label>
+        <input 
+            type="date"
+            name="due_date"
+        >
+
+        <button class="btn-primary" type="submit">
+            Create Invoice
+        </button>
+
+    </form>
+
+</div>
+
+{% endblock %}

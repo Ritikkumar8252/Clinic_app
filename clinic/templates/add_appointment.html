@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block body %}
+
+<!-- TOP HEADER (YELLOW BAR) -->
+<div class="top-banner">
+    <div>
+        <h2>Dr. {{ session['user'] }}</h2>
+        <p>Book a new appointment</p>
+    </div>
+
+    <div class="right-buttons">
+        <a href="{{ url_for('appointments_bp.appointments') }}" class="btn-secondary">
+            Back to Appointments
+        </a>
+    </div>
+</div>
+
+<!-- FORM CARD -->
+<div class="form-card">
+    <h2 class="form-title">Add Appointment</h2>
+
+    <form method="POST">
+
+        <label>Select Patient</label>
+        <select name="patient_id" class="input-box" required>
+            <option value="">Choose a patient</option>
+            {% for p in patients %}
+            <option value="{{ p.id }}">{{ p.name }} ({{ p.phone }})</option>
+            {% endfor %}
+        </select>
+
+        <label>Visit Type</label>
+        <select name="type" class="input-box">
+            <option value="First Visit">First Visit</option>
+            <option value="Follow-up">Follow-up</option>
+            <option value="Emergency">Emergency</option>
+        </select>
+
+        <label>Date</label>
+        <input type="date" name="date" class="input-box" required>
+
+        <label>Time</label>
+        <input type="time" name="time" class="input-box" required>
+
+        <button type="submit" class="btn-primary full-btn">Book Appointment</button>
+
+    </form>
+</div>
+
+{% endblock %}

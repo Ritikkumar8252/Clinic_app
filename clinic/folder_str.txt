@@ -1,0 +1,36 @@
+clinic_app/
+│
+├── app.py
+├── config.py
+├── requirements.txt
+│
+└── clinic/
+    ├── __init__.py
+    ├── extensions.py
+    ├── models.py
+    │
+    ├── routes/
+    │   ├── auth.py
+    │   ├── dashboard.py
+    │   ├── patients.py
+    │   ├── appointments.py
+    │   ├── billing.py
+    │   └── admin.py
+    │
+    ├── templates/
+    │   ├── home.html
+    │   ├── login.html
+    │   ├── signup.html
+    │   ├── dashboard.html
+    │   ├── patients.html
+    │   ├── add_patient.html
+    │   ├── appointments.html
+    │   ├── billing.html
+    │   └── admin_panel.html
+    │
+    └── static/
+        ├── css/
+        │   ├── home.css
+        │   └── dashboard.css
+        └── js/
+            └── dashboard.js
