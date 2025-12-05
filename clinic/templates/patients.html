@@ -3,38 +3,48 @@
 
 <h1 class="page-title">Patients</h1>
 
-<!-- TOP YELLOW HEADER -->
-<div class="top-banner">
+<!-- TOP DOCTOR HEADER -->
+<div class="top-banner light-orange">
     <div>
-        <h2>Dr. {{ session['user'] }}</h2>
-        <p>Manage all patients from one place</p>
+        <h2 class="doctor-title">Dr. {{ session['user'] }}</h2>
+        <p class="subtitle">Manage all patient records in one place</p>
     </div>
 
     <div class="right-buttons">
-        <a href="{{ url_for('patients_bp.add_patient') }}" class="btn-primary">+ Add New Patient</a>
+        <a href="{{ url_for('patients_bp.add_patient') }}" class="btn-add">
+            + Add New Patient
+        </a>
     </div>
 </div>
 
 <!-- FILTER BAR -->
-<div class="controls-bar">
+<form method="GET" class="controls-bar">
 
-    <!-- SEARCH -->
-    <input type="text" id="patientSearch" class="search-box" placeholder="Search by name, phone, or ID">
+    <input type="text"
+           name="q"
+           class="search-box"
+           placeholder="Search by name or phone…"
+           value="{{ request.args.get('q','') }}">
 
-    <!-- DATE FILTER -->
-    <input type="date" class="date-box" id="dateFilter">
-</div>
+    <input type="date"
+           name="date"
+           class="date-box"
+           value="{{ request.args.get('date','') }}"
+           onchange="this.form.submit()">
+
+</form>
 
 <!-- PATIENT TABLE -->
-<table class="styled-table">
+<div class="table-container">
+<table class="patients-table">
     <thead>
         <tr>
             <th>ID</th>
             <th>Name</th>
             <th>Contact</th>
-            <th>Category</th>
+            <th>Issue</th>
             <th>Last Visit</th>
-            <th>Actions</th>
+            <th style="text-align:center;">Actions</th>
         </tr>
     </thead>
 
@@ -43,19 +53,28 @@
             {% for p in patients %}
             <tr>
                 <td>{{ p.id }}</td>
-                <td>{{ p.name }}</td>
+                <td>
+                    <div class="patient-info">
+                        <img src="{{ url_for('static', filename='patient_images/' + p.image) }}" class="patient-mini">
+                        <div>
+                            <strong>{{ p.name }}</strong>
+                            <p class="subtext">{{ p.gender }}, {{ p.age }} yrs</p>
+                        </div>
+                    </div>
+                </td>
+
                 <td>{{ p.phone }}</td>
                 <td>{{ p.disease }}</td>
                 <td>{{ p.last_visit }}</td>
 
-                <td>
+                <td class="action-buttons">
                     <a href="{{ url_for('patients_bp.patient_profile', id=p.id) }}" class="btn-view">View</a>
 
                     <a href="{{ url_for('patients_bp.upload_record', id=p.id) }}" 
-                       class="btn-secondary">Upload Record</a>
+                       class="btn-upload">Record</a>
 
                     <a href="{{ url_for('patients_bp.generate_certificate', id=p.id) }}" 
-                       class="btn-secondary">Certificate</a>
+                       class="btn-cert">Certificate</a>
                 </td>
             </tr>
             {% endfor %}
@@ -63,14 +82,14 @@
         <tr>
             <td colspan="6" class="empty-state">
                 <img src="{{ url_for('static', filename='images/empty.png') }}" width="150">
-                <p>No patients found.</p>
+                <p>No patients found</p>
             </td>
         </tr>
         {% endif %}
     </tbody>
 </table>
+</div>
 
-<!-- JS Search -->
 <script src="{{ url_for('static', filename='js/patient_search.js') }}"></script>
 
 {% endblock %}

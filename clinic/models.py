@@ -12,13 +12,19 @@ class User(db.Model):
 
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120))
-    phone = db.Column(db.String(20))
-    disease = db.Column(db.String(120))
-    last_visit = db.Column(db.String(20))
-    status = db.Column(db.String(20), default="Active")
+    name = db.Column(db.String(100), nullable=False)
+    age = db.Column(db.Integer)
     gender = db.Column(db.String(20))
-    age = db.Column(db.String(20))
+    phone = db.Column(db.String(20))
+    disease = db.Column(db.String(120), nullable=False)
+    last_visit = db.Column(db.String(20), nullable=False)
+    status = db.Column(db.String(20), nullable=False)
+    image = db.Column(db.String(255), default="default_patient.png")
+    address = db.Column(db.String(200))
+    pincode = db.Column(db.String(20))
+    city = db.Column(db.String(50))
+    state = db.Column(db.String(50))
+
 
 
 class Appointment(db.Model):
@@ -34,7 +40,7 @@ class Appointment(db.Model):
     status = db.Column(db.String(20), default="Queue")
 
     patient = db.relationship("Patient", backref="appointments")
-
+    
 
 class Visit(db.Model):
     id = db.Column(db.Integer, primary_key=True)

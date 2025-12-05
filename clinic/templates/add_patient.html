@@ -1,48 +1,136 @@
 {% extends "base.html" %}
 {% block body %}
 
-<!-- YELLOW TOP HEADER -->
-<div class="top-banner">
+<!-- TOP HEADER -->
+<div class="top-banner add-banner">
     <div>
-        <h2>Dr. {{ session['user'] }}</h2>
-        <p>Add a new patient</p>
+        <h2 class="title">Add New Patient</h2>
+        <p class="subtitle">Fill complete patient details correctly</p>
     </div>
 
-    <div class="right-buttons">
-        <a href="{{ url_for('patients_bp.patients') }}" class="btn-secondary">
-            Back to Patients
-        </a>
-    </div>
+    <a href="{{ url_for('patients_bp.patients') }}" class="btn btn-secondary">
+        ← Back to Patients
+    </a>
 </div>
 
 <!-- FORM CARD -->
-<div class="form-card">
-    <h2 class="form-title">New Patient Registration</h2>
+<div class="form-card patient-form-card">
 
-    <form method="POST">
+    <h2 class="section-heading">Patient Information</h2>
 
-        <label>Name</label>
-        <input type="text" name="name" class="input-box" required>
+    <form method="POST" enctype="multipart/form-data" class="patient-form">
 
-        <label>Phone</label>
-        <input type="text" name="phone" class="input-box" required>
+        <!-- PROFILE PICTURE -->
+        <h2 class="section-heading" style="margin-top:25px;">Profile Picture</h2>
 
-        <label>Gender</label>
-        <select name="gender" class="input-box">
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-        </select>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Upload Photo</label>
+                <img id="preview" class="preview-img" src="/static/images/default_profile.png">
+                <input type="file" name="image" id="imageUpload">
 
-        <label>Age</label>
-        <input type="number" name="age" class="input-box" required>
+                <!-- Preview container -->
+            </div>
+        </div>
+        
+        <!-- ROW 1 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" required>
+            </div>
 
-        <label>Category / Complaint</label>
-        <input type="text" name="disease" class="input-box">
+            <div class="form-group">
+                <label>Age</label>
+                <input type="number" name="age" min="0">
+            </div>
 
-        <button type="submit" class="btn-primary full-btn">Add Patient</button>
+            <div class="form-group">
+                <label>Gender</label>
+                <select name="gender">
+                    <option value="">Select</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Other</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ROW 2 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" name="phone" placeholder="9876543210">
+            </div>
+
+            <div class="form-group">
+                <label>Disease / Issue</label>
+                <input type="text" name="disease" required>
+            </div>
+
+            <div class="form-group">
+                <label>Last Visit</label>
+                <input type="date" name="last_visit" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select name="status" required>
+                            <option value="">Select</option>
+                            <option>Active</option>
+                            <option>Follow-up</option>
+                        </select>
+                    </div>
+                </div>
+
+        <!-- ADDRESS SECTION -->
+        <h2 class="section-heading" style="margin-top:25px;">Address Information</h2>
+
+        <div class="form-row">
+            <div class="form-group full-width">
+                <label>Address</label>
+                <input type="text" name="address" placeholder="Street, House No.">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Pincode</label>
+                <input type="text" name="pincode">
+            </div>
+
+            <div class="form-group">
+                <label>City</label>
+                <input type="text" name="city">
+            </div>
+
+            <div class="form-group">
+                <label>State</label>
+                <input type="text" name="state">
+            </div>
+        </div>
+
+       
+
+        <button type="submit" class="btn btn-primary btn-submit">
+            + Add Patient
+        </button>
 
     </form>
 </div>
+
+<script>
+const fileInput = document.getElementById("imageUpload");
+const preview = document.getElementById("preview");
+
+fileInput.addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    preview.src = url;
+});
+</script>
 
 {% endblock %}

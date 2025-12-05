@@ -1,98 +1,121 @@
 {% extends "base.html" %}
 {% block body %}
 
-<div class="appointments-page">
-
-    <div class="top-banner">
-        <div>
-            <h2>Dr. {{ session['user'] }}</h2>
-            <p>Manage your appointments efficiently</p>
-        </div>
-
-        <div>
-            <a href="{{ url_for('appointments_bp.add_appointment') }}" class="btn-primary">
-                + Add Appointment
-            </a>
-            <a href="#" class="btn-secondary">Start Walk-in Consultation</a>
-        </div>
+<!-- HEADER -->
+<div class="appt-header">
+    <div class="left">
+        <h2>Appointments</h2>
+        <p class="subtitle">Welcome Dr. {{ session['user'] }} — manage your schedule</p>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs-container">
-        <a href="{{ url_for('appointments_bp.appointments', tab='queue') }}"
-           class="tab-btn {{ 'active' if tab=='queue' else '' }}">
-            Queue ({{ queue_count }})
+    <div class="right">
+        <a href="{{ url_for('appointments_bp.add_appointment') }}" class="btn btn-primary">
+            + Add Appointment
         </a>
 
-        <a href="{{ url_for('appointments_bp.appointments', tab='finished') }}"
-           class="tab-btn {{ 'active' if tab=='finished' else '' }}">
-            Finished ({{ finished_count }})
-        </a>
-
-        <a href="{{ url_for('appointments_bp.appointments', tab='cancelled') }}"
-           class="tab-btn {{ 'active' if tab=='cancelled' else '' }}">
-            Cancelled ({{ cancelled_count }})
+        <a href="{{ url_for('appointments_bp.walkin') }}" class="btn btn-green">
+            Start Walk-In Consultation
         </a>
     </div>
+</div>
 
-    <!-- Search + Date -->
-    <div class="controls-bar">
-        <input type="text" placeholder="Search by patient or number" id="searchBox">
-        <input type="date" value="{{ date_selected }}">
-        <select>
-            <option value="">Visit Type</option>
-            <option>Follow-up</option>
-            <option>First Visit</option>
-            <option>Emergency</option>
-        </select>
-    </div>
 
-    <!-- Table -->
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Patient</th>
-                    <th>Phone</th>
-                    <th>Visit</th>
-                    <th>Slot</th>
-                    <th>Status</th>
-                    <th>View</th>
-                </tr>
-            </thead>
+<!-- FILTER BAR -->
+<div class="filter-bar">
 
-            <tbody>
-                {% if apps %}
-                    {% for a in apps %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ a.name }}</td>
-                        <td>{{ a.phone }}</td>
-                        <td>{{ a.type }}</td>
-                        <td>{{ a.time }}</td>
-                        <td>
-                            <span class="status-badge {{ a.status|lower }}">{{ a.status }}</span>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('patients_bp.patient_profile', id=a.patient_id) }}" class="btn-view">
-                                View
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                <tr>
-                    <td colspan="7" class="empty-state">
-                        <img src="{{ url_for('static', filename='images/empty.png') }}" width="140">
-                        <p>No appointments found.</p>
-                    </td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+    <!-- Search -->
+    <form method="GET" class="filter-form">
+        <input type="hidden" name="tab" value="{{ tab }}">
+
+        <input type="text" 
+               name="search" 
+               value="{{ search }}" 
+               class="search-box"
+               placeholder="Search by patient name…">
+
+        <input type="date" 
+               name="date" 
+               value="{{ date_filter }}"
+               class="date-box">
+
+        <button class="btn btn-primary">Filter</button>
+    </form>
 
 </div>
+
+
+
+<!-- TABS -->
+<div class="appt-tabs">
+
+    <a href="?tab=queue&search={{ search }}&date={{ date_filter }}" 
+       class="tab {{ 'active' if tab=='queue' else '' }}">Queue</a>
+
+    <a href="?tab=inprogress&search={{ search }}&date={{ date_filter }}" 
+       class="tab {{ 'active' if tab=='inprogress' else '' }}">In Progress</a>
+
+    <a href="?tab=completed&search={{ search }}&date={{ date_filter }}" 
+       class="tab {{ 'active' if tab=='completed' else '' }}">Completed</a>
+
+    <a href="?tab=cancelled&search={{ search }}&date={{ date_filter }}" 
+       class="tab {{ 'active' if tab=='cancelled' else '' }}">Cancelled</a>
+
+</div>
+
+
+
+
+<!-- APPOINTMENT LIST -->
+<div class="appt-list">
+{% if tab == 'queue' %}
+    {% for a in queue %}
+        {% include 'components/appointment_card.html' %}
+    {% else %}
+        <p class="empty-state">No appointments in queue</p>
+    {% endfor %}
+{% endif %}
+
+{% if tab == 'inprogress' %}
+    {% for a in inprogress %}
+        {% include 'components/appointment_card.html' %}
+    {% else %}
+        <p class="empty-state">No consultations in progress</p>
+    {% endfor %}
+{% endif %}
+
+{% if tab == 'completed' %}
+    {% for a in completed %}
+        {% include 'components/appointment_card.html' %}
+    {% else %}
+        <p class="empty-state">No completed appointments</p>
+    {% endfor %}
+{% endif %}
+
+{% if tab == 'cancelled' %}
+    {% for a in cancelled %}
+        {% include 'components/appointment_card.html' %}
+    {% else %}
+        <p class="empty-state">No cancelled appointments</p>
+    {% endfor %}
+{% endif %}
+
+</div>
+
+
+
+
+<script>
+function setDate(type) {
+    const input = document.getElementById("dateFilter");
+    const today = new Date();
+    let d = new Date();
+
+    if(type === "yesterday") d.setDate(today.getDate() - 1);
+    if(type === "today") d = today;
+    if(type === "tomorrow") d.setDate(today.getDate() + 1);
+
+    input.value = d.toISOString().split("T")[0];
+}
+</script>
 
 {% endblock %}

@@ -14,11 +14,16 @@ from .routes.billing import billing_bp
 from .routes.admin import admin_bp
 from .routes.settings import settings_bp
 from .routes.home import home_bp
+import os
 
 
 def create_app():
     app = Flask(__name__)
     app.secret_key = "secret123"
+
+    #  photo upload patient
+    app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/patient_images")
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
     # Database
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'

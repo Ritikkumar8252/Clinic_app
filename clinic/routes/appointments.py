@@ -1,7 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, make_response,send_file
 from ..extensions import db
 from ..models import Appointment,Patient
 from datetime import datetime
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from reportlab.pdfgen import canvas
+from io import BytesIO
+from reportlab.lib import colors
+
 
 appointments_bp = Blueprint("appointments_bp", __name__)
 
@@ -11,33 +17,36 @@ def appointments():
     if "user" not in session:
         return redirect(url_for("auth_bp.login"))
 
-    tab = request.args.get("tab", "queue")  # default tab = queue
+    tab = request.args.get("tab", "queue")
+    search = request.args.get("search", "").strip()
+    date_filter = request.args.get("date", "").strip()
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    # Base Query (join with patient)
+    base_query = Appointment.query.join(Patient)
 
-    # Load appointments by tab
-    if tab == "queue":
-        apps = Appointment.query.filter_by(status="Queue").all()
-    elif tab == "finished":
-        apps = Appointment.query.filter_by(status="Finished").all()
-    elif tab == "cancelled":
-        apps = Appointment.query.filter_by(status="Cancelled").all()
-    else:
-        apps = Appointment.query.all()
+    # Apply Search Filter – patient name
+    if search:
+        base_query = base_query.filter(Patient.name.ilike(f"%{search}%"))
 
-    # Counts for tabs
-    queue_count = Appointment.query.filter_by(status="Queue").count()
-    finished_count = Appointment.query.filter_by(status="Finished").count()
-    cancelled_count = Appointment.query.filter_by(status="Cancelled").count()
+    # Apply Date Filter
+    if date_filter:
+        base_query = base_query.filter(Appointment.date == date_filter)
+
+    # GET DATA FOR EACH TAB
+    queue = base_query.filter(Appointment.status == "Queue").all()
+    inprogress = base_query.filter(Appointment.status == "In Progress").all()
+    completed = base_query.filter(Appointment.status == "Completed").all()
+    cancelled = base_query.filter(Appointment.status == "Cancelled").all()
 
     return render_template(
         "appointments.html",
-        apps=apps,
         tab=tab,
-        queue_count=queue_count,
-        finished_count=finished_count,
-        cancelled_count=cancelled_count,
-        date_selected=today,
+        search=search,
+        date_filter=date_filter,
+        queue=queue,
+        inprogress=inprogress,
+        completed=completed,
+        cancelled=cancelled
     )
 
 
@@ -103,3 +112,198 @@ def edit_appointment(id):
         return redirect(url_for("appointments_bp.appointments"))
 
     return render_template("edit_appointment.html", app=app_item)
+
+@appointments_bp.route("/walkin")
+def walkin():
+    # Later you can replace this with a real page
+    return "Walk-in consultation page coming soon!"
+
+@appointments_bp.route("/start/<int:id>")
+def start(id):
+    appt = Appointment.query.get_or_404(id)
+    appt.status = "In Progress"
+    db.session.commit()
+
+    return redirect(url_for("appointments_bp.consult", id=id))
+
+@appointments_bp.route("/complete/<int:id>")
+def complete(id):
+    appt = Appointment.query.get_or_404(id)
+    appt.status = "Completed"
+    db.session.commit()
+    return redirect(url_for("appointments_bp.appointments"))
+
+@appointments_bp.route("/cancel/<int:id>")
+def cancel(id):
+    appt = Appointment.query.get_or_404(id)
+    appt.status = "Cancelled"
+    db.session.commit()
+    return redirect(url_for("appointments_bp.appointments"))
+
+
+@appointments_bp.route("/consult/<int:id>")
+def consult(id):
+    if "user" not in session:
+        return redirect(url_for("auth_bp.login"))
+
+    appt = Appointment.query.get_or_404(id)
+    patient = Patient.query.get_or_404(appt.patient_id)
+
+    return render_template(
+        "consultation.html",
+        appt=appt,
+        patient=patient
+    )
+
+@appointments_bp.route("/autosave/<int:id>", methods=["POST"])
+def autosave(id):
+    appt = Appointment.query.get(id)
+
+    appt.symptoms = request.form.get("symptoms")
+    appt.diagnosis = request.form.get("diagnosis")
+    appt.prescription = request.form.get("prescription")
+    appt.advice = request.form.get("advice")
+
+    appt.bp = request.form.get("bp")
+    appt.pulse = request.form.get("pulse")
+    appt.spo2 = request.form.get("spo2")
+    appt.temperature = request.form.get("temperature")
+    appt.weight = request.form.get("weight")
+
+    appt.follow_up_date = request.form.get("follow_up_date")
+
+    db.session.commit()
+    return "saved"
+
+
+@appointments_bp.route("/prescription/<int:id>")
+def prescription_pdf(id):
+    appt = Appointment.query.get_or_404(id)
+    patient = Patient.query.get_or_404(appt.patient_id)
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+
+    width, height = A4
+    y = height - 2 * cm
+
+    # -------------------- HEADER -------------------------
+    pdf.setFont("Helvetica-Bold", 22)
+    pdf.drawString(2 * cm, y, "Your Clinic Name")
+
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(2 * cm, y - 20, "Specialization: General Physician")
+    pdf.drawString(2 * cm, y - 35, "Phone: +91 9876543210")
+    pdf.drawString(2 * cm, y - 50, "Address: Your Clinic Full Address")
+    
+    # Optional Logo
+    # pdf.drawImage("static/images/logo.png", width - 4*cm, y - 10, width=60, height=60)
+
+    # Divider Line
+    pdf.setStrokeColor(colors.grey)
+    pdf.setLineWidth(1)
+    pdf.line(2*cm, y - 65, width - 2*cm, y - 65)
+
+    # -------------------- PATIENT BOX -------------------------
+    y -= 110
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(2 * cm, y, "Patient Information")
+
+    # Patient Box Border
+    pdf.rect(2*cm, y - 55, width - 4*cm, 50, stroke=1, fill=0)
+
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(2.3 * cm, y - 20, f"Name: {patient.name}")
+    pdf.drawString(width/2, y - 20, f"Age: {patient.age}")
+    pdf.drawString(2.3 * cm, y - 40, f"Gender: {patient.gender}")
+    pdf.drawString(width/2, y - 40, f"Phone: {patient.phone}")
+
+    y -= 90
+
+    # -------------------- PRESCRIPTION SECTION -------------------------
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(2 * cm, y, "Prescription (Rx)")
+    y -= 20
+
+    pdf.setFont("Helvetica", 12)
+
+    # Table Header
+    headers = ["Medicine", "Dosage", "Duration", "Notes"]
+    col_widths = [6*cm, 3*cm, 3*cm, 5*cm]
+
+    x_start = 2 * cm
+    y_table = y
+
+    # Background
+    pdf.setFillColor(colors.lightgrey)
+    pdf.rect(x_start, y_table - 15, sum(col_widths), 18, fill=1, stroke=0)
+    pdf.setFillColor(colors.black)
+
+    # Draw header text
+    x = x_start
+    for i, header in enumerate(headers):
+        pdf.drawString(x + 5, y_table - 5, header)
+        x += col_widths[i]
+
+    y_table -= 25
+
+    # Example medicines — replace later with DB data
+    medicines = [
+        ["Paracetamol 650mg", "1-0-1", "5 Days", "Fever"],
+        ["Pantoprazole 40mg", "1-0-0", "7 Days", "Acidity"],
+        ["ORS", "As needed", "2 Days", "Hydration"]
+    ]
+
+    for med in medicines:
+        x = x_start
+        for i, value in enumerate(med):
+            pdf.drawString(x + 5, y_table, value)
+            x += col_widths[i]
+        y_table -= 18
+
+    y = y_table - 20
+
+    # -------------------- DOCTOR NOTES -------------------------
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(2 * cm, y, "Doctor Notes:")
+    y -= 20
+
+    pdf.setFont("Helvetica", 12)
+    notes = [
+        "- Drink plenty of water.",
+        "- Take adequate rest.",
+        "- Contact doctor if symptoms persist."
+    ]
+
+    for line in notes:
+        pdf.drawString(2.3 * cm, y, line)
+        y -= 16
+
+    y -= 30
+
+    # -------------------- SIGNATURE -------------------------
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(width - 8 * cm, y, "_______________________")
+    pdf.drawString(width - 7 * cm, y - 15, "Doctor's Signature")
+
+    y -= 40
+
+    # -------------------- FOOTER -------------------------
+    pdf.setStrokeColor(colors.grey)
+    pdf.line(2*cm, y, width - 2*cm, y)
+
+    pdf.setFont("Helvetica", 10)
+    pdf.drawString(2*cm, y - 15, "Thank you for visiting our clinic.")
+    pdf.drawString(2*cm, y - 30, "For emergencies, visit immediately or contact 9876543210.")
+
+    pdf.showPage()
+    pdf.save()
+
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"Prescription_{patient.name}.pdf",
+        mimetype="application/pdf"
+    )

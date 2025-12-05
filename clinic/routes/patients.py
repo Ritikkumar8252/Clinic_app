@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash,current_app
 from ..extensions import db
 from ..models import Patient, Invoice, Visit, Appointment
 from datetime import datetime
@@ -14,11 +14,25 @@ def patients():
     if "user" not in session:
         return redirect(url_for("auth_bp.login"))
 
-    all_patients = Patient.query.order_by(Patient.id.desc()).all()
+    q = request.args.get("q", "")
+    date_filter = request.args.get("date", "")
 
-    return render_template("patients.html", patients=all_patients)
+    query = Patient.query
 
+    # Search by name or phone
+    if q:
+        query = query.filter(
+            (Patient.name.ilike(f"%{q}%")) |
+            (Patient.phone.ilike(f"%{q}%"))
+        )
 
+    # Filter by last visit date
+    if date_filter:
+        query = query.filter(Patient.last_visit == date_filter)
+
+    patients = query.order_by(Patient.id.desc()).all()
+
+    return render_template("patients.html", patients=patients)
 
 
 
@@ -28,25 +42,43 @@ def add_patient():
         return redirect(url_for("auth_bp.login"))
 
     if request.method == "POST":
-        name = request.form["name"]
-        phone = request.form["phone"]
-        age = request.form["age"]
-        gender = request.form["gender"]
-        disease = request.form["disease"]
+        name = request.form.get("name")
+        age = request.form.get("age")
+        gender = request.form.get("gender")
+        phone = request.form.get("phone")
+        disease = request.form.get("disease")
+        last_visit = request.form.get("last_visit")
+        status = request.form.get("status")
+
+        # File upload handling
+        image_file = request.files.get("image")
+        filename = "default_patient.png"
+
+        if image_file and image_file.filename != "":
+            filename = secure_filename(image_file.filename)
+            save_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+            image_file.save(save_path)
 
         new_patient = Patient(
-            name=name,
-            phone=phone,
-            gender=gender,
-            age=age,
-            disease=disease,
-            last_visit=""
+        name=name,
+        age=age,
+        gender=gender,
+        phone=phone,
+        disease=disease,
+        last_visit=last_visit,
+        status=status,
+        address=request.form.get("address"),
+        pincode=request.form.get("pincode"),
+        city=request.form.get("city"),
+        state=request.form.get("state"),
+        image=filename
         )
+
 
         db.session.add(new_patient)
         db.session.commit()
 
-        flash("Patient added successfully!")
+        flash("Patient added successfully!", "success")
         return redirect(url_for("patients_bp.patients"))
 
     return render_template("add_patient.html")
@@ -92,7 +124,8 @@ def patient_profile(id):
     return render_template(
         "patient_profile.html",
         patient=patient,
-        apps=apps
+        apps=apps,
+        from_patient_profile=True
     )
 
 

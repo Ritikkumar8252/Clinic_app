@@ -1,0 +1,63 @@
+<div class="appt-card">
+
+    <!-- LEFT -->
+    <div class="card-left">
+        <img src="{{ url_for('static', filename='patient_images/' + a.patient.image) }}" class="avatar">
+
+        <div>
+            <h3>{{ a.patient.name }}</h3>
+            <p class="minor">{{ a.patient.phone }}</p>
+        </div>
+    </div>
+
+    <!-- MIDDLE -->
+    <div class="card-middle">
+        <p><strong>Date:</strong> {{ a.date }}</p>
+        <p><strong>Time:</strong> {{ a.time }}</p>
+        <p><strong>Visit:</strong> {{ a.type }}</p>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card-right">
+        <span class="status-badge status-{{ a.status|lower }}">{{ a.status }}</span>
+
+        {% if not from_patient_profile %}
+
+    {% if a.status == "Queue" %}
+    <a href="{{ url_for('appointments_bp.start', id=a.id) }}" 
+       class="btn small btn-blue">
+        Start Consultation
+    </a>
+
+    <a href="{{ url_for('appointments_bp.cancel', id=a.id) }}" 
+       class="btn small btn-red"
+       onclick="return confirm('Cancel appointment?')">
+        Cancel
+    </a>
+{% endif %}
+
+
+    {% if a.status == "In Progress" %}
+    <a href="{{ url_for('appointments_bp.consult', id=a.id) }}" 
+       class="btn small btn-blue">
+        Resume
+    </a>
+
+    <a href="{{ url_for('appointments_bp.complete', id=a.id) }}" 
+       class="btn small btn-green">
+        Finish
+    </a>
+    {% endif %}
+
+
+{% else %}
+    <!-- Patient profile view: hide action buttons -->
+    <span class="status-badge status-{{ a.status|lower }}">
+        {{ a.status }}
+    </span>
+
+{% endif %}
+
+    </div>
+
+</div>

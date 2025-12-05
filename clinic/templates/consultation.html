@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block body %}
+
+<!-- PAGE HEADER -->
+<div class="consult-header">
+    <div>
+        <h2>Consultation</h2>
+        <p class="sub">Patient Consultation Workspace</p>
+    </div>
+
+    <a href="{{ url_for('appointments_bp.complete', id=appt.id) }}" class="finish-btn">
+        Finish Consultation
+    </a>
+    <a href="{{ url_for('appointments_bp.prescription_pdf', id=appt.id) }}" 
+   class="btn btn-blue">
+    Download Prescription PDF
+    </a>
+
+</div>
+
+
+<div class="consult-container">
+
+    <!-- LEFT PANEL -->
+    <aside class="left-panel">
+
+        <!-- Patient Card -->
+        <div class="panel-card patient-panel">
+            <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}"
+                 class="patient-pic">
+
+            <h3 class="patient-name">{{ patient.name }}</h3>
+            <p class="minor">{{ patient.gender }}, {{ patient.age }} yrs</p>
+            <p class="minor">Phone: {{ patient.phone }}</p>
+
+            <div class="divider"></div>
+
+            <div class="info-box">
+                <span>ID</span><strong>{{ patient.id }}</strong>
+            </div>
+            <div class="info-box">
+                <span>Last Visit</span><strong>{{ patient.last_visit }}</strong>
+            </div>
+            <div class="info-box">
+                <span>Issue</span><strong>{{ patient.disease }}</strong>
+            </div>
+        </div>
+
+        <!-- VITALS -->
+        <div class="panel-card">
+            <h4>Vitals</h4>
+
+            <div class="vitals-grid">
+                <div><label>BP</label><input placeholder="120/80"></div>
+                <div><label>Pulse</label><input placeholder="76"></div>
+                <div><label>Temp</label><input placeholder="98.4°F"></div>
+                <div><label>SpO₂</label><input placeholder="98%"></div>
+            </div>
+        </div>
+
+    </aside>
+
+
+
+    <!-- RIGHT MAIN CONSULTATION PANEL -->
+    <main class="right-panel">
+
+        <!-- SYMPTOMS -->
+        <section class="main-card">
+            <h3>Symptoms</h3>
+            <textarea placeholder="Describe symptoms here..." class="long-input"></textarea>
+        </section>
+
+        <!-- DIAGNOSIS -->
+        <section class="main-card">
+            <h3>Diagnosis</h3>
+            <textarea placeholder="Clinical findings & diagnosis..." class="long-input"></textarea>
+        </section>
+
+        <!-- PRESCRIPTION -->
+        <section class="main-card">
+            <h3>Prescription</h3>
+
+            <table class="rx-table">
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Dosage</th>
+                        <th>Duration</th>
+                        <th>Timing</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="rxList">
+                    <tr>
+                        <td><input placeholder="Medicine name"></td>
+                        <td><input placeholder="1-0-1"></td>
+                        <td><input placeholder="5 Days"></td>
+                        <td><input placeholder="After food"></td>
+                        <td><button class="remove" onclick="removeRow(this)">✖</button></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="add-btn" onclick="addRow()">+ Add Medicine</button>
+        </section>
+
+        <!-- SOAP NOTES -->
+        <section class="main-card">
+            <h3>SOAP Notes</h3>
+
+            <label>Subjective</label>
+            <textarea class="soap"></textarea>
+
+            <label>Objective</label>
+            <textarea class="soap"></textarea>
+
+            <label>Assessment</label>
+            <textarea class="soap"></textarea>
+
+            <label>Plan</label>
+            <textarea class="soap"></textarea>
+        </section>
+
+    </main>
+
+</div>
+
+
+<script>
+function addRow(){
+    let row = `
+        <tr>
+            <td><input placeholder="Medicine name"></td>
+            <td><input placeholder="1-0-1"></td>
+            <td><input placeholder="5 days"></td>
+            <td><input placeholder="After food"></td>
+            <td><button class="remove" onclick="removeRow(this)">✖</button></td>
+        </tr>`;
+    document.getElementById("rxList").insertAdjacentHTML("beforeend", row);
+}
+
+function removeRow(btn){
+    btn.closest("tr").remove();
+}
+</script>
+
+{% endblock %}
