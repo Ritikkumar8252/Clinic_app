@@ -1062,6 +1062,24 @@ tbody tr:hover {
 }
 /* --- appointment */
 /* HEADER */
+.add-new-patient-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e8ffe8;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.btn-small {
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #28a745;
+    color: #fff;
+}
+
 .appt-header {
     display: flex;
     justify-content: space-between;

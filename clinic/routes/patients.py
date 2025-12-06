@@ -41,6 +41,8 @@ def add_patient():
     if "user" not in session:
         return redirect(url_for("auth_bp.login"))
 
+    from_page = request.args.get("from_page")  # check if redirected from add_appointment
+
     if request.method == "POST":
         name = request.form.get("name")
         age = request.form.get("age")
@@ -48,41 +50,51 @@ def add_patient():
         phone = request.form.get("phone")
         disease = request.form.get("disease")
         last_visit = request.form.get("last_visit")
-        status = request.form.get("status")
+        status = request.form.get("status", "Active")
 
-        # File upload handling
+        address = request.form.get("address")
+        pincode = request.form.get("pincode")
+        city = request.form.get("city")
+        state = request.form.get("state")
+
+        # PHOTO UPLOAD
         image_file = request.files.get("image")
-        filename = "default_patient.png"
+        filename = "default_profile.png"
 
         if image_file and image_file.filename != "":
             filename = secure_filename(image_file.filename)
             save_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
             image_file.save(save_path)
 
+        # Create patient entry
         new_patient = Patient(
-        name=name,
-        age=age,
-        gender=gender,
-        phone=phone,
-        disease=disease,
-        last_visit=last_visit,
-        status=status,
-        address=request.form.get("address"),
-        pincode=request.form.get("pincode"),
-        city=request.form.get("city"),
-        state=request.form.get("state"),
-        image=filename
+            name=name,
+            age=age,
+            gender=gender,
+            phone=phone,
+            disease=disease,
+            last_visit=last_visit,
+            status=status,
+            address=address,
+            pincode=pincode,
+            city=city,
+            state=state,
+            image=filename
         )
-
 
         db.session.add(new_patient)
         db.session.commit()
 
         flash("Patient added successfully!", "success")
+
+        # If coming from add_appointment → redirect back there
+        if request.form.get("from_page") == "add_appointment":
+            return redirect(url_for("appointments_bp.add_appointment"))
+
         return redirect(url_for("patients_bp.patients"))
 
-    return render_template("add_patient.html")
-
+    # GET request → show form
+    return render_template("add_patient.html", from_page=from_page)
 
 
 @patients_bp.route("/delete_patient/<int:id>")

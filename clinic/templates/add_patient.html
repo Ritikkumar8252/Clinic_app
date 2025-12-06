@@ -20,6 +20,10 @@
 
     <form method="POST" enctype="multipart/form-data" class="patient-form">
 
+        {% if from_page %}
+            <input type="hidden" name="from_page" value="{{ from_page }}">
+        {% endif %}
+
         <!-- PROFILE PICTURE -->
         <h2 class="section-heading" style="margin-top:25px;">Profile Picture</h2>
 

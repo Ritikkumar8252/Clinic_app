@@ -20,12 +20,19 @@
     <h2 class="form-title">Add Appointment</h2>
 
     <form method="POST">
+        <div class="add-new-patient-box">
+            <p>Can't find the patient?</p>
+            <a href="{{ url_for('patients_bp.add_patient', from_page='add_appointment') }}" 
+            class="btn-small btn-green">
+                + Add New Patient
+            </a>
+        </div>
 
         <label>Select Patient</label>
-        <select name="patient_id" class="input-box" required>
-            <option value="">Choose a patient</option>
+        <select id="patientSelect" name="patient_id" class="input-box" required>
+            <option value="">Search patient by name or phone…</option>
             {% for p in patients %}
-            <option value="{{ p.id }}">{{ p.name }} ({{ p.phone }})</option>
+            <option value="{{ p.id }}">{{ p.name }} - ({{ p.phone }})</option>
             {% endfor %}
         </select>
 
@@ -46,5 +53,35 @@
 
     </form>
 </div>
+<script>
+// Custom matcher: enables searching ANY part of text
+function matchCustom(params, data) {
+    if ($.trim(params.term) === '') {
+        return data;
+    }
+
+    if (typeof data.text === 'undefined') {
+        return null;
+    }
+
+    // Case-insensitive search for ANY part of the name or phone
+    if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
+        return data;
+    }
+
+    return null;
+}
+
+$(document).ready(function() {
+    $('#patientSelect').select2({
+        placeholder: "Search patient by name or phone",
+        allowClear: true,
+        width: '100%',
+        matcher: matchCustom
+    });
+});
+</script>
+
+
 
 {% endblock %}
