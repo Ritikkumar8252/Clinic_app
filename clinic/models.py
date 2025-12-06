@@ -32,15 +32,31 @@ class Appointment(db.Model):
 
     patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable=False)
 
-    name = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
-    type = db.Column(db.String(50))
-    time = db.Column(db.String(20))
+    type = db.Column(db.String(100))
     date = db.Column(db.String(20))
-    status = db.Column(db.String(20), default="Queue")
+    time = db.Column(db.String(20))
 
+    status = db.Column(db.String(50), default="Queue")
+
+    # Consultation fields
+    symptoms = db.Column(db.Text, default="")
+    diagnosis = db.Column(db.Text, default="")
+    prescription = db.Column(db.Text, default="")
+    advice = db.Column(db.Text, default="")
+
+    # Vitals
+    bp = db.Column(db.String(20), default="")
+    pulse = db.Column(db.String(20), default="")
+    spo2 = db.Column(db.String(20), default="")
+    temperature = db.Column(db.String(20), default="")
+    weight = db.Column(db.String(20), default="")
+
+    # Follow-up
+    follow_up_date = db.Column(db.String(20), default="")
+
+    # Relationship
     patient = db.relationship("Patient", backref="appointments")
-    
+
 
 class Visit(db.Model):
     id = db.Column(db.Integer, primary_key=True)

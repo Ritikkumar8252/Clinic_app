@@ -152,28 +152,36 @@ def consult(id):
     return render_template(
         "consultation.html",
         appt=appt,
-        patient=patient
+        patient=patient,
+        medicines=[],  # future database
     )
 
 @appointments_bp.route("/autosave/<int:id>", methods=["POST"])
 def autosave(id):
-    appt = Appointment.query.get(id)
+    appt = Appointment.query.get_or_404(id)
 
-    appt.symptoms = request.form.get("symptoms")
-    appt.diagnosis = request.form.get("diagnosis")
-    appt.prescription = request.form.get("prescription")
-    appt.advice = request.form.get("advice")
+    data = request.get_json()
 
-    appt.bp = request.form.get("bp")
-    appt.pulse = request.form.get("pulse")
-    appt.spo2 = request.form.get("spo2")
-    appt.temperature = request.form.get("temperature")
-    appt.weight = request.form.get("weight")
+    # Update symptoms & findings
+    appt.symptoms = data.get("symptoms", "")
+    appt.diagnosis = data.get("diagnosis", "")
+    appt.prescription = data.get("prescription", "")
+    appt.advice = data.get("advice", "")
 
-    appt.follow_up_date = request.form.get("follow_up_date")
+    # Update vitals
+    appt.bp = data.get("bp", "")
+    appt.pulse = data.get("pulse", "")
+    appt.spo2 = data.get("spo2", "")
+    appt.temperature = data.get("temperature", "")
+    appt.weight = data.get("weight", "")
+
+    # Follow-up
+    appt.follow_up_date = data.get("follow_up_date", "")
 
     db.session.commit()
-    return "saved"
+
+    return {"status": "saved"}
+
 
 
 @appointments_bp.route("/prescription/<int:id>")

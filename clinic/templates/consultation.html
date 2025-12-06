@@ -1,148 +1,214 @@
 {% extends "base.html" %}
 {% block body %}
 
-<!-- PAGE HEADER -->
-<div class="consult-header">
-    <div>
-        <h2>Consultation</h2>
-        <p class="sub">Patient Consultation Workspace</p>
-    </div>
-
-    <a href="{{ url_for('appointments_bp.complete', id=appt.id) }}" class="finish-btn">
-        Finish Consultation
-    </a>
-    <a href="{{ url_for('appointments_bp.prescription_pdf', id=appt.id) }}" 
-   class="btn btn-blue">
-    Download Prescription PDF
-    </a>
-
-</div>
-
-
 <div class="consult-container">
 
-    <!-- LEFT PANEL -->
-    <aside class="left-panel">
+    <!-- LEFT PATIENT INFO PANEL -->
+    <div class="patient-side">
 
-        <!-- Patient Card -->
-        <div class="panel-card patient-panel">
-            <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}"
-                 class="patient-pic">
+        <div class="patient-card">
+            <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}" class="patient-photo">
 
-            <h3 class="patient-name">{{ patient.name }}</h3>
-            <p class="minor">{{ patient.gender }}, {{ patient.age }} yrs</p>
-            <p class="minor">Phone: {{ patient.phone }}</p>
+            <h3>{{ patient.name }}</h3>
+            <p class="pt-small">ID: {{ patient.id }}</p>
+            <p class="pt-small">{{ patient.gender }}, {{ patient.age }} yrs</p>
+            <p class="pt-small">Phone: {{ patient.phone }}</p>
 
-            <div class="divider"></div>
-
-            <div class="info-box">
-                <span>ID</span><strong>{{ patient.id }}</strong>
-            </div>
-            <div class="info-box">
-                <span>Last Visit</span><strong>{{ patient.last_visit }}</strong>
-            </div>
-            <div class="info-box">
-                <span>Issue</span><strong>{{ patient.disease }}</strong>
+            <div class="last-visit">
+                <strong>Last Visit:</strong> {{ patient.last_visit }}
             </div>
         </div>
 
-        <!-- VITALS -->
-        <div class="panel-card">
+        <div class="vitals-card">
             <h4>Vitals</h4>
 
-            <div class="vitals-grid">
-                <div><label>BP</label><input placeholder="120/80"></div>
-                <div><label>Pulse</label><input placeholder="76"></div>
-                <div><label>Temp</label><input placeholder="98.4°F"></div>
-                <div><label>SpO₂</label><input placeholder="98%"></div>
-            </div>
+            <label>Blood Pressure</label>
+            <input type="text" id="bp" placeholder="120/80">
+
+            <label>Heart Rate</label>
+            <input type="text" id="hr" placeholder="72 bpm">
+
+            <label>Temperature</label>
+            <input type="text" id="temp" placeholder="98.6°F">
+
+            <label>Weight</label>
+            <input type="text" id="weight" placeholder="kg">
+
         </div>
 
-    </aside>
+    </div>
 
 
 
-    <!-- RIGHT MAIN CONSULTATION PANEL -->
-    <main class="right-panel">
+    <!-- MAIN CONSULTATION AREA -->
+    <div class="consult-main">
+
+        <h2 class="section-title">Consultation</h2>
 
         <!-- SYMPTOMS -->
-        <section class="main-card">
+        <div class="box">
             <h3>Symptoms</h3>
-            <textarea placeholder="Describe symptoms here..." class="long-input"></textarea>
-        </section>
+            <textarea id="symptoms" class="text-box" placeholder="Enter patient symptoms...">{{ appt.symptoms }}</textarea>
+        </div>
 
         <!-- DIAGNOSIS -->
-        <section class="main-card">
+        <div class="box">
             <h3>Diagnosis</h3>
-            <textarea placeholder="Clinical findings & diagnosis..." class="long-input"></textarea>
-        </section>
+            <textarea id="diagnosis" class="text-box" placeholder="Enter diagnosis...">{{ appt.diagnosis }}</textarea>
+        </div>
 
-        <!-- PRESCRIPTION -->
-        <section class="main-card">
-            <h3>Prescription</h3>
+        <!-- MEDICINES -->
+        <div class="box">
+            <h3>Medicines</h3>
 
-            <table class="rx-table">
+            <table class="med-table" id="medTable">
                 <thead>
                     <tr>
                         <th>Medicine</th>
-                        <th>Dosage</th>
+                        <th>Dose</th>
                         <th>Duration</th>
-                        <th>Timing</th>
                         <th></th>
                     </tr>
                 </thead>
-                <tbody id="rxList">
+                <tbody>
+                    {% for m in medicines %}
                     <tr>
-                        <td><input placeholder="Medicine name"></td>
-                        <td><input placeholder="1-0-1"></td>
-                        <td><input placeholder="5 Days"></td>
-                        <td><input placeholder="After food"></td>
-                        <td><button class="remove" onclick="removeRow(this)">✖</button></td>
+                        <td><input type="text" value="{{ m.name }}"></td>
+                        <td><input type="text" value="{{ m.dose }}"></td>
+                        <td><input type="text" value="{{ m.days }}"></td>
+                        <td><button class="btn-del" onclick="removeRow(this)">✖</button></td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
 
-            <button class="add-btn" onclick="addRow()">+ Add Medicine</button>
-        </section>
+            <button class="btn-add" onclick="addRow()">+ Add Medicine</button>
+        </div>
 
-        <!-- SOAP NOTES -->
-        <section class="main-card">
-            <h3>SOAP Notes</h3>
+        <!-- NOTES -->
+        <div class="box">
+            <h3>Additional Notes</h3>
+            <textarea id="notes" class="text-box" placeholder="Doctor remarks...">{{ appt.notes }}</textarea>
+        </div>
 
-            <label>Subjective</label>
-            <textarea class="soap"></textarea>
+    </div>
 
-            <label>Objective</label>
-            <textarea class="soap"></textarea>
 
-            <label>Assessment</label>
-            <textarea class="soap"></textarea>
 
-            <label>Plan</label>
-            <textarea class="soap"></textarea>
-        </section>
 
-    </main>
+    <!-- ACTION PANEL -->
+    <div class="action-panel">
+        <button class="btn-save" onclick="saveConsultation()">Save</button>
+
+        <a href="{{ url_for('appointments_bp.complete', id=appt.id) }}" 
+           class="btn-complete">Finish Consultation</a>
+
+        <a href="{{ url_for('appointments_bp.prescription_pdf', id=appt.id) }}" 
+           class="btn-pres">Print Prescription</a>
+    </div>
 
 </div>
 
-
+<!-- JS FOR MEDICINE TABLE -->
 <script>
-function addRow(){
-    let row = `
+function addRow() {
+    const table = document.querySelector("#medTable tbody");
+    table.insertAdjacentHTML("beforeend", `
         <tr>
-            <td><input placeholder="Medicine name"></td>
-            <td><input placeholder="1-0-1"></td>
-            <td><input placeholder="5 days"></td>
-            <td><input placeholder="After food"></td>
-            <td><button class="remove" onclick="removeRow(this)">✖</button></td>
-        </tr>`;
-    document.getElementById("rxList").insertAdjacentHTML("beforeend", row);
+            <td><input type="text" placeholder="Medicine"></td>
+            <td><input type="text" placeholder="Dose"></td>
+            <td><input type="text" placeholder="Days"></td>
+            <td><button class="btn-del" onclick="removeRow(this)">✖</button></td>
+        </tr>
+    `);
 }
 
-function removeRow(btn){
-    btn.closest("tr").remove();
+function removeRow(btn) {
+    btn.parentElement.parentElement.remove();
+}
+
+function saveConsultation() {
+    alert("Auto-save feature will be implemented next!");
 }
 </script>
+<script>
+let saveTimeout;
+
+// AUTO-SAVE TRIGGER
+function autoSave() {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(sendSaveRequest, 1200); // save after 1.2 seconds idle
+}
+
+document.querySelectorAll(".text-box").forEach(e => {
+    e.addEventListener("keyup", autoSave);
+});
+
+// AUTO-SAVE FOR MEDICINE TABLE
+document.querySelector("#medTable").addEventListener("input", autoSave);
+
+// SEND SAVE REQUEST
+function sendSaveRequest() {
+    let medicines = [];
+
+    document.querySelectorAll("#medTable tbody tr").forEach(row => {
+        const cols = row.querySelectorAll("input");
+        medicines.push({
+            name: cols[0].value,
+            dose: cols[1].value,
+            days: cols[2].value
+        });
+    });
+
+    fetch(`/autosave/{{ appt.id }}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            symptoms: document.getElementById("symptoms").value,
+        diagnosis: document.getElementById("diagnosis").value,
+        prescription: document.getElementById("prescription").value,
+        advice: document.getElementById("advice").value,
+        bp: document.getElementById("bp").value,
+        pulse: document.getElementById("pulse").value,
+        spo2: document.getElementById("spo2").value,
+        temperature: document.getElementById("temperature").value,
+        weight: document.getElementById("weight").value,
+        follow_up_date: document.getElementById("follow_up_date").value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Auto-saved");
+        showSavedToast();
+    });
+}
+
+// TOAST MESSAGE
+function showSavedToast() {
+    const toast = document.getElementById("saveToast");
+    toast.style.opacity = 1;
+
+    setTimeout(() => {
+        toast.style.opacity = 0;
+    }, 1500);
+}
+</script>
+
+<!-- SAVE NOTIFICATION -->
+<div id="saveToast" 
+     style="
+         position: fixed;
+         bottom: 20px;
+         right: 20px;
+         background: #4caf50;
+         color: white;
+         padding: 10px 18px;
+         border-radius: 6px;
+         opacity: 0;
+         transition: 0.4s;
+     ">
+    Saved
+</div>
+
 
 {% endblock %}
