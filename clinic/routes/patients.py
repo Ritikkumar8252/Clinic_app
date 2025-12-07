@@ -63,7 +63,7 @@ def add_patient():
 
         if image_file and image_file.filename != "":
             filename = secure_filename(image_file.filename)
-            save_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+            save_path = os.path.join(current_app.config["PATIENT_UPLOAD_FOLDER"], filename)
             image_file.save(save_path)
 
         # Create patient entry

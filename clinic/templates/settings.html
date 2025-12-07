@@ -28,7 +28,7 @@
                     <h2>My Profile</h2>
 
                     <div class="profile-header">
-                        <img src="{{ url_for('static', filename='doctor.png') }}" class="profile-img">
+                        <img src="{{ url_for('static', filename= user.profile_photo or 'doctor.png') }}" class="profile-img">
                         <div>
                             <p class="name">{{ user.fullname }}</p>
                             
@@ -58,23 +58,50 @@
 
 
             <!-- Government Documents -->
-            <div id="gov-docs" class="tab">
+           <div id="gov-docs" class="tab">
                 <div class="card">
                     <h2>Government & Medical Documents</h2>
 
                     <form method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="upload_docs">
 
+                        <!-- Aadhar -->
                         <label>Aadhar Card</label>
-                        <input type="file" name="aadhar">
+                        {% if user.aadhar %}
+                            <div class="doc-row">
+                                <span class="uploaded-badge">Uploaded</span>
+                                <a href="{{ url_for('static', filename=user.aadhar) }}" target="_blank" class="btn-view">View</a>
+                                <input type="file" name="aadhar" class="file-replace">
+                            </div>
+                        {% else %}
+                            <input type="file" name="aadhar">
+                        {% endif %}
 
+                        <!-- MRC -->
                         <label>MCI / MRC Certificate</label>
-                        <input type="file" name="mrc">
+                        {% if user.mrc_certificate %}
+                            <div class="doc-row">
+                                <span class="uploaded-badge">Uploaded</span>
+                                <a href="{{ url_for('static', filename=user.mrc_certificate) }}" target="_blank" class="btn-view">View</a>
+                                <input type="file" name="mrc" class="file-replace">
+                            </div>
+                        {% else %}
+                            <input type="file" name="mrc">
+                        {% endif %}
 
+                        <!-- Clinic License -->
                         <label>Clinic License</label>
-                        <input type="file" name="clinic_license">
+                        {% if user.clinic_license %}
+                            <div class="doc-row">
+                                <span class="uploaded-badge">Uploaded</span>
+                                <a href="{{ url_for('static', filename=user.clinic_license) }}" target="_blank" class="btn-view">View</a>
+                                <input type="file" name="clinic_license" class="file-replace">
+                            </div>
+                        {% else %}
+                            <input type="file" name="clinic_license">
+                        {% endif %}
 
-                        <button class="btn-primary">Upload Documents</button>
+                        <button class="btn-primary">Save Documents</button>
                     </form>
                 </div>
             </div>
@@ -147,16 +174,16 @@
                         <input type="hidden" name="clinic_save">
 
                         <label>Clinic Name</label>
-                        <input type="text" name="clinic_name" value="{{ clinic.clinic_name }}">
+                        <input type="text" name="clinic_name" value="{{ user.clinic_name }}">
 
                         <label>Speciality</label>
-                        <input type="text" name="speciality" value="{{ clinic.speciality }}">
+                        <input type="text" name="speciality" value="{{ user.speciality }}">
 
                         <label>Phone</label>
-                        <input type="text" name="clinic_phone" value="{{ clinic.phone }}">
+                        <input type="text" name="clinic_phone" value="{{ user.clinic_phone }}">
 
                         <label>Address</label>
-                        <textarea name="clinic_address">{{ clinic.address }}</textarea>
+                        <textarea name="clinic_address">{{ user.clinic_address }}</textarea>
 
                         <button class="btn-primary">Save Clinic Settings</button>
                     </form>

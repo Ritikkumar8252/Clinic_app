@@ -1,58 +1,89 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from clinic.extensions import db
 from clinic.models import User
 from clinic.routes.auth import login_required
+from werkzeug.utils import secure_filename
+import os
 
 settings_bp = Blueprint("settings_bp", __name__, url_prefix="/settings")
 
-# SETTINGS PAGE
+ALLOWED_EXT = {"png", "jpg", "jpeg", "pdf"}
+
+def allowed(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
+
+
 @settings_bp.route("/settings", methods=["GET", "POST"])
 @login_required
 def settings():
 
     user = User.query.filter_by(email=session["user"]).first()
 
-    # ------------ POST REQUESTS ------------
     if request.method == "POST":
 
-        # PROFILE UPDATE
+        # -------- PROFILE UPDATE ----------
         if "update_profile" in request.form:
+
             user.fullname = request.form["fullname"]
             user.email = request.form["email"]
             user.phone = request.form.get("phone")
+
+            photo = request.files.get("profile_photo")
+            if photo and photo.filename and allowed(photo.filename):
+                filename = secure_filename(photo.filename)
+                save_path = os.path.join(current_app.config["DOC_UPLOAD_FOLDER"], filename)
+                photo.save(save_path)
+                user.profile_photo = f"uploads/{filename}"
+
             db.session.commit()
-            flash("Profile updated")
+            flash("Profile updated successfully.")
+            return redirect(url_for("settings_bp.settings"))
 
-        # PASSWORD CHANGE
+        # -------- DOCUMENT UPLOAD ----------
+        if "upload_docs" in request.form:
+
+            doc_fields = {
+                "aadhar": request.files.get("aadhar"),
+                "mrc_certificate": request.files.get("mrc"),
+                "clinic_license": request.files.get("clinic_license")
+            }
+
+            for field, file in doc_fields.items():
+                if file and file.filename and allowed(file.filename):
+                    filename = secure_filename(file.filename)
+                    save_path = os.path.join(current_app.config["DOC_UPLOAD_FOLDER"], filename)
+                    file.save(save_path)
+                    setattr(user, field, f"uploads/{filename}")
+
+            db.session.commit()
+            flash("Documents uploaded successfully.")
+            return redirect(url_for("settings_bp.settings"))
+
+        # -------- CHANGE PASSWORD ----------
         if "change_password" in request.form:
-            old = request.form["old_password"]
-            new = request.form["new_password"]
 
-            if user.password != old:
-                flash("Incorrect old password")
+            if user.password != request.form["old_password"]:
+                flash("Old password incorrect.")
                 return redirect(url_for("settings_bp.settings"))
 
-            user.password = new
+            user.password = request.form["new_password"]
             db.session.commit()
-            flash("Password updated")
+            flash("Password updated.")
+            return redirect(url_for("settings_bp.settings"))
 
-        # CLINIC SETTINGS UPDATE
+        
+        # -------- CLINIC SETTINGS ----------
         if "clinic_save" in request.form:
-            session["clinic_name"] = request.form["clinic_name"]
-            session["speciality"] = request.form["speciality"]
-            session["clinic_phone"] = request.form["clinic_phone"]
-            session["clinic_address"] = request.form["clinic_address"]
-            flash("Clinic details updated")
 
-        return redirect(url_for("settings_bp.settings"))
+            user.clinic_name = request.form["clinic_name"]
+            user.speciality = request.form["speciality"]
+            user.clinic_phone = request.form["clinic_phone"]
+            user.clinic_address = request.form["clinic_address"]
 
-    # ------------ GET REQUEST (Render Page) ------------
+            db.session.commit()
+            flash("Clinic details updated successfully.")
+            return redirect(url_for("settings_bp.settings"))
 
-    clinic = {
-        "clinic_name": session.get("clinic_name", ""),
-        "speciality": session.get("speciality", ""),
-        "clinic_phone": session.get("clinic_phone", ""),
-        "clinic_address": session.get("clinic_address", "")
-    }
 
-    return render_template("settings.html", user=user, clinic=clinic)
+
+    return render_template("settings.html", user=user)

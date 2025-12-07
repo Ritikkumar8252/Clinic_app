@@ -21,22 +21,25 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = "secret123"
 
-    #  photo upload patient
-    app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/patient_images")
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    # ********* UPLOAD FOLDERS *********
+    app.config["PATIENT_UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/patient_images")
+    app.config["DOC_UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/uploads")
 
-    # Database
+    os.makedirs(app.config["PATIENT_UPLOAD_FOLDER"], exist_ok=True)
+    os.makedirs(app.config["DOC_UPLOAD_FOLDER"], exist_ok=True)
+
+    # ********* DATABASE *********
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # Email config (use your credentials)
+    # ******** EMAIL ********
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
     app.config['MAIL_USERNAME'] = "yourgmail@gmail.com"
     app.config['MAIL_PASSWORD'] = "your_app_password"
 
-    # Init DB + MAIL
+    # Init extensions
     db.init_app(app)
     mail.init_app(app)
 
@@ -49,9 +52,8 @@ def create_app():
     app.register_blueprint(billing_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(settings_bp)
-    
 
-    # Auto create admin
+    # Auto-create admin
     with app.app_context():
         db.create_all()
         if not User.query.filter_by(email="admin@gmail.com").first():

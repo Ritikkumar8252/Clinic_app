@@ -8,11 +8,16 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     role = db.Column(db.String(20), default="staff")
+    phone = db.Column(db.String(20))
     aadhar = db.Column(db.String(200))
     mrc_certificate = db.Column(db.String(200))
     clinic_license = db.Column(db.String(200))
     profile_photo = db.Column(db.String(200))
-
+    # Clinic details
+    clinic_name = db.Column(db.String(200))
+    clinic_phone = db.Column(db.String(50))
+    clinic_address = db.Column(db.String(300))
+    speciality = db.Column(db.String(100))
 
 
 class Patient(db.Model):

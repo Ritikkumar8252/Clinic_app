@@ -1425,8 +1425,8 @@ tbody tr:hover {
 /* Cards */
 .settings-page .card {
     background: white;
-    padding: 22px;
-    border-radius: 14px;
+    padding: 2px;
+    border-radius: 28px;
     margin-bottom: 25px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.07);
 }
@@ -1489,9 +1489,40 @@ tbody tr:hover {
 
 .settings-page .plan-box {
     flex: 1;
-    background: white;
+    background: rgb(205, 61, 61);
     padding: 20px;
     border-radius: 14px;
     text-align: center;
     border: 2px solid #e4e9ff;
+}
+.doc-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.uploaded-badge {
+    background: #28a745;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.btn-view {
+    padding: 6px 14px;
+    background: #2563eb;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.btn-view:hover {
+    background: #1d4ed8;
+}
+
+.file-replace {
+    flex: 1;
 }
