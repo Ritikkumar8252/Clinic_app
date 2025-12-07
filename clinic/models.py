@@ -8,6 +8,11 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     role = db.Column(db.String(20), default="staff")
+    aadhar = db.Column(db.String(200))
+    mrc_certificate = db.Column(db.String(200))
+    clinic_license = db.Column(db.String(200))
+    profile_photo = db.Column(db.String(200))
+
 
 
 class Patient(db.Model):

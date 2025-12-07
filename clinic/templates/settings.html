@@ -1,81 +1,201 @@
 {% extends "base.html" %}
 {% block body %}
 
-<h2 class="page-title">Settings</h2>
+<div class="settings-page">
 
-<div class="settings-wrapper">
+    <div class="settings-container">
 
-    <!-- PERSONAL PROFILE -->
-    <section class="settings-card">
-        <h3>Personal Profile</h3>
+        <!-- Sidebar -->
+        <div class="settings-sidebar">
+            <h3><i class="bi bi-gear-fill"></i> Settings</h3>
 
-        <form method="POST">
-            <input type="hidden" name="update_profile">
+            <button class="tab-btn active" onclick="switchTab('profile')"><i class="bi bi-person"></i> Profile</button>
+            <button class="tab-btn" onclick="switchTab('gov-docs')"><i class="bi bi-file-earmark-text"></i> Documents</button>
+            <button class="tab-btn" onclick="switchTab('account')"><i class="bi bi-shield-lock"></i> Account</button>
+            <button class="tab-btn" onclick="switchTab('subscription')"><i class="bi bi-credit-card"></i> Subscription</button>
+            <button class="tab-btn" onclick="switchTab('clinic')"><i class="bi bi-hospital"></i> Clinic</button>
+            <button class="tab-btn" onclick="switchTab('theme')"><i class="bi bi-sun"></i> Theme</button>
+        </div>
 
-            <label>Full Name</label>
-            <input type="text" name="fullname" value="{{ user.fullname }}" required>
 
-            <label>Email</label>
-            <input type="email" name="email" value="{{ user.email }}" required>
 
-            <button class="btn-primary" type="submit">Save Changes</button>
-        </form>
-    </section>
+        <!-- Right Content -->
+        <div class="settings-content">
 
-    <!-- CHANGE PASSWORD -->
-    <section class="settings-card">
-        <h3>Change Password</h3>
+            <!-- Profile -->
+            <div id="profile" class="tab active">
+                <div class="card">
+                    <h2>My Profile</h2>
 
-        <form method="POST">
-            <input type="hidden" name="change_password">
+                    <div class="profile-header">
+                        <img src="{{ url_for('static', filename='doctor.png') }}" class="profile-img">
+                        <div>
+                            <p class="name">{{ user.fullname }}</p>
+                            
+                        </div>
+                    </div>
 
-            <label>Old Password</label>
-            <input type="password" name="old_password" required>
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="update_profile">
 
-            <label>New Password</label>
-            <input type="password" name="new_password" required>
+                        <label>Full Name</label>
+                        <input type="text" name="fullname" value="{{ user.fullname }}" required>
 
-            <button class="btn-primary" type="submit">Update Password</button>
-        </form>
-    </section>
+                        <label>Email</label>
+                        <input type="email" name="email" value="{{ user.email }}" required>
 
-    <!-- CLINIC INFO (ADMIN ONLY) -->
-    {% if session["role"] == "admin" %}
-    <section class="settings-card">
-        <h3>Clinic Information</h3>
+                        <label>Phone</label>
+                        <input type="text" name="phone" value="{{ user.phone or '' }}">
 
-        <form method="POST">
-            <input type="hidden" name="clinic_save">
+                        <label>Profile Photo</label>
+                        <input type="file" name="profile_photo">
 
-            <label>Clinic Name</label>
-            <input type="text" name="clinic_name" value="{{ session.get('clinic_name', 'ClinicCare') }}">
+                        <button class="btn-primary">Save Profile</button>
+                    </form>
+                </div>
+            </div>
 
-            <label>Phone</label>
-            <input type="text" name="clinic_phone" value="{{ session.get('clinic_phone', '') }}">
 
-            <label>Address</label>
-            <input type="text" name="clinic_address" value="{{ session.get('clinic_address', '') }}">
 
-            <button class="btn-primary" type="submit">Save Clinic Details</button>
-        </form>
-    </section>
-    {% endif %}
+            <!-- Government Documents -->
+            <div id="gov-docs" class="tab">
+                <div class="card">
+                    <h2>Government & Medical Documents</h2>
 
-    <!-- THEME SETTINGS -->
-    <section class="settings-card">
-        <h3>Appearance</h3>
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="upload_docs">
 
-        <form method="POST">
-            <label>Theme Mode</label>
-            <select name="theme">
-                <option value="light" {% if session.get('theme')=='light' %}selected{% endif %}>Light</option>
-                <option value="dark" {% if session.get('theme')=='dark' %}selected{% endif %}>Dark</option>
-            </select>
+                        <label>Aadhar Card</label>
+                        <input type="file" name="aadhar">
 
-            <button class="btn-primary" type="submit">Apply</button>
-        </form>
-    </section>
+                        <label>MCI / MRC Certificate</label>
+                        <input type="file" name="mrc">
 
+                        <label>Clinic License</label>
+                        <input type="file" name="clinic_license">
+
+                        <button class="btn-primary">Upload Documents</button>
+                    </form>
+                </div>
+            </div>
+
+
+
+            <!-- Account Security -->
+            <div id="account" class="tab">
+                <div class="card">
+                    <h2>Account Security</h2>
+
+                    <form method="POST">
+                        <input type="hidden" name="change_password">
+
+                        <label>Old Password</label>
+                        <input type="password" name="old_password" required>
+
+                        <label>New Password</label>
+                        <input type="password" name="new_password" required>
+
+                        <button class="btn-primary">Update Password</button>
+                    </form>
+
+                    <hr>
+
+                    <h3>Danger Zone</h3>
+                    <button class="btn-danger">Delete Account</button>
+                </div>
+            </div>
+
+
+
+            <!-- Subscription -->
+            <div id="subscription" class="tab">
+                <div class="card">
+                    <h2>Subscription</h2>
+
+                    <p><strong>Current Plan:</strong> Free Trial</p>
+
+                    <div class="plans-container">
+                        <div class="plan-card">
+                            <h4>Basic</h4>
+                            <p>₹199 / month</p>
+                            <button class="btn-select">Choose</button>
+                        </div>
+
+                        <div class="plan-card">
+                            <h4>Pro</h4>
+                            <p>₹499 / month</p>
+                            <button class="btn-select">Choose</button>
+                        </div>
+
+                        <div class="plan-card">
+                            <h4>Clinic+</h4>
+                            <p>₹999 / month</p>
+                            <button class="btn-select">Choose</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Clinic -->
+            <div id="clinic" class="tab">
+                <div class="card">
+                    <h2>Clinic Details</h2>
+
+                    <form method="POST">
+                        <input type="hidden" name="clinic_save">
+
+                        <label>Clinic Name</label>
+                        <input type="text" name="clinic_name" value="{{ clinic.clinic_name }}">
+
+                        <label>Speciality</label>
+                        <input type="text" name="speciality" value="{{ clinic.speciality }}">
+
+                        <label>Phone</label>
+                        <input type="text" name="clinic_phone" value="{{ clinic.phone }}">
+
+                        <label>Address</label>
+                        <textarea name="clinic_address">{{ clinic.address }}</textarea>
+
+                        <button class="btn-primary">Save Clinic Settings</button>
+                    </form>
+                </div>
+            </div>
+
+
+
+            <!-- Theme -->
+            <div id="theme" class="tab">
+                <div class="card">
+                    <h2>Theme</h2>
+
+                    <form method="POST">
+                        <label>Select Theme</label>
+                        <select name="theme">
+                            <option value="light" {% if session.get('theme')=='light' %}selected{% endif %}>Light</option>
+                            <option value="dark" {% if session.get('theme')=='dark' %}selected{% endif %}>Dark</option>
+                        </select>
+
+                        <button class="btn-primary">Apply</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
+
+
+
+
+<script>
+function switchTab(tabName) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById(tabName).classList.add("active");
+    event.target.classList.add("active");
+}
+</script>
 
 {% endblock %}
