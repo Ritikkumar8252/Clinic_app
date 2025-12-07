@@ -1,0 +1,166 @@
+{# clinic/templates/prescription_template.html #}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Prescription - {{ patient.name }}</title>
+
+<style>
+/* --- printable layout (keeps width stable for PDF) --- */
+:root{
+  --accent:#2b6cff;
+  --accent-2:#ff8c00;
+  --muted:#6b7280;
+  --card:#ffffff;
+  --bg:#f6f8fb;
+  --paper-width:880px;
+}
+body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);padding:18px;color:#111}
+.paper{max-width:var(--paper-width);margin:0 auto;background:var(--card);box-shadow:0 6px 22px rgba(16,24,40,0.06);border-radius:10px;padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eef2f6;padding-bottom:12px;margin-bottom:14px}
+.clinic {display:flex;flex-direction:column}
+.clinic .name{font-weight:700;font-size:20px;color:var(--accent)}
+.clinic .meta{font-size:13px;color:var(--muted)}
+.patient-block{display:flex;gap:18px;align-items:center}
+.patient-photo{width:74px;height:74px;border-radius:10px;object-fit:cover;border:1px solid #e6eefc}
+.patient-info{font-size:14px}
+.row{display:flex;justify-content:space-between;gap:12px;margin-top:10px}
+.col{flex:1;min-width:150px}
+.small{font-size:12px;color:var(--muted)}
+.vitals{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.vital{background:#fbfdff;border:1px solid #eef6ff;padding:8px 10px;border-radius:8px;font-size:13px;color:#0f1724}
+.section{margin-top:16px}
+.section h4{margin:0 0 8px 0;font-size:15px;color:#0f1724}
+.box{background:#fff;border-radius:8px;border:1px solid #eef2f8;padding:12px}
+.meds-table{width:100%;border-collapse:collapse;margin-top:8px}
+.meds-table th, .meds-table td{padding:8px 10px;border-bottom:1px dashed #eef2f8;text-align:left;font-size:14px}
+.meds-table th{background:#fbfdff;color:#0f1724}
+.instructions{font-size:14px;color:#0f1724;line-height:1.4;margin-top:8px}
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:18px;border-top:1px solid #eef2f6;padding-top:10px}
+.doc {text-align:right}
+.doc .name{font-weight:700}
+.small-muted{font-size:12px;color:var(--muted)}
+.actions{display:flex;gap:10px}
+.btn{display:inline-block;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px}
+.btn-print{background:var(--accent);color:#fff}
+.btn-pdf{background:var(--accent-2);color:#fff}
+@media print{
+  body{background:white;padding:0}
+  .paper{box-shadow:none;border-radius:0}
+  .actions{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="paper">
+
+  <!-- header -->
+  <div class="header">
+    <div class="clinic">
+      <div class="name">{{ clinic_name or "ClinicCare" }}</div>
+      <div class="meta">{{ clinic_address or "" }} · {{ clinic_phone or "" }}</div>
+    </div>
+
+    <div class="patient-block">
+      <img src="{{ url_for('static', filename='patient_images/' + (patient.image or 'default_profile.png')) }}" class="patient-photo" alt="photo">
+      <div class="patient-info">
+        <div style="font-weight:700;font-size:16px">{{ patient.name }}</div>
+        <div class="small">ID: {{ patient.id }} · {{ patient.age }} / {{ patient.gender }}</div>
+        <div class="small">Phone: {{ patient.phone or '-' }}</div>
+        <div class="small">Visit: {{ appt.date }} · {{ appt.type }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- vitals + summary -->
+  <div class="row">
+    <div class="col box">
+      <div class="small-muted">CHIEF COMPLAINT</div>
+      <div style="margin-top:6px">{{ appt.symptoms or "—" }}</div>
+    </div>
+
+    <div class="col box">
+      <div class="small-muted">EXAM / NOTES</div>
+      <div style="margin-top:6px">{{ appt.diagnosis or "—" }}</div>
+    </div>
+
+    <div class="col box">
+      <div class="small-muted">VITALS</div>
+      <div class="vitals" style="margin-top:8px">
+        <div class="vital">BP: {{ appt.bp or "—" }}</div>
+        <div class="vital">Pulse: {{ appt.pulse or "—" }}</div>
+        <div class="vital">SpO₂: {{ appt.spo2 or "—" }}</div>
+        <div class="vital">Temp: {{ appt.temperature or "—" }}</div>
+        <div class="vital">Wt: {{ appt.weight or "—" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- medicines -->
+  <div class="section">
+    <h4>Prescription</h4>
+    <div class="box">
+      <table class="meds-table">
+        <thead>
+          <tr>
+            <th style="width:40%">Medicine</th>
+            <th style="width:20%">Dose</th>
+            <th style="width:20%">Freq</th>
+            <th style="width:20%">Days / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%- if meds %}
+            {%- for m in meds %}
+            <tr>
+              <td>{{ m.name }}</td>
+              <td>{{ m.dose }}</td>
+              <td>{{ m.freq }}</td>
+              <td>{{ m.duration }} {% if m.note %} · {{ m.note }}{% endif %}</td>
+            </tr>
+            {%- endfor %}
+          {%- else %}
+            <tr><td colspan="4" class="small-muted">No medicines added</td></tr>
+          {%- endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- advice + follow up -->
+  <div class="section" style="display:flex;gap:14px;flex-wrap:wrap">
+    <div style="flex:1" class="box">
+      <div class="small-muted">ADVICE / INSTRUCTIONS</div>
+      <div class="instructions">{{ appt.advice or "-" }}</div>
+    </div>
+
+    <div style="width:260px" class="box">
+      <div class="small-muted">FOLLOW-UP</div>
+      <div style="margin-top:8px;font-weight:700">{{ appt.follow_up_date or "Not scheduled" }}</div>
+      <div class="small-muted" style="margin-top:8px">ICD-10: {{ appt.icd10 or "-" }}</div>
+    </div>
+  </div>
+
+  <!-- footer: doctor -->
+  <div class="footer">
+    <div>
+      <div class="small-muted">Generated</div>
+      <div class="small-muted">{{ now or "" }}</div>
+    </div>
+
+    <div class="doc">
+      <div class="name">Dr. {{ session['user'] }}</div>
+      <div class="small-muted">Signature</div>
+    </div>
+  </div>
+
+  <!-- actions (print, pdf) -->
+  <div style="margin-top:14px;text-align:right" class="actions">
+    <a class="btn btn-print" href="#" onclick="window.print();return false">Print / Save as PDF</a>
+  </div>
+
+</div>
+</body>
+</html>

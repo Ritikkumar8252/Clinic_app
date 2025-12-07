@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prescription Preview</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prescription.css') }}">
+</head>
+<body>
+
+<div class="prescription-container">
+
+    <h2 class="clinic-title">ClinicCare Prescription</h2>
+
+    <div class="patient-info">
+        <p><strong>Patient:</strong> {{ patient.name }}</p>
+        <p><strong>Age:</strong> {{ patient.age }} yrs</p>
+        <p><strong>Gender:</strong> {{ patient.gender }}</p>
+        <p><strong>Date:</strong> {{ appt.date }}</p>
+    </div>
+
+    <hr>
+
+    <h3>Symptoms</h3>
+    <p>{{ appt.symptoms }}</p>
+
+    <h3>Diagnosis</h3>
+    <p>{{ appt.diagnosis }}</p>
+
+    <h3>Prescription</h3>
+    <p style="white-space: pre-line;">{{ appt.prescription }}</p>
+
+    <h3>Advice</h3>
+    <p>{{ appt.advice }}</p>
+
+</div>
+
+</body>
+</html>

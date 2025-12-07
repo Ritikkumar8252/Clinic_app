@@ -1,39 +1,70 @@
 {% extends "base.html" %}
 {% block body %}
 
-<div class="consult-container">
+<!-- ====== TOP ACTION BAR ====== -->
+<div class="consult-topbar enhanced">
+    <div class="top-info">
+        <h2>Consultation</h2>
+        <p>{{ patient.name }} • {{ patient.gender }}, {{ patient.age }} yrs</p>
+    </div>
 
-    <!-- LEFT PATIENT INFO PANEL -->
+    <div class="top-actions">
+        <button class="btn-save" onclick="sendSaveRequest()">💾 Save</button>
+        <a class="btn-complete" href="{{ url_for('appointments_bp.complete', id=appt.id) }}">✔ Finish</a>
+        
+        <a class="btn-pres" target="_blank" href="{{ url_for('appointments_bp.prescription_pdf', id=appt.id) }}">📝 Print</a>
+    </div>
+</div>
+
+
+
+<!-- ====== MAIN CONSULTATION UI ====== -->
+<div class="consult-container upgraded">
+
+    <!-- LEFT PANEL -->
     <div class="patient-side">
 
-        <div class="patient-card">
+        <div class="patient-card shadow-card">
             <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}" class="patient-photo">
 
-            <h3>{{ patient.name }}</h3>
-            <p class="pt-small">ID: {{ patient.id }}</p>
+            <h3 class="patient-name">{{ patient.name }}</h3>
             <p class="pt-small">{{ patient.gender }}, {{ patient.age }} yrs</p>
             <p class="pt-small">Phone: {{ patient.phone }}</p>
 
-            <div class="last-visit">
-                <strong>Last Visit:</strong> {{ patient.last_visit }}
-            </div>
+            <div class="divider"></div>
+
+            <p class="last-visit-title">Last Visit</p>
+            <p class="last-visit-value">{{ patient.last_visit or "—" }}</p>
         </div>
 
-        <div class="vitals-card">
+        <!-- VITALS -->
+        <div class="vitals-card shadow-card">
             <h4>Vitals</h4>
 
-            <label>Blood Pressure</label>
-            <input type="text" id="bp" placeholder="120/80">
+            <div class="vital-row">
+                <label>Blood Pressure</label>
+                <input type="text" id="bp" value="{{ appt.bp or '' }}" placeholder="120/80" onkeyup="autoSave()">
+            </div>
 
-            <label>Heart Rate</label>
-            <input type="text" id="hr" placeholder="72 bpm">
+            <div class="vital-row">
+                <label>Pulse</label>
+                <input type="text" id="pulse" value="{{ appt.pulse or '' }}" placeholder="72" onkeyup="autoSave()">
+            </div>
 
-            <label>Temperature</label>
-            <input type="text" id="temp" placeholder="98.6°F">
+            <div class="vital-row">
+                <label>SPO2</label>
+                <input type="text" id="spo2" value="{{ appt.spo2 or '' }}" placeholder="98%" onkeyup="autoSave()">
+            </div>
 
-            <label>Weight</label>
-            <input type="text" id="weight" placeholder="kg">
+            <div class="vital-row">
+                <label>Temperature</label>
+                <input type="text" id="temperature" value="{{ appt.temperature or '' }}" placeholder="98.6°F" onkeyup="autoSave()">
+            </div>
 
+            <div class="vital-row">
+                <label>Weight</label>
+                <input type="text" id="weight" value="{{ appt.weight or '' }}" placeholder="kg" onkeyup="autoSave()">
+            </div>
         </div>
 
     </div>
@@ -43,172 +74,83 @@
     <!-- MAIN CONSULTATION AREA -->
     <div class="consult-main">
 
-        <h2 class="section-title">Consultation</h2>
-
         <!-- SYMPTOMS -->
-        <div class="box">
+        <div class="box shadow-card">
             <h3>Symptoms</h3>
-            <textarea id="symptoms" class="text-box" placeholder="Enter patient symptoms...">{{ appt.symptoms }}</textarea>
+            <textarea id="symptoms" class="input-area" onkeyup="autoSave()">{{ appt.symptoms }}</textarea>
         </div>
 
         <!-- DIAGNOSIS -->
-        <div class="box">
+        <div class="box shadow-card">
             <h3>Diagnosis</h3>
-            <textarea id="diagnosis" class="text-box" placeholder="Enter diagnosis...">{{ appt.diagnosis }}</textarea>
+            <textarea id="diagnosis" class="input-area" onkeyup="autoSave()">{{ appt.diagnosis }}</textarea>
         </div>
 
-        <!-- MEDICINES -->
-        <div class="box">
-            <h3>Medicines</h3>
-
-            <table class="med-table" id="medTable">
-                <thead>
-                    <tr>
-                        <th>Medicine</th>
-                        <th>Dose</th>
-                        <th>Duration</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for m in medicines %}
-                    <tr>
-                        <td><input type="text" value="{{ m.name }}"></td>
-                        <td><input type="text" value="{{ m.dose }}"></td>
-                        <td><input type="text" value="{{ m.days }}"></td>
-                        <td><button class="btn-del" onclick="removeRow(this)">✖</button></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <button class="btn-add" onclick="addRow()">+ Add Medicine</button>
+        <!-- PRESCRIPTION -->
+        <div class="box shadow-card">
+            <h3>Prescription</h3>
+            <textarea id="prescription" class="input-area" onkeyup="autoSave()">{{ appt.prescription }}</textarea>
         </div>
 
-        <!-- NOTES -->
-        <div class="box">
-            <h3>Additional Notes</h3>
-            <textarea id="notes" class="text-box" placeholder="Doctor remarks...">{{ appt.notes }}</textarea>
+        <!-- ADVICE -->
+        <div class="box shadow-card">
+            <h3>Advice</h3>
+            <textarea id="advice" class="input-area" onkeyup="autoSave()">{{ appt.advice }}</textarea>
         </div>
 
-    </div>
+        <!-- FOLLOW-UP -->
+        <div class="box shadow-card">
+            <h3>Follow Up Date</h3>
+            <input type="date" id="follow_up_date" value="{{ appt.follow_up_date }}" onchange="autoSave()" class="followup-input">
+        </div>
 
-
-
-
-    <!-- ACTION PANEL -->
-    <div class="action-panel">
-        <button class="btn-save" onclick="saveConsultation()">Save</button>
-
-        <a href="{{ url_for('appointments_bp.complete', id=appt.id) }}" 
-           class="btn-complete">Finish Consultation</a>
-
-        <a href="{{ url_for('appointments_bp.prescription_pdf', id=appt.id) }}" 
-           class="btn-pres">Print Prescription</a>
     </div>
 
 </div>
 
-<!-- JS FOR MEDICINE TABLE -->
-<script>
-function addRow() {
-    const table = document.querySelector("#medTable tbody");
-    table.insertAdjacentHTML("beforeend", `
-        <tr>
-            <td><input type="text" placeholder="Medicine"></td>
-            <td><input type="text" placeholder="Dose"></td>
-            <td><input type="text" placeholder="Days"></td>
-            <td><button class="btn-del" onclick="removeRow(this)">✖</button></td>
-        </tr>
-    `);
-}
 
-function removeRow(btn) {
-    btn.parentElement.parentElement.remove();
-}
 
-function saveConsultation() {
-    alert("Auto-save feature will be implemented next!");
-}
-</script>
+<!-- ====== AUTO-SAVE JS ====== -->
 <script>
 let saveTimeout;
 
-// AUTO-SAVE TRIGGER
+// auto-save trigger
 function autoSave() {
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(sendSaveRequest, 1200); // save after 1.2 seconds idle
+    saveTimeout = setTimeout(sendSaveRequest, 900);
 }
 
-document.querySelectorAll(".text-box").forEach(e => {
-    e.addEventListener("keyup", autoSave);
-});
-
-// AUTO-SAVE FOR MEDICINE TABLE
-document.querySelector("#medTable").addEventListener("input", autoSave);
-
-// SEND SAVE REQUEST
 function sendSaveRequest() {
-    let medicines = [];
-
-    document.querySelectorAll("#medTable tbody tr").forEach(row => {
-        const cols = row.querySelectorAll("input");
-        medicines.push({
-            name: cols[0].value,
-            dose: cols[1].value,
-            days: cols[2].value
-        });
-    });
 
     fetch(`/autosave/{{ appt.id }}`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             symptoms: document.getElementById("symptoms").value,
-        diagnosis: document.getElementById("diagnosis").value,
-        prescription: document.getElementById("prescription").value,
-        advice: document.getElementById("advice").value,
-        bp: document.getElementById("bp").value,
-        pulse: document.getElementById("pulse").value,
-        spo2: document.getElementById("spo2").value,
-        temperature: document.getElementById("temperature").value,
-        weight: document.getElementById("weight").value,
-        follow_up_date: document.getElementById("follow_up_date").value
+            diagnosis: document.getElementById("diagnosis").value,
+            prescription: document.getElementById("prescription").value,
+            advice: document.getElementById("advice").value,
+
+            bp: document.getElementById("bp").value,
+            pulse: document.getElementById("pulse").value,
+            spo2: document.getElementById("spo2").value,
+            temperature: document.getElementById("temperature").value,
+            weight: document.getElementById("weight").value,
+
+            follow_up_date: document.getElementById("follow_up_date").value
         })
     })
-    .then(res => res.json())
-    .then(data => {
-        console.log("Auto-saved");
-        showSavedToast();
-    });
+    .then(() => showToast());
 }
 
-// TOAST MESSAGE
-function showSavedToast() {
+function showToast() {
     const toast = document.getElementById("saveToast");
-    toast.style.opacity = 1;
-
-    setTimeout(() => {
-        toast.style.opacity = 0;
-    }, 1500);
+    toast.style.opacity = "1";
+    setTimeout(() => toast.style.opacity = "0", 1500);
 }
 </script>
 
-<!-- SAVE NOTIFICATION -->
-<div id="saveToast" 
-     style="
-         position: fixed;
-         bottom: 20px;
-         right: 20px;
-         background: #4caf50;
-         color: white;
-         padding: 10px 18px;
-         border-radius: 6px;
-         opacity: 0;
-         transition: 0.4s;
-     ">
-    Saved
-</div>
-
+<!-- SAVE TOAST -->
+<div id="saveToast" class="save-toast">Saved</div>
 
 {% endblock %}

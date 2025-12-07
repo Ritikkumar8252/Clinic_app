@@ -141,7 +141,7 @@ def cancel(id):
     return redirect(url_for("appointments_bp.appointments"))
 
 
-@appointments_bp.route("/consult/<int:id>")
+@appointments_bp.route("/consult/<int:id>", methods=["GET", "POST"])
 def consult(id):
     if "user" not in session:
         return redirect(url_for("auth_bp.login"))
@@ -149,12 +149,34 @@ def consult(id):
     appt = Appointment.query.get_or_404(id)
     patient = Patient.query.get_or_404(appt.patient_id)
 
+    if request.method == "POST":
+
+        # Save consultation fields
+        appt.symptoms = request.form.get("symptoms")
+        appt.diagnosis = request.form.get("diagnosis")
+        appt.prescription = request.form.get("prescription")
+        appt.advice = request.form.get("advice")
+
+        appt.bp = request.form.get("bp")
+        appt.pulse = request.form.get("pulse")
+        appt.spo2 = request.form.get("spo2")
+        appt.temperature = request.form.get("temperature")
+        appt.weight = request.form.get("weight")
+
+        appt.follow_up_date = request.form.get("follow_up_date")
+
+        db.session.commit()
+        flash("Consultation saved")
+
+        return redirect(url_for("appointments_bp.consult", id=id))
+
     return render_template(
         "consultation.html",
         appt=appt,
         patient=patient,
-        medicines=[],  # future database
+        medicines=[],  # future pharmacy DB
     )
+
 
 @appointments_bp.route("/autosave/<int:id>", methods=["POST"])
 def autosave(id):
@@ -315,3 +337,7 @@ def prescription_pdf(id):
         download_name=f"Prescription_{patient.name}.pdf",
         mimetype="application/pdf"
     )
+
+
+
+

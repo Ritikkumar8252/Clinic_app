@@ -1,12 +1,13 @@
 <div class="appt-card">
 
-    <!-- LEFT -->
+    <!-- LEFT: Patient Info -->
     <div class="card-left">
         <img src="{{ url_for('static', filename='patient_images/' + a.patient.image) }}" class="avatar">
 
         <div>
-            <h3>{{ a.patient.name }}</h3>
+            <h3 class="name">{{ a.patient.name }}</h3>
             <p class="minor">{{ a.patient.phone }}</p>
+            <p class="minor">ID: {{ a.patient.id }}</p>
         </div>
     </div>
 
@@ -17,46 +18,41 @@
         <p><strong>Visit:</strong> {{ a.type }}</p>
     </div>
 
-    <!-- RIGHT -->
+    <!-- RIGHT SIDE: Status + 3-dot menu -->
     <div class="card-right">
-        <span class="status-badge status-{{ a.status|lower }}">{{ a.status }}</span>
+        <span class="status-badge status-{{ a.status|lower }}">
+            {{ a.status }}
+        </span>
 
-        {% if not from_patient_profile %}
+        <!-- 3 DOT MENU ICON -->
+        <div class="dropdown">
+            <button class="menu-btn">⋮</button>
 
-    {% if a.status == "Queue" %}
-    <a href="{{ url_for('appointments_bp.start', id=a.id) }}" 
-       class="btn small btn-blue">
-        Start Consultation
-    </a>
+            <div class="dropdown-menu">
 
-    <a href="{{ url_for('appointments_bp.cancel', id=a.id) }}" 
-       class="btn small btn-red"
-       onclick="return confirm('Cancel appointment?')">
-        Cancel
-    </a>
-{% endif %}
+                {% if a.status == 'Queue' %}
+                <a href="{{ url_for('patients_bp.patient_profile', id=a.patient.id) }}">Patient Details</a>
+                <a href="{{ url_for('appointments_bp.start', id=a.id) }}">Start Consultation</a>
+                <a href="{{ url_for('appointments_bp.complete', id=a.id) }}">Complete</a>
+                <a href="{{ url_for('appointments_bp.cancel', id=a.id) }}">Cancel</a>
+                {% endif %}
 
+                {% if a.status == 'In Progress' %}
+                <a href="{{ url_for('appointments_bp.consult', id=a.id) }}">Open Consultation</a>
+                <a href="{{ url_for('appointments_bp.complete', id=a.id) }}">Finish</a>
+                {% endif %}
 
-    {% if a.status == "In Progress" %}
-    <a href="{{ url_for('appointments_bp.consult', id=a.id) }}" 
-       class="btn small btn-blue">
-        Resume
-    </a>
+                {% if a.status == 'Completed' %}
+                <a href="{{ url_for('appointments_bp.consult', id=a.id) }}">View Notes</a>
+                <a href="{{ url_for('appointments_bp.prescription_pdf', id=a.id) }}" target="_blank">Prescription PDF</a>
+                {% endif %}
 
-    <a href="{{ url_for('appointments_bp.complete', id=a.id) }}" 
-       class="btn small btn-green">
-        Finish
-    </a>
-    {% endif %}
+                {% if a.status == 'Cancelled' %}
+                <span class="disabled">No actions available</span>
+                {% endif %}
 
-
-{% else %}
-    <!-- Patient profile view: hide action buttons -->
-    <span class="status-badge status-{{ a.status|lower }}">
-        {{ a.status }}
-    </span>
-
-{% endif %}
+            </div>
+        </div>
 
     </div>
 
