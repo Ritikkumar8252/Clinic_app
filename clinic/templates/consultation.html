@@ -88,9 +88,50 @@
 
         <!-- PRESCRIPTION -->
         <div class="box shadow-card">
-            <h3>Prescription</h3>
-            <textarea id="prescription" class="input-area" onkeyup="autoSave()">{{ appt.prescription }}</textarea>
+
+            <div class="header-row" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>Prescription</h3>
+
+                <!-- Template Button -->
+                <button type="button" class="btn grey" onclick="toggleTemplates()">
+                    Templates ▼
+                </button>
+            </div>
+
+            <!-- Template Prescriptions Dropdown -->
+            <div id="templateBox" class="template-box">
+                <div class="template-item" onclick="applyTemplate('Fever Standard')">Fever Standard</div>
+                <div class="template-item" onclick="applyTemplate('Viral Infection')">Viral Infection</div>
+                <div class="template-item" onclick="applyTemplate('Cough & Cold')">Cough & Cold</div>
+                <div class="template-item" onclick="applyTemplate('Gastritis')">Gastritis</div>
+                <div class="template-item" onclick="applyTemplate('Diarrhea')">Diarrhea Treatment</div>
+            </div>
+
+            <table class="med-table" id="medTable">
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Dose</th>
+                        <th>Days</th>
+                        <th>Notes</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody id="medBody">
+                    <tr>
+                        <td><input name="medicine[]"></td>
+                        <td><input name="dose[]"></td>
+                        <td><input name="days[]"></td>
+                        <td><input name="notes[]"></td>
+                        <td><button onclick="removeRow(this)" class="del-btn">x</button></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button id="addRowBtn" class="btn grey" type="button">Add Medicine</button>
         </div>
+
 
         <!-- ADVICE -->
         <div class="box shadow-card">
@@ -152,5 +193,96 @@ function showToast() {
 
 <!-- SAVE TOAST -->
 <div id="saveToast" class="save-toast">Saved</div>
+
+<script>
+
+// TEMPLATE DEFINITIONS
+const templates = {
+    "Fever Standard": [
+        {med: "Paracetamol 650mg", dose: "1-0-1", days: "3", notes: "After food"},
+        {med: "Pantoprazole 40mg", dose: "0-0-1", days: "5", notes: ""}
+    ],
+
+    "Viral Infection": [
+        {med: "Dolo 650", dose: "1-1-1", days: "3", notes: ""},
+        {med: "Cetrizine 10mg", dose: "0-0-1", days: "5", notes: "Night"}
+    ],
+
+    "Cough & Cold": [
+        {med: "Montelukast + Levocet", dose: "0-0-1", days: "7", notes: ""},
+        {med: "Cough Syrup", dose: "10ml", days: "5", notes: ""}
+    ],
+
+    "Gastritis": [
+        {med: "Pantoprazole 40mg", dose: "1-0-1", days: "7", notes: ""},
+        {med: "Antacid Gel", dose: "10ml", days: "5", notes: ""}
+    ],
+
+    "Diarrhea Treatment": [
+        {med: "ORS Solution", dose: "200ml hourly", days: "2", notes: ""},
+        {med: "Racecadotril", dose: "1-0-1", days: "3", notes: ""}
+    ]
+};
+
+// Show/Hide template dropdown
+function toggleTemplates() {
+    document.getElementById("templateBox").classList.toggle("show");
+}
+
+// Apply template prescriptions
+function applyTemplate(name) {
+    const meds = templates[name];
+
+    let body = document.getElementById("medBody");
+    body.innerHTML = ""; 
+
+    meds.forEach(item => {
+        let row = document.createElement("tr");
+        row.innerHTML = `
+            <td><input name="medicine[]" value="${item.med}"></td>
+            <td><input name="dose[]" value="${item.dose}"></td>
+            <td><input name="days[]" value="${item.days}"></td>
+            <td><input name="notes[]" value="${item.notes}"></td>
+            <td><button onclick="removeRow(this)" class="del-btn">x</button></td>
+        `;
+        body.appendChild(row);
+    });
+
+    addRow();
+    toggleTemplates();
+}
+
+
+// ADD ROW
+function addRow() {
+    let body = document.getElementById("medBody");
+
+    let tr = document.createElement("tr");
+    tr.innerHTML = `
+        <td><input name="medicine[]"></td>
+        <td><input name="dose[]"></td>
+        <td><input name="days[]"></td>
+        <td><input name="notes[]"></td>
+        <td><button onclick="removeRow(this)" class="del-btn">x</button></td>
+    `;
+    body.appendChild(tr);
+}
+
+// REMOVE ROW
+function removeRow(btn) {
+    btn.parentNode.parentNode.remove();
+}
+
+// Auto-add new row
+document.addEventListener("input", function(e){
+    let last = document.querySelector("#medBody tr:last-child");
+    if (last.contains(e.target)) {
+        let filled = [...last.querySelectorAll("input")].every(inp => inp.value.trim() !== "");
+        if (filled) addRow();
+    }
+});
+
+</script>
+
 
 {% endblock %}

@@ -1309,6 +1309,39 @@ tbody tr:hover {
     opacity: 0;
     transition: 0.4s;
 }
+.template-box {
+    display: none;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    width: 260px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    padding: 6px 0;
+}
+
+.template-box.show {
+    display: block;
+}
+
+.template-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.template-item:hover {
+    background: #f0f2f5;
+}
+
+.del-btn {
+    background: red;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+}
 
 
 /* -----appointment_card */
