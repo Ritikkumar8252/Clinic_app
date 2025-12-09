@@ -180,3 +180,23 @@
     opacity: 0;
     transition: 0.4s;
 }
+.suggestions-box {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 5px;
+    display: none;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.suggestions-box .item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.suggestions-box .item:hover {
+    background: #f0f2f5;
+}
+

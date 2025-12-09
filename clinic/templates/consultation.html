@@ -67,6 +67,8 @@
             <h3>Symptoms</h3>
 
             <div class="tags-wrapper" id="symptoms-wrapper">
+                <div id="symptoms-suggestions" class="suggestions-box"></div>
+
                 <div class="tags" id="symptoms-tags"></div>
                 <input id="symptoms-input" class="tags-input" placeholder="Type symptom + Enter">
             </div>
@@ -78,6 +80,8 @@
             <h3>Diagnosis</h3>
 
             <div class="tags-wrapper" id="diagnosis-wrapper">
+                <div id="diagnosis-suggestions" class="suggestions-box"></div>
+
                 <div class="tags" id="diagnosis-tags"></div>
                 <input id="diagnosis-input" class="tags-input" placeholder="Type diagnosis + Enter">
             </div>
@@ -121,6 +125,8 @@
             <h3>Advice</h3>
 
             <div class="tags-wrapper" id="advice-wrapper">
+                <div id="advice-suggestions" class="suggestions-box"></div>
+
                 <div class="tags" id="advice-tags"></div>
                 <input id="advice-input" class="tags-input" placeholder="Type advice + Enter">
             </div>
@@ -191,22 +197,20 @@ function showToast() {
 
 <!-- TAG INPUT SYSTEM -->
 <script>
-function initTagInput(fieldId) {
+function initTagInput(field) {
+    const wrapper = document.getElementById(field + "-wrapper");
+    const tagsBox = document.getElementById(field + "-tags");
+    const input = document.getElementById(field + "-input");
+    const hidden = document.getElementById(field + "-hidden");
 
-    const wrapper = document.getElementById(fieldId + "-wrapper");
-    const tagsBox = document.getElementById(fieldId + "-tags");
-    const input = document.getElementById(fieldId + "-input");
-    const hidden = document.getElementById(fieldId + "-hidden");
-
-    // Load old tags
+    // load db values
     if (hidden.value.trim() !== "") {
         hidden.value.split(",").forEach(t => addTag(t.trim()));
     }
 
     function addTag(text) {
-        if (!text) return;
         text = text.trim();
-        if (text === "") return;
+        if (!text) return;
 
         const exists = [...tagsBox.children].some(el => el.dataset.val === text);
         if (exists) return;
@@ -214,8 +218,7 @@ function initTagInput(fieldId) {
         const tag = document.createElement("span");
         tag.className = "tag";
         tag.dataset.val = text;
-
-        tag.innerHTML = `${text} <span class="remove">✕</span>`;
+        tag.innerHTML = `${text}<span class="remove">✕</span>`;
 
         tag.querySelector(".remove").onclick = () => {
             tag.remove();
@@ -229,11 +232,10 @@ function initTagInput(fieldId) {
     }
 
     function updateHidden() {
-        const values = [...tagsBox.children].map(t => t.dataset.val);
-        hidden.value = values.join(",");
+        hidden.value = [...tagsBox.children].map(t => t.dataset.val).join(",");
     }
 
-    input.addEventListener("keydown", (e) => {
+    input.addEventListener("keydown", function(e) {
         if (e.key === "Enter" || e.key === ",") {
             e.preventDefault();
             addTag(input.value);
