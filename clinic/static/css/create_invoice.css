@@ -1,0 +1,85 @@
+.page-title {
+    font-size: 26px;
+    margin-bottom: 20px;
+}
+
+.invoice-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    max-width: 900px;
+    margin: auto;
+}
+
+.invoice-form .form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group input,
+.form-group select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.section-title {
+    margin-top: 25px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+}
+
+.items-table th,
+.items-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.amount-field {
+    width: 140px;
+}
+
+.btn-secondary {
+    background: #e8e8e8;
+    padding: 8px 14px;
+    border-radius: 6px;
+}
+
+.remove-btn {
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
+    padding: 2px 10px;
+}
+
+.total-box {
+    margin-top: 20px;
+    display: flex;
+    gap: 20px;
+}
+
+.total-box input {
+    width: 200px;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.submit-btn {
+    margin-top: 20px;
+    padding: 12px 20px;
+}

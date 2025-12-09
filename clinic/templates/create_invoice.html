@@ -1,54 +1,117 @@
 {% extends "base.html" %}
 {% block body %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='css/create_invoice.css') }}">
+
+
 <h2 class="page-title">Create Invoice</h2>
 
-<div class="form-container">
+<div class="invoice-container">
 
-    <form action="{{ url_for('billing_bp.create_invoice') }}" method="POST">
+<form method="POST" class="invoice-form">
 
-        <!-- Patient Dropdown -->
-        <label>Patient</label>
-        <select name="patient_id" required>
-            <option value="" disabled selected>Select patient</option>
+    <!-- Invoice Header -->
+    <div class="form-row">
 
-            {% for p in patients %}
-            <option value="{{ p.id }}">{{ p.name }}</option>
-            {% endfor %}
-        </select>
+        <div class="form-group">
+            <label>Invoice Number</label>
+            <input type="text" name="invoice_number" value="{{ new_invoice_number }}" readonly>
+        </div>
 
-        <!-- Description -->
+        <div class="form-group">
+            <label>Patient</label>
+            <select name="patient_id" required>
+                <option value="">Select Patient</option>
+                {% for p in patients %}
+                <option value="{{ p.id }}">{{ p.name }} ({{ p.phone }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
         <label>Description</label>
-        <input 
-            type="text"
-            name="description"
-            placeholder="Consultation / Medicine / Lab Test etc."
-        >
+        <input type="text" name="description" placeholder="Consultation, Medicines, Tests">
+    </div>
 
-        <!-- Total Amount -->
-        <label>Total Amount (₹)</label>
-        <input 
-            type="number"
-            name="total_amount"
-            min="0"
-            step="0.01"
-            placeholder="Enter amount"
-            required
-        >
 
-        <!-- Due Date -->
-        <label>Due Date</label>
-        <input 
-            type="date"
-            name="due_date"
-        >
+    <!-- Items Table -->
+    <h3 class="section-title">Invoice Items</h3>
 
-        <button class="btn-primary" type="submit">
-            Create Invoice
-        </button>
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Amount (₹)</th>
+                <th></th>
+            </tr>
+        </thead>
 
-    </form>
+        <tbody id="itemsBody">
+            <tr>
+                <td><input type="text" name="item_name[]" required></td>
+                <td><input type="number" name="item_amount[]" class="amount-field" required></td>
+                <td><button type="button" class="remove-btn" onclick="removeRow(this)">×</button></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button type="button" id="addRowBtn" class="btn-secondary">+ Add Item</button>
+
+
+    <!-- Total Amount -->
+    <div class="total-box">
+        <label>Total Amount</label>
+        <input type="text" id="totalAmount" name="total_amount" readonly>
+    </div>
+
+    <!-- Payment -->
+    <h3 class="section-title">Initial Payment</h3>
+
+    <div class="form-group">
+        <label>Amount Paid Now</label>
+        <input type="number" name="paid_now" value="0">
+    </div>
+
+    <button class="btn-primary submit-btn" type="submit">Create Invoice</button>
+
+</form>
 
 </div>
 
 {% endblock %}
+
+<script>
+    function updateTotal() {
+    let total = 0;
+    document.querySelectorAll(".amount-field").forEach(input => {
+        total += Number(input.value) || 0;
+    });
+
+    document.getElementById("totalAmount").value = total;
+}
+
+document.addEventListener("input", function(e) {
+    if (e.target.classList.contains("amount-field")) {
+        updateTotal();
+    }
+});
+
+document.getElementById("addRowBtn").onclick = function() {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td><input type="text" name="item_name[]" required></td>
+        <td><input type="number" name="item_amount[]" class="amount-field" required></td>
+        <td><button type="button" class="remove-btn" onclick="removeRow(this)">×</button></td>
+    `;
+    document.getElementById("itemsBody").appendChild(row);
+};
+
+function removeRow(btn) {
+    btn.parentElement.parentElement.remove();
+    updateTotal();
+}
+
+</script>

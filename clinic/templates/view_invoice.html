@@ -1,102 +1,61 @@
+{# view_invoice.html #}
 {% extends "base.html" %}
 {% block body %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/billing.css') }}">
 
-<h2 class="page-title">Invoice Details</h2>
-
-<!-- HEADER: INVOICE SUMMARY -->
-<div class="invoice-header">
-
-    <div class="left">
-        <h3>Invoice #{{ invoice.invoice_number }}</h3>
-        <p><strong>Date:</strong> {{ invoice.created_at }}</p>
-        <p><strong>Due Date:</strong> {{ invoice.due_date }}</p>
-    </div>
-
-    <div class="right">
-        <p><strong>Patient:</strong> {{ invoice.patient.name }}</p>
-
-        <span class="status-badge 
-            {% if invoice.status == 'Paid' %} active
-            {% elif invoice.status == 'Partial' %} yellow
-            {% else %} inactive {% endif %}">
-            {{ invoice.status }}
-        </span>
-
-        <div class="invoice-actions">
-            <a href="{{ url_for('billing_bp.download_invoice', id=invoice.id) }}" class="btn-primary">
-                Download PDF
-            </a>
+<div class="invoice-view shadow-card">
+    <div class="view-header">
+        <h2>Invoice: {{ invoice.invoice_number }}</h2>
+        <div class="actions-right">
+            <a class="btn" href="{{ url_for('billing_bp.download_invoice', id=invoice.id) }}">Download PDF</a>
+            <a class="btn-primary" href="{{ url_for('billing_bp.billing') }}">Back</a>
         </div>
     </div>
 
-</div>
-
-<hr class="divider">
-
-<!-- AMOUNT SUMMARY -->
-<div class="amount-box">
-
-    <div>
-        <h4>Total Amount</h4>
-        <p>₹ {{ invoice.total_amount }}</p>
+    <div class="view-grid">
+        <div>
+            <strong>Patient</strong><br>
+            {{ invoice.patient.name }}<br>
+            {{ invoice.patient.phone }}<br>
+        </div>
+        <div>
+            <strong>Date</strong><br>
+            {{ invoice.created_at }}<br>
+            <strong>Due</strong><br>
+            {{ invoice.due_date or "-" }}
+        </div>
+        <div>
+            <strong>Status</strong><br>
+            <span class="status-badge {% if invoice.status=='Paid' %}paid{% elif invoice.status=='Partial' %}partial{% else %}unpaid{% endif %}">
+                {{ invoice.status }}
+            </span>
+        </div>
     </div>
 
-    <div>
-        <h4>Total Paid</h4>
-        <p>₹ {{ paid }}</p>
+    <h3>Items</h3>
+    <table class="items-table">
+        <thead><tr><th>Item</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody>
+            {% for it in invoice.items %}
+            <tr><td>{{ it.item_name }}</td><td style="text-align:right">₹ {{ "%.2f"|format(it.amount) }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary-box">
+        {% set paid = invoice.payments | sum(attribute='amount') %}
+        <div>Total: ₹ {{ "%.2f"|format(invoice.total_amount) }}</div>
+        <div>Paid: ₹ {{ "%.2f"|format(paid) }}</div>
+        <div><strong>Balance: ₹ {{ "%.2f"|format(invoice.total_amount - (paid or 0)) }}</strong></div>
     </div>
 
-    <div>
-        <h4>Balance</h4>
-        <p>₹ {{ balance }}</p>
-    </div>
-
-</div>
-
-<!-- PAYMENT BUTTON -->
-<div class="top-actions" style="margin-top: 15px;">
-    <a href="{{ url_for('billing_bp.pay_invoice', id=invoice.id) }}" class="btn-primary">
-        + Add Payment
-    </a>
-</div>
-
-<hr class="divider">
-
-<!-- PAYMENT HISTORY -->
-<h3 class="section-title">Payment History</h3>
-
-{% if invoice.payments %}
-<table class="styled-table">
-    <thead>
-        <tr>
-            <th>Amount</th>
-            <th>Method</th>
-            <th>Date</th>
-        </tr>
-    </thead>
-
-    <tbody>
+    <h3>Payments</h3>
+    <ul>
         {% for p in invoice.payments %}
-        <tr>
-            <td>₹ {{ p.amount }}</td>
-            <td>{{ p.method }}</td>
-            <td>{{ p.paid_at }}</td>
-        </tr>
+        <li>₹ {{ "%.2f"|format(p.amount) }} — {{ p.method or "Cash" }} — {{ p.paid_at }}</li>
+        {% else %}
+        <li>No payments yet</li>
         {% endfor %}
-    </tbody>
-</table>
-
-{% else %}
-<p class="empty-msg">No payments recorded yet.</p>
-{% endif %}
-
-<hr class="divider">
-
-<!-- DESCRIPTION -->
-<h3 class="section-title">Description</h3>
-
-<p class="description-box">
-    {{ invoice.description if invoice.description else "No description provided." }}
-</p>
-
+    </ul>
+</div>
 {% endblock %}

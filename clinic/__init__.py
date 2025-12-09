@@ -49,7 +49,7 @@ def create_app():
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(patients_bp)
     app.register_blueprint(appointments_bp)
-    app.register_blueprint(billing_bp)
+    app.register_blueprint(billing_bp, url_prefix="/billing")
     app.register_blueprint(admin_bp)
     app.register_blueprint(settings_bp)
 

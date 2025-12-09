@@ -78,7 +78,6 @@ class Visit(db.Model):
 
     patient = db.relationship('Patient', backref=db.backref('visits', lazy=True))
 
-
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
@@ -90,6 +89,16 @@ class Invoice(db.Model):
     status = db.Column(db.String(20), default="Unpaid")
 
     patient = db.relationship('Patient', backref=db.backref('invoices', lazy=True))
+
+
+class InvoiceItem(db.Model):
+    __tablename__ = "invoice_item"
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey("invoice.id"), nullable=False)
+    item_name = db.Column(db.String(255), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+
+    invoice = db.relationship("Invoice", backref=db.backref("items", lazy=True))
 
 
 class Payment(db.Model):

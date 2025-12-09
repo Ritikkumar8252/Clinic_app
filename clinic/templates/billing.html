@@ -1,85 +1,120 @@
 {% extends "base.html" %}
 {% block body %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='css/billing.css') }}">
+
 <h2 class="page-title">Billing & Invoices</h2>
 
-<!-- Top Actions -->
-<div class="top-actions">
-
-    <a href="{{ url_for('billing_bp.create_invoice') }}" class="btn-primary">
-        + Create Invoice
-    </a>
-
-    <div class="due-box">
-        <strong>Due Invoices:</strong> {{ due_count }}
+<!-- Summary Cards -->
+<div class="billing-summary">
+    <div class="card">
+        <h3>Total Invoices</h3>
+        <p>{{ invoices|length }}</p>
     </div>
 
+    <div class="card">
+        <h3>Paid</h3>
+        <p>{{ paid_count }}</p>
+    </div>
+
+    <div class="card">
+        <h3>Unpaid</h3>
+        <p>{{ unpaid_count }}</p>
+    </div>
+
+    <div class="card">
+        <h3>Due Invoices</h3>
+        <p>{{ due_count }}</p>
+    </div>
 </div>
 
+
+<!-- Toolbar -->
+<div class="billing-toolbar">
+    <form method="get" action="{{ url_for('billing_bp.billing') }}" class="toolbar-form">
+
+        <input type="text" name="search" placeholder="Search patient or invoice" value="{{ request.args.get('search','') }}">
+
+        <select name="status">
+            <option value="">All</option>
+            <option value="Paid" {% if request.args.get('status')=='Paid' %}selected{% endif %}>Paid</option>
+            <option value="Partial" {% if request.args.get('status')=='Partial' %}selected{% endif %}>Partial</option>
+            <option value="Unpaid" {% if request.args.get('status')=='Unpaid' %}selected{% endif %}>Unpaid</option>
+        </select>
+
+        <button type="submit" class="btn-filter">Filter</button>
+    </form>
+
+    <a href="{{ url_for('billing_bp.create_invoice') }}" class="btn-primary">+ Create Invoice</a>
+</div>
+
+
 <!-- Invoice Table -->
-<table class="styled-table">
+<div class="table-container">
+<table class="billing-table">
     <thead>
         <tr>
-            <th>Invoice No</th>
+            <th>Invoice</th>
             <th>Patient</th>
             <th>Description</th>
             <th>Total</th>
             <th>Status</th>
             <th>Balance</th>
-            <th style="width: 200px;">Actions</th>
+            <th>Actions</th>
         </tr>
     </thead>
 
     <tbody>
-        {% for inv in invoices %}
-
+    {% for inv in invoices %}
         {% set paid = inv.payments | sum(attribute='amount') %}
         {% set balance = inv.total_amount - paid %}
 
         <tr>
-            <td>{{ inv.invoice_number }}</td>
-
+            <td>#{{ inv.invoice_number }}</td>
             <td>{{ inv.patient.name }}</td>
-
             <td>{{ inv.description }}</td>
-
-            <td>₹ {{ inv.total_amount }}</td>
+            <td>₹ {{ "%.2f"|format(inv.total_amount) }}</td>
 
             <td>
-                <span class="status-badge 
-                    {% if inv.status == 'Paid' %} active 
-                    {% elif inv.status == 'Partial' %} yellow
-                    {% else %} inactive {% endif %}">
-                    {{ inv.status }}
-                </span>
+                <span class="status {{ inv.status|lower }}">{{ inv.status }}</span>
             </td>
 
-            <td>₹ {{ balance }}</td>
+            <td>₹ {{ "%.2f"|format(balance) }}</td>
 
-            <td class="actions">
+            <td>
+                <div class="action-menu">
+                    <button class="menu-btn">⋮</button>
 
-                <!-- View -->
-                <a href="{{ url_for('billing_bp.view_invoice', id=inv.id) }}" class="btn-view">
-                    View
-                </a>
-
-                <!-- Download PDF -->
-                <a href="{{ url_for('billing_bp.download_invoice', id=inv.id) }}" class="btn-primary">
-                    PDF
-                </a>
-
-                <!-- Delete -->
-                <a href="{{ url_for('billing_bp.delete_invoice', id=inv.id) }}"
-                   class="btn-delete"
-                   onclick="return confirm('Delete this invoice?');">
-                    Delete
-                </a>
-
+                    <div class="menu-dropdown">
+                        <a href="{{ url_for('billing_bp.view_invoice', id=inv.id) }}">View</a>
+                        <a href="{{ url_for('billing_bp.download_invoice', id=inv.id) }}">Download PDF</a>
+                        <a href="{{ url_for('billing_bp.delete_invoice', id=inv.id) }}" onclick="return confirm('Delete invoice?')">Delete</a>
+                    </div>
+                </div>
             </td>
         </tr>
-
-        {% endfor %}
+    {% endfor %}
     </tbody>
 </table>
+</div>
 
 {% endblock %}
+<script>
+    document.addEventListener("click", function (e) {
+
+    const clickedMenu = e.target.closest(".menu-btn");
+
+    // Close all menus by default
+    document.querySelectorAll(".menu-dropdown").forEach(m => m.style.display = "none");
+
+    if (clickedMenu) {
+        const dropdown = clickedMenu.nextElementSibling;
+
+        dropdown.style.display =
+            dropdown.style.display === "block" ? "none" : "block";
+
+        e.stopPropagation();
+    }
+});
+
+</script>
