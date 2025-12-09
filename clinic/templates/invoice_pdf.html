@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .clinic-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2A4D9B;
+        }
+
+        .clinic-info {
+            font-size: 14px;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .invoice-title {
+            text-align: center;
+            font-size: 22px;
+            margin: 25px 0;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .info-box {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #f7f9fc;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .info-section {
+            width: 48%;
+            font-size: 14px;
+        }
+
+        .info-section strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+        }
+
+        th {
+            background: #e9eef7;
+            padding: 10px;
+            font-size: 14px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+
+        td {
+            padding: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .total-box {
+            margin-top: 20px;
+            float: right;
+            width: 250px;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #aaa;
+            background: #fafafa;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- CLINIC HEADER -->
+    <div class="header">
+        <div class="clinic-name">{{ clinic_name }}</div>
+        <div class="clinic-info">
+            {{ clinic_address }} <br>
+            Phone: {{ clinic_phone }}
+        </div>
+    </div>
+
+    <div class="invoice-title">INVOICE</div>
+
+    <!-- PATIENT + INVOICE DETAILS -->
+    <div class="info-box">
+
+        <div class="info-section">
+            <strong>Patient Details</strong>
+            Name: {{ inv.patient.name }} <br>
+            Phone: {{ inv.patient.phone }} <br>
+            Gender: {{ inv.patient.gender }} <br>
+            Age: {{ inv.patient.age }} years
+        </div>
+
+        <div class="info-section">
+            <strong>Invoice Details</strong>
+            Invoice No: {{ inv.invoice_number }} <br>
+            Date: {{ inv.created_at }} <br>
+            Status: {{ inv.status }} <br>
+            Description: {{ inv.description }}
+        </div>
+
+    </div>
+
+
+    <!-- ITEMS TABLE -->
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 70%;">Item</th>
+                <th style="width: 30%;">Amount (₹)</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in inv.items %}
+            <tr>
+                <td>{{ item.item_name }}</td>
+                <td>₹ {{ "%.2f"|format(item.amount) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <!-- TOTAL SUMMARY -->
+    <div class="total-box">
+        Total: ₹ {{ "%.2f"|format(inv.total_amount) }} <br>
+
+        Paid: ₹ {{ "%.2f"|format(paid) }} <br>
+
+        Balance: ₹ {{ "%.2f"|format(balance) }}
+    </div>
+
+    <div style="clear: both;"></div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        Thank you for visiting. Wishing you good health.
+    </div>
+
+</body>
+</html>

@@ -183,3 +183,112 @@
   .form-row { flex-direction:column; }
   .view-grid { flex-direction:column; gap:10px; }
 }
+
+/* Billing CSS (complete) */
+.page-title { font-size: 26px; margin-bottom: 18px; }
+.billing-top { display:flex; justify-content:space-between; align-items:center; padding:12px; background:#fff; border-radius:10px; box-shadow:0 2px 12px rgba(0,0,0,0.06); margin-bottom:16px; }
+.left-info { display:flex; gap:10px; align-items:center; }
+.due-count { background:#ff5252; color:#fff; padding:6px 10px; border-radius:8px; }
+.btn-primary { background:#007bff; color:#fff; padding:8px 12px; border-radius:8px; text-decoration:none; }
+.filter-bar { background:#fff; padding:12px; border-radius:10px; margin-bottom:16px; box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+.search-box, .filter-select { padding:8px 10px; border-radius:8px; border:1px solid #ddd; }
+.btn-filter { padding:8px 12px; background:#007bff; color:#fff; border:none; border-radius:8px; }
+.billing-table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+.billing-table th { background:#f7f9fc; padding:12px; text-align:left; font-weight:600; color:#333; }
+.billing-table td { padding:12px; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+.status-badge { padding:6px 12px; border-radius:20px; font-weight:600; }
+.status-badge.paid { background:#e7f8ee; color:#1e9b4c; }
+.status-badge.partial { background:#fff6d5; color:#c29b00; }
+.status-badge.unpaid { background:#ffecec; color:#d60000; }
+
+/* action menu */
+.action-menu { position: relative; display:inline-block; }
+.menu-btn { background:none; border:none; font-size:20px; cursor:pointer; padding:6px; }
+.menu-dropdown { position:absolute; right:0; top:28px; background:#fff; border:1px solid #ddd; border-radius:8px; display:none; min-width:160px; z-index:9999; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+.menu-dropdown a { display:block; padding:10px 12px; text-decoration:none; color:#333; }
+.menu-dropdown a:hover { background:#f6f8fa; }
+
+/* invoice view */
+.invoice-view { max-width:900px; margin:auto; padding:18px; background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+.items-table { width:100%; border-collapse:collapse; }
+.items-table th, .items-table td { padding:8px; border-bottom:1px solid #eee; }
+
+/* modal */
+.modal { position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:20000; }
+.modal-content { background:#fff; padding:18px; border-radius:8px; width:400px; max-width:90%; }
+.modal .close { float:right; cursor:pointer; font-size:20px; }
+
+/* ========= FIX DROPDOWN VISIBILITY ========= */
+.billing-table,
+.billing-table tr,
+.billing-table td {
+    overflow: visible !important;
+}
+
+.billing-table td {
+    position: relative;
+    z-index: 9;
+}
+
+/* ========= ACTION MENU STYLE ========= */
+.action-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    font-size: 20px;
+    color: #555;
+}
+
+.menu-btn:hover {
+    background: #f0f0f0;
+    border-radius: 50%;
+}
+
+/* Dropdown box */
+.menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: 32px;
+    min-width: 180px;
+    background: #fff;
+    padding: 6px 0;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    border: 1px solid #e5e5e5;
+    display: none;
+    transform-origin: top right;
+    animation: fadeScale 0.15s ease-out;
+    z-index: 99999 !important;
+}
+
+/* Dropdown links */
+.menu-dropdown a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    text-decoration: none;
+    font-size: 14px;
+    color: #333;
+}
+
+.menu-dropdown a:hover {
+    background: #f6f8fa;
+}
+
+/* Show dropdown */
+.menu-dropdown.show {
+    display: block;
+}
+
+/* Smooth open animation */
+@keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}

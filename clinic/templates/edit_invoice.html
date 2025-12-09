@@ -1,84 +1,54 @@
 {% extends "base.html" %}
 {% block body %}
-
 <link rel="stylesheet" href="{{ url_for('static', filename='css/create_invoice.css') }}">
 
-
-<h2 class="page-title">Create Invoice</h2>
+<h2 class="page-title">Edit Invoice {{ inv.invoice_number }}</h2>
 
 <div class="invoice-container">
-
-<form method="POST" class="invoice-form">
-
-    <!-- Invoice Header -->
+<form method="POST">
     <div class="form-row">
-
         <div class="form-group">
             <label>Invoice Number</label>
-            <input type="text" name="invoice_number" value="{{ new_invoice_number }}" readonly>
+            <input type="text" name="invoice_number" value="{{ inv.invoice_number }}" readonly>
         </div>
-
         <div class="form-group">
             <label>Patient</label>
             <select name="patient_id" required>
-                <option value="">Select Patient</option>
                 {% for p in patients %}
-                <option value="{{ p.id }}">{{ p.name }} ({{ p.phone }})</option>
+                <option value="{{ p.id }}" {% if p.id == inv.patient_id %}selected{% endif %}>{{ p.name }}</option>
                 {% endfor %}
             </select>
         </div>
-
     </div>
 
-    <!-- Description -->
     <div class="form-group">
         <label>Description</label>
-        <input type="text" name="description" placeholder="Consultation, Medicines, Tests">
+        <input name="description" value="{{ inv.description }}">
     </div>
 
-
-    <!-- Items Table -->
-    <h3 class="section-title">Invoice Items</h3>
-
+    <h3 class="section-title">Items</h3>
     <table class="items-table">
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>Amount (₹)</th>
-                <th></th>
-            </tr>
-        </thead>
-
+        <thead><tr><th>Item</th><th>Amount</th><th></th></tr></thead>
         <tbody id="itemsBody">
+            {% for it in inv.items %}
             <tr>
-                <td><input type="text" name="item_name[]" required></td>
-                <td><input type="number" name="item_amount[]" class="amount-field" required></td>
+                <td><input type="text" name="item_name[]" value="{{ it.item_name }}" required></td>
+                <td><input type="number" name="item_amount[]" class="amount-field" value="{{ it.amount }}" required></td>
                 <td><button type="button" class="remove-btn" onclick="removeRow(this)">×</button></td>
             </tr>
+            {% endfor %}
         </tbody>
     </table>
 
     <button type="button" id="addRowBtn" class="btn-secondary">+ Add Item</button>
 
-
-    <!-- Total Amount -->
     <div class="total-box">
         <label>Total Amount</label>
-        <input type="text" id="totalAmount" name="total_amount" readonly>
+        <input type="text" id="totalAmount" name="total_amount" readonly value="{{ inv.total_amount }}">
     </div>
 
-    <!-- Payment -->
-    <h3 class="section-title">Initial Payment</h3>
-
-    <div class="form-group">
-        <label>Amount Paid Now</label>
-        <input type="number" name="paid_now" value="0">
-    </div>
-
-    <button class="btn-primary submit-btn" type="submit">Create Invoice</button>
-
+    <button class="btn-primary submit-btn" type="submit">Save Changes</button>
 </form>
-
 </div>
 
 
@@ -103,8 +73,8 @@ document.getElementById("addRowBtn").onclick = function() {
     row.innerHTML = `
     <td><input type="text" name="item_name[]" required></td>
     <td><input type="number" name="item_amount[]" class="amount-field" required></td>
-        <td><button type="button" class="remove-btn" onclick="removeRow(this)">×</button></td>
-        `;
+    <td><button type="button" class="remove-btn" onclick="removeRow(this)">×</button></td>
+    `;
     document.getElementById("itemsBody").appendChild(row);
 };
 
