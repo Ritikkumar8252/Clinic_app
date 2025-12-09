@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 {% block body %}
 
-<!-- ====== TOP ACTION BAR ====== -->
-<div class="consult-topbar enhanced">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/consult.css') }}">
+
+<div class="consult-page">
+
+<!-- TOP BAR -->
+<div class="consult-topbar">
     <div class="top-info">
         <h2>Consultation</h2>
         <p>{{ patient.name }} • {{ patient.gender }}, {{ patient.age }} yrs</p>
@@ -11,111 +15,90 @@
     <div class="top-actions">
         <button class="btn-save" onclick="sendSaveRequest()">💾 Save</button>
         <a class="btn-complete" href="{{ url_for('appointments_bp.complete', id=appt.id) }}">✔ Finish</a>
-        
         <a class="btn-pres" target="_blank" href="{{ url_for('appointments_bp.prescription_pdf', id=appt.id) }}">📝 Print</a>
     </div>
 </div>
 
 
-
-<!-- ====== MAIN CONSULTATION UI ====== -->
-<div class="consult-container upgraded">
+<!-- MAIN GRID -->
+<div class="consult-container">
 
     <!-- LEFT PANEL -->
     <div class="patient-side">
-
         <div class="patient-card shadow-card">
             <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}" class="patient-photo">
-
             <h3 class="patient-name">{{ patient.name }}</h3>
             <p class="pt-small">{{ patient.gender }}, {{ patient.age }} yrs</p>
             <p class="pt-small">Phone: {{ patient.phone }}</p>
 
             <div class="divider"></div>
-
             <p class="last-visit-title">Last Visit</p>
-            <p class="last-visit-value">{{ patient.last_visit or "—" }}</p>
+            <p>{{ patient.last_visit or "—" }}</p>
         </div>
 
-        <!-- VITALS -->
         <div class="vitals-card shadow-card">
             <h4>Vitals</h4>
 
-            <div class="vital-row">
-                <label>Blood Pressure</label>
-                <input type="text" id="bp" value="{{ appt.bp or '' }}" placeholder="120/80" onkeyup="autoSave()">
+            <div class="vital-row"><label>BP</label>
+                <input id="bp" value="{{ appt.bp or '' }}" onkeyup="autoSave()">
             </div>
-
-            <div class="vital-row">
-                <label>Pulse</label>
-                <input type="text" id="pulse" value="{{ appt.pulse or '' }}" placeholder="72" onkeyup="autoSave()">
+            <div class="vital-row"><label>Pulse</label>
+                <input id="pulse" value="{{ appt.pulse or '' }}" onkeyup="autoSave()">
             </div>
-
-            <div class="vital-row">
-                <label>SPO2</label>
-                <input type="text" id="spo2" value="{{ appt.spo2 or '' }}" placeholder="98%" onkeyup="autoSave()">
+            <div class="vital-row"><label>SPO2</label>
+                <input id="spo2" value="{{ appt.spo2 or '' }}" onkeyup="autoSave()">
             </div>
-
-            <div class="vital-row">
-                <label>Temperature</label>
-                <input type="text" id="temperature" value="{{ appt.temperature or '' }}" placeholder="98.6°F" onkeyup="autoSave()">
+            <div class="vital-row"><label>Temp</label>
+                <input id="temperature" value="{{ appt.temperature or '' }}" onkeyup="autoSave()">
             </div>
-
-            <div class="vital-row">
-                <label>Weight</label>
-                <input type="text" id="weight" value="{{ appt.weight or '' }}" placeholder="kg" onkeyup="autoSave()">
+            <div class="vital-row"><label>Weight</label>
+                <input id="weight" value="{{ appt.weight or '' }}" onkeyup="autoSave()">
             </div>
         </div>
-
     </div>
 
 
 
-    <!-- MAIN CONSULTATION AREA -->
+    <!-- MAIN CONSULT AREA -->
     <div class="consult-main">
 
         <!-- SYMPTOMS -->
         <div class="box shadow-card">
             <h3>Symptoms</h3>
-            <textarea id="symptoms" class="input-area" onkeyup="autoSave()">{{ appt.symptoms }}</textarea>
+
+            <div class="tags-wrapper" id="symptoms-wrapper">
+                <div class="tags" id="symptoms-tags"></div>
+                <input id="symptoms-input" class="tags-input" placeholder="Type symptom + Enter">
+            </div>
+            <input type="hidden" id="symptoms-hidden" value="{{ appt.symptoms or '' }}">
         </div>
 
         <!-- DIAGNOSIS -->
         <div class="box shadow-card">
             <h3>Diagnosis</h3>
-            <textarea id="diagnosis" class="input-area" onkeyup="autoSave()">{{ appt.diagnosis }}</textarea>
+
+            <div class="tags-wrapper" id="diagnosis-wrapper">
+                <div class="tags" id="diagnosis-tags"></div>
+                <input id="diagnosis-input" class="tags-input" placeholder="Type diagnosis + Enter">
+            </div>
+            <input type="hidden" id="diagnosis-hidden" value="{{ appt.diagnosis or '' }}">
         </div>
 
         <!-- PRESCRIPTION -->
         <div class="box shadow-card">
-
-            <div class="header-row" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="header-row" style="display:flex; justify-content:space-between;">
                 <h3>Prescription</h3>
-
-                <!-- Template Button -->
-                <button type="button" class="btn grey" onclick="toggleTemplates()">
-                    Templates ▼
-                </button>
+                <button class="btn grey" onclick="toggleTemplates()">Templates ▼</button>
             </div>
 
-            <!-- Template Prescriptions Dropdown -->
             <div id="templateBox" class="template-box">
                 <div class="template-item" onclick="applyTemplate('Fever Standard')">Fever Standard</div>
                 <div class="template-item" onclick="applyTemplate('Viral Infection')">Viral Infection</div>
-                <div class="template-item" onclick="applyTemplate('Cough & Cold')">Cough & Cold</div>
-                <div class="template-item" onclick="applyTemplate('Gastritis')">Gastritis</div>
-                <div class="template-item" onclick="applyTemplate('Diarrhea')">Diarrhea Treatment</div>
             </div>
 
-            <table class="med-table" id="medTable">
+            <table class="med-table">
                 <thead>
-                    <tr>
-                        <th>Medicine</th>
-                        <th>Dose</th>
-                        <th>Days</th>
-                        <th>Notes</th>
-                        <th></th>
-                    </tr>
+                    <tr><th>Medicine</th><th>Dose</th><th>Days</th><th>Notes</th><th></th></tr>
                 </thead>
 
                 <tbody id="medBody">
@@ -124,7 +107,7 @@
                         <td><input name="dose[]"></td>
                         <td><input name="days[]"></td>
                         <td><input name="notes[]"></td>
-                        <td><button onclick="removeRow(this)" class="del-btn">x</button></td>
+                        <td><button class="del-btn" onclick="removeRow(this)">x</button></td>
                     </tr>
                 </tbody>
             </table>
@@ -136,13 +119,20 @@
         <!-- ADVICE -->
         <div class="box shadow-card">
             <h3>Advice</h3>
-            <textarea id="advice" class="input-area" onkeyup="autoSave()">{{ appt.advice }}</textarea>
+
+            <div class="tags-wrapper" id="advice-wrapper">
+                <div class="tags" id="advice-tags"></div>
+                <input id="advice-input" class="tags-input" placeholder="Type advice + Enter">
+            </div>
+
+            <input type="hidden" id="advice-hidden" value="{{ appt.advice or '' }}">
         </div>
+
 
         <!-- FOLLOW-UP -->
         <div class="box shadow-card">
             <h3>Follow Up Date</h3>
-            <input type="date" id="follow_up_date" value="{{ appt.follow_up_date }}" onchange="autoSave()" class="followup-input">
+            <input id="follow_up_date" type="date" value="{{ appt.follow_up_date }}" onchange="autoSave()">
         </div>
 
     </div>
@@ -150,139 +140,172 @@
 </div>
 
 
+<!-- SAVE TOAST -->
+<div id="saveToast" class="save-toast">Saved</div>
 
-<!-- ====== AUTO-SAVE JS ====== -->
+
+
+<!-- ==========================
+        JS SECTION
+============================== -->
+
 <script>
 let saveTimeout;
 
-// auto-save trigger
 function autoSave() {
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(sendSaveRequest, 900);
+    saveTimeout = setTimeout(sendSaveRequest, 800);
 }
 
 function sendSaveRequest() {
 
+    const payload = {
+        symptoms: document.getElementById("symptoms-hidden").value,
+        diagnosis: document.getElementById("diagnosis-hidden").value,
+        advice: document.getElementById("advice-hidden").value,
+
+        bp: document.getElementById("bp")?.value || "",
+        pulse: document.getElementById("pulse")?.value || "",
+        spo2: document.getElementById("spo2")?.value || "",
+        temperature: document.getElementById("temperature")?.value || "",
+        weight: document.getElementById("weight")?.value || "",
+        follow_up_date: document.getElementById("follow_up_date")?.value || ""
+    };
+
     fetch(`/autosave/{{ appt.id }}`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            symptoms: document.getElementById("symptoms").value,
-            diagnosis: document.getElementById("diagnosis").value,
-            prescription: document.getElementById("prescription").value,
-            advice: document.getElementById("advice").value,
-
-            bp: document.getElementById("bp").value,
-            pulse: document.getElementById("pulse").value,
-            spo2: document.getElementById("spo2").value,
-            temperature: document.getElementById("temperature").value,
-            weight: document.getElementById("weight").value,
-
-            follow_up_date: document.getElementById("follow_up_date").value
-        })
+        body: JSON.stringify(payload)
     })
     .then(() => showToast());
 }
 
 function showToast() {
-    const toast = document.getElementById("saveToast");
-    toast.style.opacity = "1";
-    setTimeout(() => toast.style.opacity = "0", 1500);
+    const t = document.getElementById("saveToast");
+    t.style.opacity = "1";
+    setTimeout(() => t.style.opacity = "0", 1200);
 }
 </script>
 
-<!-- SAVE TOAST -->
-<div id="saveToast" class="save-toast">Saved</div>
 
+
+<!-- TAG INPUT SYSTEM -->
 <script>
+function initTagInput(fieldId) {
 
-// TEMPLATE DEFINITIONS
-const templates = {
-    "Fever Standard": [
-        {med: "Paracetamol 650mg", dose: "1-0-1", days: "3", notes: "After food"},
-        {med: "Pantoprazole 40mg", dose: "0-0-1", days: "5", notes: ""}
-    ],
+    const wrapper = document.getElementById(fieldId + "-wrapper");
+    const tagsBox = document.getElementById(fieldId + "-tags");
+    const input = document.getElementById(fieldId + "-input");
+    const hidden = document.getElementById(fieldId + "-hidden");
 
-    "Viral Infection": [
-        {med: "Dolo 650", dose: "1-1-1", days: "3", notes: ""},
-        {med: "Cetrizine 10mg", dose: "0-0-1", days: "5", notes: "Night"}
-    ],
+    // Load old tags
+    if (hidden.value.trim() !== "") {
+        hidden.value.split(",").forEach(t => addTag(t.trim()));
+    }
 
-    "Cough & Cold": [
-        {med: "Montelukast + Levocet", dose: "0-0-1", days: "7", notes: ""},
-        {med: "Cough Syrup", dose: "10ml", days: "5", notes: ""}
-    ],
+    function addTag(text) {
+        if (!text) return;
+        text = text.trim();
+        if (text === "") return;
 
-    "Gastritis": [
-        {med: "Pantoprazole 40mg", dose: "1-0-1", days: "7", notes: ""},
-        {med: "Antacid Gel", dose: "10ml", days: "5", notes: ""}
-    ],
+        const exists = [...tagsBox.children].some(el => el.dataset.val === text);
+        if (exists) return;
 
-    "Diarrhea Treatment": [
-        {med: "ORS Solution", dose: "200ml hourly", days: "2", notes: ""},
-        {med: "Racecadotril", dose: "1-0-1", days: "3", notes: ""}
-    ]
-};
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.dataset.val = text;
 
-// Show/Hide template dropdown
-function toggleTemplates() {
-    document.getElementById("templateBox").classList.toggle("show");
-}
+        tag.innerHTML = `${text} <span class="remove">✕</span>`;
 
-// Apply template prescriptions
-function applyTemplate(name) {
-    const meds = templates[name];
+        tag.querySelector(".remove").onclick = () => {
+            tag.remove();
+            updateHidden();
+            autoSave();
+        };
 
-    let body = document.getElementById("medBody");
-    body.innerHTML = ""; 
+        tagsBox.appendChild(tag);
+        updateHidden();
+        autoSave();
+    }
 
-    meds.forEach(item => {
-        let row = document.createElement("tr");
-        row.innerHTML = `
-            <td><input name="medicine[]" value="${item.med}"></td>
-            <td><input name="dose[]" value="${item.dose}"></td>
-            <td><input name="days[]" value="${item.days}"></td>
-            <td><input name="notes[]" value="${item.notes}"></td>
-            <td><button onclick="removeRow(this)" class="del-btn">x</button></td>
-        `;
-        body.appendChild(row);
+    function updateHidden() {
+        const values = [...tagsBox.children].map(t => t.dataset.val);
+        hidden.value = values.join(",");
+    }
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            addTag(input.value);
+            input.value = "";
+        }
     });
-
-    addRow();
-    toggleTemplates();
 }
 
+initTagInput("symptoms");
+initTagInput("diagnosis");
+initTagInput("advice");
+</script>
 
-// ADD ROW
+
+
+<!-- PRESCRIPTION JS -->
+<script>
 function addRow() {
     let body = document.getElementById("medBody");
-
     let tr = document.createElement("tr");
     tr.innerHTML = `
         <td><input name="medicine[]"></td>
         <td><input name="dose[]"></td>
         <td><input name="days[]"></td>
         <td><input name="notes[]"></td>
-        <td><button onclick="removeRow(this)" class="del-btn">x</button></td>
+        <td><button class="del-btn" onclick="removeRow(this)">x</button></td>
     `;
     body.appendChild(tr);
 }
 
-// REMOVE ROW
 function removeRow(btn) {
     btn.parentNode.parentNode.remove();
 }
 
-// Auto-add new row
-document.addEventListener("input", function(e){
-    let last = document.querySelector("#medBody tr:last-child");
-    if (last.contains(e.target)) {
-        let filled = [...last.querySelectorAll("input")].every(inp => inp.value.trim() !== "");
-        if (filled) addRow();
-    }
-});
+document.getElementById("addRowBtn").onclick = addRow;
 
+function toggleTemplates() {
+    document.getElementById("templateBox").classList.toggle("show");
+}
+
+const templates = {
+    "Fever Standard": [
+        {med:"Paracetamol", dose:"1-0-1", days:"3", notes:"After food"}
+    ],
+    "Viral Infection": [
+        {med:"Dolo 650", dose:"1-1-1", days:"3", notes:""}
+    ]
+};
+
+function applyTemplate(name) {
+    let body = document.getElementById("medBody");
+    body.innerHTML = "";
+
+    templates[name].forEach(item => {
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><input name="medicine[]" value="${item.med}"></td>
+            <td><input name="dose[]" value="${item.dose}"></td>
+            <td><input name="days[]" value="${item.days}"></td>
+            <td><input name="notes[]" value="${item.notes}"></td>
+            <td><button class="del-btn" onclick="removeRow(this)">x</button></td>
+        `;
+        body.appendChild(tr);
+    });
+
+    addRow();
+    toggleTemplates();
+}
 </script>
 
+
+
+</div>
 
 {% endblock %}
