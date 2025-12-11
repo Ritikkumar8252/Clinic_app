@@ -30,7 +30,7 @@ def dashboard():
     total_invoices = Invoice.query.count()
 
     return render_template(
-    "dashboard.html",
+    "dashboard/dashboard.html",
     total_patients=total_patients,
     today_appointments=today_appointments,
     pending_bills=pending_bills,

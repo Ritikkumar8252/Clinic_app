@@ -48,7 +48,7 @@ def login():
         else:
             return redirect(url_for("dashboard_bp.dashboard"))
 
-    return render_template("login.html")
+    return render_template("auth/login.html")
 
 
 @auth_bp.route("/signup", methods=["GET", "POST"])
@@ -77,7 +77,7 @@ def signup():
         flash("Account created, please login.")
         return redirect(url_for("auth_bp.login"))
 
-    return render_template("signup.html")
+    return render_template("auth/signup.html")
 
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
@@ -105,7 +105,7 @@ def forgot_password():
         flash("OTP sent to your email.")
         return redirect(url_for("auth_bp.verify_otp"))
 
-    return render_template("forgot_password.html")
+    return render_template("auth/forgot_password.html")
 
 @auth_bp.route("/verify-otp", methods=["GET", "POST"])
 def verify_otp():
@@ -118,7 +118,7 @@ def verify_otp():
 
         flash("Invalid OTP. Try again.")
 
-    return render_template("verify_otp.html")
+    return render_template("auth/verify_otp.html")
 
 @auth_bp.route("/reset-password", methods=["GET", "POST"])
 def reset_password():
@@ -141,7 +141,7 @@ def reset_password():
         flash("Password reset successfully. Please login.")
         return redirect(url_for("auth_bp.login"))
 
-    return render_template("reset_password.html")
+    return render_template("auth/reset_password.html")
 
 
 @auth_bp.route("/logout")

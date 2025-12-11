@@ -32,7 +32,7 @@ def patients():
 
     patients = query.order_by(Patient.id.desc()).all()
 
-    return render_template("patients.html", patients=patients)
+    return render_template("patients/patients.html", patients=patients)
 
 
 
@@ -94,7 +94,7 @@ def add_patient():
         return redirect(url_for("patients_bp.patients"))
 
     # GET request → show form
-    return render_template("add_patient.html", from_page=from_page)
+    return render_template("patients/add_patient.html", from_page=from_page)
 
 
 @patients_bp.route("/delete_patient/<int:id>")
@@ -120,7 +120,7 @@ def edit_patient(id):
         flash("Patient updated successfully!")
         return redirect(url_for("patients_bp.patients"))
 
-    return render_template("edit_patient.html", patient=patient)
+    return render_template("patients/edit_patient.html", patient=patient)
 
 
 @patients_bp.route("/patient/<int:id>")
@@ -134,7 +134,7 @@ def patient_profile(id):
     apps = Appointment.query.filter_by(patient_id=patient.id).all()
 
     return render_template(
-        "patient_profile.html",
+        "patients/patient_profile.html",
         patient=patient,
         apps=apps,
         from_patient_profile=True

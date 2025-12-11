@@ -28,7 +28,7 @@ def admin_panel():
     users = User.query.all()
 
     return render_template(
-        "admin_panel.html",
+        "admin/admin_panel.html",
         total_users=total_users,
         total_patients=total_patients,
         total_appointments=total_appointments,

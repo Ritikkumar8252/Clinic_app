@@ -39,7 +39,7 @@ def appointments():
     cancelled = base_query.filter(Appointment.status == "Cancelled").all()
 
     return render_template(
-        "appointments.html",
+        "appointments/appointments.html",
         tab=tab,
         search=search,
         date_filter=date_filter,
@@ -84,7 +84,7 @@ def add_appointment():
         flash("Appointment booked successfully!")
         return redirect(url_for("appointments_bp.appointments"))
 
-    return render_template("add_appointment.html", patients=patients)
+    return render_template("appointments/add_appointment.html", patients=patients)
 
 
 @appointments_bp.route("/delete_appointment/<int:id>")
@@ -111,7 +111,7 @@ def edit_appointment(id):
         flash("Appointment updated!")
         return redirect(url_for("appointments_bp.appointments"))
 
-    return render_template("edit_appointment.html", app=app_item)
+    return render_template("appointments/edit_appointment.html", app=app_item)
 
 @appointments_bp.route("/walkin")
 def walkin():
@@ -171,7 +171,7 @@ def consult(id):
         return redirect(url_for("appointments_bp.consult", id=id))
 
     return render_template(
-        "consultation.html",
+        "appointments/consultation.html",
         appt=appt,
         patient=patient,
         medicines=[],  # future pharmacy DB

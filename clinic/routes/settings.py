@@ -86,4 +86,4 @@ def settings():
 
 
 
-    return render_template("settings.html", user=user)
+    return render_template("dashboard/settings.html", user=user)

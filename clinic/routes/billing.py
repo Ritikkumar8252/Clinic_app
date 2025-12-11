@@ -33,7 +33,7 @@ def billing():
 
     due_count = Invoice.query.filter(Invoice.status != "Paid").count()
 
-    return render_template("billing.html", invoices=invoices, due_count=due_count)
+    return render_template("billing/billing.html", invoices=invoices, due_count=due_count)
 
 @billing_bp.route("/create_invoice", methods=["GET", "POST"])
 def create_invoice():
@@ -87,7 +87,7 @@ def create_invoice():
         flash("Invoice created successfully.", "success")
         return redirect(url_for("billing_bp.billing"))
 
-    return render_template("create_invoice.html", patients=patients, new_invoice_number=new_invoice_number)
+    return render_template("billing/create_invoice.html", patients=patients, new_invoice_number=new_invoice_number)
 
 @billing_bp.route("/view/<int:id>", methods=["GET"])
 def view_invoice(id):
@@ -97,7 +97,7 @@ def view_invoice(id):
     inv = Invoice.query.get_or_404(id)
     paid = sum(p.amount for p in inv.payments)
     balance = inv.total_amount - paid
-    return render_template("view_invoice.html", inv=inv, paid=paid, balance=balance)
+    return render_template("billing/view_invoice.html", inv=inv, paid=paid, balance=balance)
 
 @billing_bp.route("/download/<int:id>", methods=["GET"])
 def download_invoice(id):
@@ -159,7 +159,7 @@ def edit_invoice(id):
         flash("Invoice updated.", "success")
         return redirect(url_for("billing_bp.view_invoice", id=inv.id))
 
-    return render_template("edit_invoice.html", inv=inv, patients=patients)
+    return render_template("billing/edit_invoice.html", inv=inv, patients=patients)
 
 @billing_bp.route("/add_payment/<int:id>", methods=["POST"])
 def add_payment(id):
