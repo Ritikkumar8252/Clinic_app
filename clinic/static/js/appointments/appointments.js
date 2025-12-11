@@ -6,25 +6,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     tabs.forEach(tab => {
         tab.addEventListener("click", () => {
-            // remove old active
+
             tabs.forEach(t => t.classList.remove("active"));
             tab.classList.add("active");
 
-            // show correct section
             sections.forEach(sec => sec.classList.add("d-none"));
             document.getElementById(tab.dataset.section).classList.remove("d-none");
         });
     });
 
     // CARD MOVEMENT
-    document.addEventListener("click", function(e) {
+    document.addEventListener("click", (e) => {
 
         // Start Consultation
         if (e.target.classList.contains("start-btn")) {
             let card = e.target.closest(".appointment-card");
             document.getElementById("started").appendChild(card);
 
-            card.style.background = "#d4edda"; // green
+            card.style.background = "#d4edda";
             card.querySelector(".card-actions").innerHTML = `
                 <button class="btn btn-sm btn-success finish-btn">Finish</button>
                 <button class="btn btn-sm btn-outline-danger cancel-btn">Cancel</button>
@@ -48,7 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
             card.style.background = "#f8d7da";
             card.querySelector(".card-actions").innerHTML = `<span class="text-danger">Cancelled</span>`;
         }
-
     });
 
 });

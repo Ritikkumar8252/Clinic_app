@@ -1,94 +1,56 @@
 CLINIC_APP/
 │
-├── app.py                     # local entry point
-├── wsgi.py                    # production entry point
-├── config.py                  # main config loader
-│
-├── clinic/
-│   ├── __init__.py            # create_app() lives here
-│   ├── extensions.py
+├── clinic/  
+│   ├── __init__.py  
+│   ├── app.py                     # (if you use create_app here)
+│   ├── config.py                  # base config
+│   ├── extensions.py              # db, login_manager, mail, bcrypt...
 │   ├── models.py
 │   ├── utils.py
-│
-│   ├── routes/                # all routes grouped cleanly
-│   │   ├── __init__.py
+│   │
+│   ├── routes/                    # Blueprints
 │   │   ├── auth.py
+│   │   ├── admin.py
+│   │   ├── appointments.py
 │   │   ├── billing.py
 │   │   ├── dashboard.py
 │   │   ├── home.py
 │   │   ├── patients.py
-│   │   ├── appointments.py
-│   │   ├── admin.py           # admin panel route
-│   │   └── settings.py        # user settings / clinic settings
-│
-│   ├── static/                # ONLY one static folder
-│   │   ├── css/
-│   │   │   ├── billing.css
-│   │   │   ├── consult.css
-│   │   │   ├── create_invoice.css
-│   │   │   ├── dashboard.css
-│   │   │   └── home.css
-│   │   │
-│   │   ├── js/
-│   │   │   ├── appointments.js
-│   │   │   ├── appointment_search.js
-│   │   │   ├── billing.js
-│   │   │   └── patient_search.js
-│   │   │
-│   │   ├── images/
-│   │   │   └── (all UI images)
-│   │   │
-│   │   ├── uploads/           # for user-uploaded content
-│   │   │   ├── doctor_docs/
-│   │   │   └── patient_images/
-│   │   │
-│   │   └── favicon.ico
-│
+│   │   └── settings.py
+│   │
 │   ├── templates/
 │   │   ├── base.html
-│   │   ├── components/        # reusable UI parts
-│   │   │   ├── appointment_card.html
-│   │   │   └── navbar.html (optional)
 │   │   │
-│   │   ├── auth/              # login, signup, otp
-│   │   │   ├── login.html
-│   │   │   ├── signup.html
-│   │   │   ├── forgot_password.html
-│   │   │   ├── reset_password.html
-│   │   │   └── verify_otp.html
-│   │
-│   │   ├── dashboard/
-│   │   │   ├── dashboard.html
-│   │   │   ├── admin_panel.html
-│   │   │   ├── home.html
-│   │   │   └── settings.html
-│   │
-│   │   ├── patients/
-│   │   │   ├── patients.html
-│   │   │   ├── add_patient.html
-│   │   │   ├── edit_patient.html
-│   │   │   └── patient_profile.html
-│   │
+│   │   ├── admin/
 │   │   ├── appointments/
-│   │   │   ├── appointments.html
-│   │   │   ├── add_appointment.html
-│   │   │   ├── edit_appointment.html
-│   │   │   └── consultation.html
-│   │
+│   │   ├── auth/
 │   │   ├── billing/
-│   │   │   ├── billing.html
-│   │   │   ├── create_invoice.html
-│   │   │   ├── edit_invoice.html
-│   │   │   ├── view_invoice.html
-│   │   │   ├── pay_invoice.html
-│   │   │   └── invoice_pdf.html
-│   │
+│   │   ├── components/
+│   │   ├── dashboard/
+│   │   ├── patients/
 │   │   └── records/
-│   │       └── upload_record.html
+│   │
+│   └── static/
+│       ├── css/
+│       ├── js/
+│       │   ├── auth/
+│       │   ├── admin/
+│       │   ├── appointments/
+│       │   ├── billing/
+│       │   ├── dashboard/
+│       │   ├── patients/
+│       │   └── settings/
+│       ├── images/
+│       ├── patient_images/
+│       └── doctor_docs/
 │
+├── instance/
+│   ├── config.py                  # production secrets (not committed)
+│   └── clinic.db                  # local SQLite (optional)
 │
-├── instance/                  # Production secrets, DB
-│   └── (your instance files)
-│
+├── .env                           # environment variables
+├── .gitignore
+├── Dockerfile
+├── docker-compose.yml
 ├── requirements.txt
-└── README.md
+└── wsgi.py                        # Flask entrypoint for Gunicorn

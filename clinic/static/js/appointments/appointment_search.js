@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     search.addEventListener("keyup", () => {
         const value = search.value.toLowerCase();
         rows.forEach(r => {
-            r.style.display = r.innerText.toLowerCase().includes(value) 
-                ? "" 
+            r.style.display = r.innerText.toLowerCase().includes(value)
+                ? ""
                 : "none";
         });
     });

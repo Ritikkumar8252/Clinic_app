@@ -81,37 +81,6 @@
 
 </div>
 
-
-<script>
-    function updateTotal() {
-    let total = 0;
-    document.querySelectorAll(".amount-field").forEach(input => {
-        total += Number(input.value) || 0;
-    });
-
-    document.getElementById("totalAmount").value = total;
-}
-
-document.addEventListener("input", function(e) {
-    if (e.target.classList.contains("amount-field")) {
-        updateTotal();
-    }
-});
-
-document.getElementById("addRowBtn").onclick = function() {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-    <td><input type="text" name="item_name[]" required></td>
-    <td><input type="number" name="item_amount[]" class="amount-field" required></td>
-        <td><button type="button" class="remove-btn" onclick="removeRow(this)">×</button></td>
-        `;
-    document.getElementById("itemsBody").appendChild(row);
-};
-
-function removeRow(btn) {
-    btn.parentElement.parentElement.remove();
-    updateTotal();
-}
-
-</script>
+<!-- External JS file -->
+<script src="{{ url_for('static', filename='js/billing/create_invoice.js') }}"></script>
 {% endblock %}

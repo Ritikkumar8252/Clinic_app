@@ -126,15 +126,16 @@
 </div>
 
 <script>
-const fileInput = document.getElementById("imageUpload");
-const preview = document.getElementById("preview");
+document.addEventListener("DOMContentLoaded", () => {
+    const fileInput = document.getElementById("imageUpload");
+    const preview = document.getElementById("preview");
 
-fileInput.addEventListener("change", function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    preview.src = url;
+    fileInput.addEventListener("change", e => {
+        const file = e.target.files[0];
+        if (file) preview.src = URL.createObjectURL(file);
+    });
 });
 </script>
+
 
 {% endblock %}

@@ -9,12 +9,13 @@
         <div class="settings-sidebar">
             <h3><i class="bi bi-gear-fill"></i> Settings</h3>
 
-            <button class="tab-btn active" onclick="switchTab('profile')"><i class="bi bi-person"></i> Profile</button>
-            <button class="tab-btn" onclick="switchTab('gov-docs')"><i class="bi bi-file-earmark-text"></i> Documents</button>
-            <button class="tab-btn" onclick="switchTab('account')"><i class="bi bi-shield-lock"></i> Account</button>
-            <button class="tab-btn" onclick="switchTab('subscription')"><i class="bi bi-credit-card"></i> Subscription</button>
-            <button class="tab-btn" onclick="switchTab('clinic')"><i class="bi bi-hospital"></i> Clinic</button>
-            <button class="tab-btn" onclick="switchTab('theme')"><i class="bi bi-sun"></i> Theme</button>
+            <button class="tab-btn active" onclick="switchTab('profile', this)">Profile</button>
+            <button class="tab-btn" onclick="switchTab('gov-docs', this)">Documents</button>
+            <button class="tab-btn" onclick="switchTab('account', this)">Account</button>
+            <button class="tab-btn" onclick="switchTab('subscription', this)">Subscription</button>
+            <button class="tab-btn" onclick="switchTab('clinic', this)">Clinic</button>
+            <button class="tab-btn" onclick="switchTab('theme', this)">Theme</button>
+
         </div>
 
 
@@ -214,15 +215,6 @@
 </div>
 
 
-
-
-<script>
-function switchTab(tabName) {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    document.getElementById(tabName).classList.add("active");
-    event.target.classList.add("active");
-}
-</script>
+<script src="{{ url_for('static', filename='js/settings/settings_tabs.js') }}"></script>
 
 {% endblock %}

@@ -40,19 +40,19 @@
             <h4>Vitals</h4>
 
             <div class="vital-row"><label>BP</label>
-                <input id="bp" value="{{ appt.bp or '' }}" onkeyup="autoSave()">
+                <input id="bp" value="{{ appt.bp or '' }}">
             </div>
             <div class="vital-row"><label>Pulse</label>
-                <input id="pulse" value="{{ appt.pulse or '' }}" onkeyup="autoSave()">
+                <input id="pulse" value="{{ appt.pulse or '' }}">
             </div>
             <div class="vital-row"><label>SPO2</label>
-                <input id="spo2" value="{{ appt.spo2 or '' }}" onkeyup="autoSave()">
+                <input id="spo2" value="{{ appt.spo2 or '' }}">
             </div>
             <div class="vital-row"><label>Temp</label>
-                <input id="temperature" value="{{ appt.temperature or '' }}" onkeyup="autoSave()">
+                <input id="temperature" value="{{ appt.temperature or '' }}">
             </div>
             <div class="vital-row"><label>Weight</label>
-                <input id="weight" value="{{ appt.weight or '' }}" onkeyup="autoSave()">
+                <input id="weight" value="{{ appt.weight or '' }}">
             </div>
         </div>
     </div>
@@ -68,7 +68,6 @@
 
             <div class="tags-wrapper" id="symptoms-wrapper">
                 <div id="symptoms-suggestions" class="suggestions-box"></div>
-
                 <div class="tags" id="symptoms-tags"></div>
                 <input id="symptoms-input" class="tags-input" placeholder="Type symptom + Enter">
             </div>
@@ -81,7 +80,6 @@
 
             <div class="tags-wrapper" id="diagnosis-wrapper">
                 <div id="diagnosis-suggestions" class="suggestions-box"></div>
-
                 <div class="tags" id="diagnosis-tags"></div>
                 <input id="diagnosis-input" class="tags-input" placeholder="Type diagnosis + Enter">
             </div>
@@ -126,7 +124,6 @@
 
             <div class="tags-wrapper" id="advice-wrapper">
                 <div id="advice-suggestions" class="suggestions-box"></div>
-
                 <div class="tags" id="advice-tags"></div>
                 <input id="advice-input" class="tags-input" placeholder="Type advice + Enter">
             </div>
@@ -138,7 +135,7 @@
         <!-- FOLLOW-UP -->
         <div class="box shadow-card">
             <h3>Follow Up Date</h3>
-            <input id="follow_up_date" type="date" value="{{ appt.follow_up_date }}" onchange="autoSave()">
+            <input id="follow_up_date" type="date" value="{{ appt.follow_up_date }}">
         </div>
 
     </div>
@@ -149,165 +146,23 @@
 <!-- SAVE TOAST -->
 <div id="saveToast" class="save-toast">Saved</div>
 
-
-
-<!-- ==========================
-        JS SECTION
-============================== -->
-
-<script>
-let saveTimeout;
-
-function autoSave() {
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(sendSaveRequest, 800);
-}
-
-function sendSaveRequest() {
-
-    const payload = {
-        symptoms: document.getElementById("symptoms-hidden").value,
-        diagnosis: document.getElementById("diagnosis-hidden").value,
-        advice: document.getElementById("advice-hidden").value,
-
-        bp: document.getElementById("bp")?.value || "",
-        pulse: document.getElementById("pulse")?.value || "",
-        spo2: document.getElementById("spo2")?.value || "",
-        temperature: document.getElementById("temperature")?.value || "",
-        weight: document.getElementById("weight")?.value || "",
-        follow_up_date: document.getElementById("follow_up_date")?.value || ""
-    };
-
-    fetch(`/autosave/{{ appt.id }}`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload)
-    })
-    .then(() => showToast());
-}
-
-function showToast() {
-    const t = document.getElementById("saveToast");
-    t.style.opacity = "1";
-    setTimeout(() => t.style.opacity = "0", 1200);
-}
-</script>
-
-
-
-<!-- TAG INPUT SYSTEM -->
-<script>
-function initTagInput(field) {
-    const wrapper = document.getElementById(field + "-wrapper");
-    const tagsBox = document.getElementById(field + "-tags");
-    const input = document.getElementById(field + "-input");
-    const hidden = document.getElementById(field + "-hidden");
-
-    // load db values
-    if (hidden.value.trim() !== "") {
-        hidden.value.split(",").forEach(t => addTag(t.trim()));
-    }
-
-    function addTag(text) {
-        text = text.trim();
-        if (!text) return;
-
-        const exists = [...tagsBox.children].some(el => el.dataset.val === text);
-        if (exists) return;
-
-        const tag = document.createElement("span");
-        tag.className = "tag";
-        tag.dataset.val = text;
-        tag.innerHTML = `${text}<span class="remove">✕</span>`;
-
-        tag.querySelector(".remove").onclick = () => {
-            tag.remove();
-            updateHidden();
-            autoSave();
-        };
-
-        tagsBox.appendChild(tag);
-        updateHidden();
-        autoSave();
-    }
-
-    function updateHidden() {
-        hidden.value = [...tagsBox.children].map(t => t.dataset.val).join(",");
-    }
-
-    input.addEventListener("keydown", function(e) {
-        if (e.key === "Enter" || e.key === ",") {
-            e.preventDefault();
-            addTag(input.value);
-            input.value = "";
-        }
-    });
-}
-
-initTagInput("symptoms");
-initTagInput("diagnosis");
-initTagInput("advice");
-</script>
-
-
-
-<!-- PRESCRIPTION JS -->
-<script>
-function addRow() {
-    let body = document.getElementById("medBody");
-    let tr = document.createElement("tr");
-    tr.innerHTML = `
-        <td><input name="medicine[]"></td>
-        <td><input name="dose[]"></td>
-        <td><input name="days[]"></td>
-        <td><input name="notes[]"></td>
-        <td><button class="del-btn" onclick="removeRow(this)">x</button></td>
-    `;
-    body.appendChild(tr);
-}
-
-function removeRow(btn) {
-    btn.parentNode.parentNode.remove();
-}
-
-document.getElementById("addRowBtn").onclick = addRow;
-
-function toggleTemplates() {
-    document.getElementById("templateBox").classList.toggle("show");
-}
-
-const templates = {
-    "Fever Standard": [
-        {med:"Paracetamol", dose:"1-0-1", days:"3", notes:"After food"}
-    ],
-    "Viral Infection": [
-        {med:"Dolo 650", dose:"1-1-1", days:"3", notes:""}
-    ]
-};
-
-function applyTemplate(name) {
-    let body = document.getElementById("medBody");
-    body.innerHTML = "";
-
-    templates[name].forEach(item => {
-        let tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><input name="medicine[]" value="${item.med}"></td>
-            <td><input name="dose[]" value="${item.dose}"></td>
-            <td><input name="days[]" value="${item.days}"></td>
-            <td><input name="notes[]" value="${item.notes}"></td>
-            <td><button class="del-btn" onclick="removeRow(this)">x</button></td>
-        `;
-        body.appendChild(tr);
-    });
-
-    addRow();
-    toggleTemplates();
-}
-</script>
-
-
-
 </div>
+
+
+<!-- =========================================
+ PASS URL + APPOINTMENT ID TO EXTERNAL JS
+========================================= -->
+<script>
+    window.autosaveUrl = "{{ url_for('appointments_bp.autosave', id=appt.id) }}";
+    window.apptId = "{{ appt.id }}";
+</script>
+
+<!-- =========================================
+        LOAD SEPARATED JS FILES
+========================================= -->
+<script src="{{ url_for('static', filename='js/appointments/consultation/autosave.js') }}"></script>
+<script src="{{ url_for('static', filename='js/appointments/consultation/tags.js') }}"></script>
+<script src="{{ url_for('static', filename='js/appointments/consultation/prescription.js') }}"></script>
+
 
 {% endblock %}

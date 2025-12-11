@@ -165,18 +165,7 @@
     </form>
   </main>
 
-  <script>
-    // Password Show/Hide Logic
-    (function () {
-      const pwd = document.getElementById('password');
-      const toggle = document.getElementById('togglePwd');
-
-      toggle.addEventListener('click', () => {
-        const visible = pwd.type === 'text';
-        pwd.type = visible ? 'password' : 'text';
-        toggle.textContent = visible ? "Show" : "Hide";
-      });
-    })();
-  </script>
+  <!-- Load external JS -->
+  <script src="{{ url_for('static', filename='js/auth/login.js') }}"></script>
 </body>
 </html>
