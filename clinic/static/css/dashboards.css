@@ -1,0 +1,171 @@
+/* ===============================
+   DASHBOARD
+   =============================== */
+
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* HEADER */
+.page-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.page-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-badge {
+    background: #eef2ff;
+    color: #3730a3;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+.admin-btn {
+    background: #2563eb;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+/* STATS */
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    border-left: 5px solid transparent;
+}
+
+.stat-card .label {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.stat-card .value {
+    font-size: 26px;
+    font-weight: 600;
+}
+
+.stat-card.blue { border-left-color: #2563eb; }
+.stat-card.green { border-left-color: #16a34a; }
+.stat-card.yellow { border-left-color: #f59e0b; }
+.stat-card.red { border-left-color: #ef4444; }
+
+/* CHART */
+.chart-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 28px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* TABLE */
+.table-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.search-bar {
+    display: flex;
+    gap: 6px;
+}
+
+.search-bar input {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+}
+
+.search-bar button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.styled-table th {
+    background: #f9fafb;
+    padding: 12px;
+    font-size: 13px;
+    text-align: left;
+}
+
+.styled-table td {
+    padding: 12px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+/* STATUS */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.status-badge.active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.inactive {
+    background: #fee2e2;
+    color: #991b1b;
+}
+.chart-error {
+    padding: 32px;
+    text-align: center;
+    font-size: 14px;
+    color: #6b7280;
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    border-radius: 12px;
+}

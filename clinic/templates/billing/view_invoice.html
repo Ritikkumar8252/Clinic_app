@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/billing.css') }}">
-<script src="{{ url_for('static', filename='js/billing.js') }}"></script>
 
 <div class="invoice-view shadow-card">
     <div class="row" style="display:flex; justify-content:space-between; align-items:center;">
@@ -82,5 +81,15 @@
         </form>
     </div>
 </div>
+
+<script>
+function openPaymentModal() {
+    document.getElementById("paymentModal").style.display = "flex";
+}
+
+function closePaymentModal() {
+    document.getElementById("paymentModal").style.display = "none";
+}
+</script>
 
 {% endblock %}

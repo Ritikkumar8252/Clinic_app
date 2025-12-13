@@ -34,6 +34,7 @@ class Patient(db.Model):
     pincode = db.Column(db.String(20))
     city = db.Column(db.String(50))
     state = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 

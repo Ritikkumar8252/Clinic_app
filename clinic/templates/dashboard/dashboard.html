@@ -1,26 +1,27 @@
 {% extends "base.html" %}
-
 {% block body %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboards.css') }}">
 
 <div class="dashboard-container">
 
-    <!-- PAGE HEADER -->
+    <!-- HEADER -->
     <div class="page-top">
-        <h1 class="page-title">Dashboard Overview</h1>
+        <h1 class="page-title">Dashboard</h1>
 
         <div class="actions">
             <span class="user-badge">{{ session['user'] }}</span>
-            <button id="darkModeBtn" class="dark-toggle">🌙</button>
 
             {% if session['role'] == "admin" %}
-            <a href="{{ url_for('admin_bp.admin_panel') }}" class="admin-btn">Admin Panel</a>
+                <a href="{{ url_for('admin_bp.admin_panel') }}" class="admin-btn">
+                    Admin Panel
+                </a>
             {% endif %}
         </div>
     </div>
 
-    <!-- STAT CARDS -->
+    <!-- STATS -->
     <div class="stats-section">
-
         <div class="stat-card blue">
             <p class="label">Total Patients</p>
             <h2 class="value">{{ total_patients }}</h2>
@@ -40,13 +41,19 @@
             <p class="label">Total Invoices</p>
             <h2 class="value">{{ total_invoices }}</h2>
         </div>
-
     </div>
 
-    <!-- CHART SECTION -->
+    <!-- CHART -->
     <div class="chart-wrapper">
         <h2 class="section-title">Patient Growth</h2>
-        <canvas id="patientChart" class="chart-canvas"></canvas>
+
+        <!-- DATA PASSED SAFELY -->
+        <div id="chart-data"
+             data-labels='{{ chart_labels | tojson | safe }}'
+             data-values='{{ chart_data | tojson | safe }}'>
+        </div>
+
+        <canvas id="patientChart"></canvas>
     </div>
 
     <!-- RECENT PATIENTS -->
@@ -54,8 +61,10 @@
         <div class="table-header">
             <h2 class="section-title">Recent Patients</h2>
 
-            <form method="GET" action="{{ url_for('patients_bp.patients') }}" class="search-bar">
-                <input type="text" name="q" placeholder="Search patient…">
+            <form method="GET"
+                  action="{{ url_for('patients_bp.patients') }}"
+                  class="search-bar">
+                <input type="text" name="q" placeholder="Search patient">
                 <button type="submit">Search</button>
             </form>
         </div>
@@ -77,17 +86,28 @@
                     <td>{{ p.disease }}</td>
                     <td>{{ p.last_visit }}</td>
                     <td>
-                        <span class="status-badge {{ 'active' if p.status=='Active' else 'inactive' }}">
+                        <span class="status-badge {{ 'active' if p.status == 'Active' else 'inactive' }}">
                             {{ p.status }}
                         </span>
                     </td>
                 </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align:center;">
+                        No recent patients
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
-
         </table>
     </div>
 
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Dashboard Logic -->
+<script src="{{ url_for('static', filename='js/dashboard/dashboard.js') }}"></script>
 
 {% endblock %}
