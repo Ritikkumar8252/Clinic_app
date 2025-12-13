@@ -11,13 +11,14 @@ patients_bp = Blueprint("patients_bp", __name__)
 
 @patients_bp.route("/patients")
 def patients():
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
 
     q = request.args.get("q", "")
     date_filter = request.args.get("date", "")
 
-    query = Patient.query
+    # ✅ FILTER BY LOGGED-IN USER
+    query = Patient.query.filter_by(user_id=session["user_id"])
 
     # Search by name or phone
     if q:
@@ -38,7 +39,7 @@ def patients():
 
 @patients_bp.route("/add_patient", methods=["GET", "POST"])
 def add_patient():
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
 
     from_page = request.args.get("from_page")  # check if redirected from add_appointment
@@ -68,6 +69,7 @@ def add_patient():
 
         # Create patient entry
         new_patient = Patient(
+            user_id=session["user_id"],
             name=name,
             age=age,
             gender=gender,
@@ -99,7 +101,10 @@ def add_patient():
 
 @patients_bp.route("/delete_patient/<int:id>")
 def delete_patient(id):
-    patient = Patient.query.get_or_404(id)
+    patient = Patient.query.filter_by(
+        id=id,
+        user_id=session["user_id"]
+    ).first_or_404()
     db.session.delete(patient)
     db.session.commit()
     flash("Patient deleted!")
@@ -108,7 +113,10 @@ def delete_patient(id):
 
 @patients_bp.route("/edit_patient/<int:id>", methods=["GET", "POST"])
 def edit_patient(id):
-    patient = Patient.query.get_or_404(id)
+    patient = Patient.query.filter_by(
+        id=id,
+        user_id=session["user_id"]
+    ).first_or_404()
 
     if request.method == "POST":
         patient.name = request.form["name"]
@@ -125,10 +133,13 @@ def edit_patient(id):
 
 @patients_bp.route("/patient/<int:id>")
 def patient_profile(id):
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
 
-    patient = Patient.query.get_or_404(id)
+    patient = Patient.query.filter_by(
+        id=id,
+        user_id=session["user_id"]
+    ).first_or_404()
 
     # FIX: fetch appointments via patient_id
     apps = Appointment.query.filter_by(patient_id=patient.id).all()
@@ -143,7 +154,12 @@ def patient_profile(id):
 
 @patients_bp.route("/upload_record/<int:id>", methods=["GET", "POST"])
 def upload_record(id):
-    patient = Patient.query.get_or_404(id)
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+    patient = Patient.query.filter_by(
+    id=id,
+    user_id=session["user_id"]
+    ).first_or_404()
 
     if request.method == "POST":
         file = request.files["record"]
@@ -160,5 +176,10 @@ def upload_record(id):
 
 @patients_bp.route("/generate_certificate/<int:id>")
 def generate_certificate(id):
-    patient = Patient.query.get_or_404(id)
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+    patient = Patient.query.filter_by(
+    id=id,
+    user_id=session["user_id"]
+    ).first_or_404()
     return f"Certificate generation is coming soon for: {patient.name}"

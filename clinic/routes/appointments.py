@@ -14,15 +14,21 @@ appointments_bp = Blueprint("appointments_bp", __name__)
 
 @appointments_bp.route("/appointments")
 def appointments():
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
+    user_id = session["user_id"]
+
 
     tab = request.args.get("tab", "queue")
     search = request.args.get("search", "").strip()
     date_filter = request.args.get("date", "").strip()
 
     # Base Query (join with patient)
-    base_query = Appointment.query.join(Patient)
+    base_query = (
+        Appointment.query
+        .join(Patient)
+        .filter(Patient.user_id == user_id)
+    )
 
     # Apply Search Filter – patient name
     if search:
@@ -55,10 +61,12 @@ def appointments():
 @appointments_bp.route("/add_appointment", methods=["GET", "POST"])
 def add_appointment():
 
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
+    
+    user_id = session["user_id"]
 
-    patients = Patient.query.all()
+    patients = Patient.query.filter_by(user_id=user_id).all()
 
     if request.method == "POST":
         patient_id = request.form["patient_id"]
@@ -66,7 +74,10 @@ def add_appointment():
         time = request.form["time"]
         date = request.form["date"]
 
-        patient = Patient.query.get(patient_id)
+        patient = Patient.query.filter_by(
+            id=patient_id,
+            user_id=user_id
+        ).first_or_404()
 
         ap = Appointment(
             patient_id=patient.id,
@@ -76,7 +87,7 @@ def add_appointment():
             status="Queue"
         )
 
-        patient.last_visit = date
+        patient.last_visit = request.form["date"]
 
         db.session.add(ap)
         db.session.commit()
@@ -89,7 +100,10 @@ def add_appointment():
 
 @appointments_bp.route("/delete_appointment/<int:id>")
 def delete_appointment(id):
-    app_item = Appointment.query.get_or_404(id)
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+
+    app_item = get_secure_appointment(id)
     db.session.delete(app_item)
     db.session.commit()
     flash("Appointment deleted!")
@@ -98,7 +112,7 @@ def delete_appointment(id):
 
 @appointments_bp.route("/edit_appointment/<int:id>", methods=["GET", "POST"])
 def edit_appointment(id):
-    app_item = Appointment.query.get_or_404(id)
+    app_item = get_secure_appointment(id)
 
     if request.method == "POST":
         app_item.patient_name = request.form["patient_name"]
@@ -118,9 +132,21 @@ def walkin():
     # Later you can replace this with a real page
     return "Walk-in consultation page coming soon!"
 
+# ---------------- STATUS ACTIONS ----------------
+def get_secure_appointment(id):
+    return (
+        Appointment.query
+        .join(Patient)
+        .filter(
+            Appointment.id == id,
+            Patient.user_id == session["user_id"]
+        )
+        .first_or_404()
+    )
+
 @appointments_bp.route("/start/<int:id>")
 def start(id):
-    appt = Appointment.query.get_or_404(id)
+    appt = get_secure_appointment(id)
     appt.status = "In Progress"
     db.session.commit()
 
@@ -128,14 +154,17 @@ def start(id):
 
 @appointments_bp.route("/complete/<int:id>")
 def complete(id):
-    appt = Appointment.query.get_or_404(id)
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+
+    appt = get_secure_appointment(id)
     appt.status = "Completed"
     db.session.commit()
     return redirect(url_for("appointments_bp.appointments"))
 
 @appointments_bp.route("/cancel/<int:id>")
 def cancel(id):
-    appt = Appointment.query.get_or_404(id)
+    appt = get_secure_appointment(id)
     appt.status = "Cancelled"
     db.session.commit()
     return redirect(url_for("appointments_bp.appointments"))
@@ -143,10 +172,10 @@ def cancel(id):
 
 @appointments_bp.route("/consult/<int:id>", methods=["GET", "POST"])
 def consult(id):
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
 
-    appt = Appointment.query.get_or_404(id)
+    appt = get_secure_appointment(id)
     patient = Patient.query.get_or_404(appt.patient_id)
 
     if request.method == "POST":
@@ -180,7 +209,7 @@ def consult(id):
 
 @appointments_bp.route("/autosave/<int:id>", methods=["POST"])
 def autosave(id):
-    appt = Appointment.query.get_or_404(id)
+    appt = get_secure_appointment(id)
 
     data = request.get_json()
 
@@ -208,7 +237,7 @@ def autosave(id):
 
 @appointments_bp.route("/prescription/<int:id>")
 def prescription_pdf(id):
-    appt = Appointment.query.get_or_404(id)
+    appt = get_secure_appointment(id)
     patient = Patient.query.get_or_404(appt.patient_id)
 
     buffer = BytesIO()

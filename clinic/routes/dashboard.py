@@ -4,38 +4,60 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 from clinic.extensions import db
 
-
 dashboard_bp = Blueprint("dashboard_bp", __name__)
-
 
 @dashboard_bp.route("/dashboard")
 def dashboard():
 
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
 
-    total_patients = Patient.query.count()
+    user_id = session["user_id"]
 
+    # ✅ TOTAL PATIENTS (USER-SPECIFIC)
+    total_patients = Patient.query.filter_by(user_id=user_id).count()
+
+    # ✅ TODAY'S APPOINTMENTS (USER-SPECIFIC)
     today = datetime.now().strftime("%Y-%m-%d")
-    today_appointments = Appointment.query.filter_by(date=today).count()
-
-    unpaid = (
-        Invoice.query.filter(Invoice.status != "Paid")
-        .with_entities(func.count(Invoice.id))
-        .first()
+    today_appointments = (
+        Appointment.query
+        .join(Patient)
+        .filter(
+            Patient.user_id == user_id,
+            Appointment.date == today
+        )
+        .count()
     )
-    pending_bills = unpaid[0] if unpaid else 0
 
-    total_invoices = Invoice.query.count()
+    # ✅ PENDING BILLS (USER-SPECIFIC)
+    pending_bills = (
+        Invoice.query
+        .join(Patient)
+        .filter(
+            Patient.user_id == user_id,
+            Invoice.status != "Paid"
+        )
+        .count()
+    )
 
+    # ✅ TOTAL INVOICES (USER-SPECIFIC)
+    total_invoices = (
+        Invoice.query
+        .join(Patient)
+        .filter(Patient.user_id == user_id)
+        .count()
+    )
+
+    # ✅ RECENT PATIENTS (USER-SPECIFIC)
     recent_patients = (
         Patient.query
+        .filter_by(user_id=user_id)
         .order_by(Patient.id.desc())
         .limit(3)
         .all()
     )
 
-    # 📊 PATIENTS PER DAY (LAST 7 DAYS)
+    # 📊 PATIENTS PER DAY (LAST 7 DAYS, USER-SPECIFIC)
     start_date = datetime.now() - timedelta(days=6)
 
     patient_stats = (
@@ -43,7 +65,10 @@ def dashboard():
             func.date(Patient.created_at),
             func.count(Patient.id)
         )
-        .filter(Patient.created_at >= start_date)
+        .filter(
+            Patient.user_id == user_id,
+            Patient.created_at >= start_date
+        )
         .group_by(func.date(Patient.created_at))
         .order_by(func.date(Patient.created_at))
         .all()
@@ -52,8 +77,9 @@ def dashboard():
     chart_labels = []
     chart_data = []
 
-    for date_str, count in patient_stats:
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    for date_val, count in patient_stats:
+        # date_val may already be date object depending on DB
+        date_obj = date_val if not isinstance(date_val, str) else datetime.strptime(date_val, "%Y-%m-%d")
         chart_labels.append(date_obj.strftime("%d %b"))
         chart_data.append(count)
 

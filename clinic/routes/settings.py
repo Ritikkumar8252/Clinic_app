@@ -17,7 +17,7 @@ def allowed(filename):
 @login_required
 def settings():
 
-    user = User.query.filter_by(email=session["user"]).first()
+    user = User.query.get_or_404(session["user_id"])
 
     if request.method == "POST":
 

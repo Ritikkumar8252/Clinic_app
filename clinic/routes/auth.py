@@ -5,19 +5,19 @@ from functools import wraps
 from clinic.models import User
 from clinic import mail
 
-
+auth_bp = Blueprint("auth_bp", __name__)
 
 # LOGIN REQUIRED DECORATOR
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if "user" not in session:
+        if "user_id" not in session:
             flash("Please log in first.")
             return redirect(url_for("auth_bp.login"))
         return f(*args, **kwargs)
     return wrapper
 
-auth_bp = Blueprint("auth_bp", __name__)
+
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
@@ -39,8 +39,11 @@ def login():
             return redirect(url_for("auth_bp.login"))
 
         # store session
-        session["user"] = user.email
-        session["role"] = user.role    # <-- IMPORTANT
+        session["user_id"] = user.id
+        session["user_email"] = user.email
+        session["role"] = user.role
+        
+
 
         # redirect according to role
         if user.role == "admin":

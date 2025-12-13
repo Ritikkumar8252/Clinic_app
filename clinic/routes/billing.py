@@ -6,6 +6,19 @@ import io
 
 billing_bp = Blueprint("billing_bp", __name__, url_prefix="/billing")
 
+
+def get_secure_invoice(id):
+    return (
+        Invoice.query
+        .join(Patient)
+        .filter(
+            Invoice.id == id,
+            Patient.user_id == session["user_id"]
+        )
+        .first_or_404()
+    )
+
+
 # helper: generate next invoice number
 def next_invoice_number():
     last = Invoice.query.order_by(Invoice.id.desc()).first()
@@ -15,13 +28,19 @@ def next_invoice_number():
 
 @billing_bp.route("/", methods=["GET"])
 def billing():
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
 
     q = request.args.get("search", "").strip()
     status = request.args.get("status", "").strip()
 
-    invoices = Invoice.query.join(Patient).order_by(Invoice.created_at.desc())
+    invoices = (
+    Invoice.query
+    .join(Patient)
+    .filter(Patient.user_id == session["user_id"])
+    .order_by(Invoice.created_at.desc())
+    )
+
 
     if q:
         invoices = invoices.filter((Patient.name.ilike(f"%{q}%")) | (Invoice.invoice_number.ilike(f"%{q}%")))
@@ -31,27 +50,44 @@ def billing():
 
     invoices = invoices.all()
 
-    due_count = Invoice.query.filter(Invoice.status != "Paid").count()
+    due_count = (
+    Invoice.query
+    .join(Patient)
+    .filter(
+        Patient.user_id == session["user_id"],
+        Invoice.status != "Paid"
+    )
+    .count()
+    )
+
 
     return render_template("billing/billing.html", invoices=invoices, due_count=due_count)
 
 @billing_bp.route("/create_invoice", methods=["GET", "POST"])
 def create_invoice():
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
 
-    patients = Patient.query.order_by(Patient.name).all()
+    patients = Patient.query.filter_by(
+        user_id=session["user_id"]
+    ).order_by(Patient.name).all()
+
+
     new_invoice_number = next_invoice_number()
 
     if request.method == "POST":
-        patient_id = int(request.form["patient_id"])
+         # ✅ ONLY NOW access request.form
+        patient = Patient.query.filter_by(
+            id=int(request.form["patient_id"]),
+            user_id=session["user_id"]
+        ).first_or_404()
         invoice_number = request.form.get("invoice_number", new_invoice_number)
         description = request.form.get("description", "")
         total = float(request.form.get("total_amount", 0) or 0)
         created_at = datetime.now().strftime("%Y-%m-%d")
 
         invoice = Invoice(
-            patient_id=patient_id,
+            patient_id=patient.id,
             invoice_number=invoice_number,
             description=description,
             total_amount=total,
@@ -68,7 +104,11 @@ def create_invoice():
             if not name.strip():
                 continue
             item = InvoiceItem(invoice_id=invoice.id, item_name=name.strip(), amount=float(amt or 0))
-            db.session.add(item)
+            db.session.add(InvoiceItem(
+                    invoice_id=invoice.id,
+                    item_name=name.strip(),
+                    amount=float(amt or 0)
+                ))
         db.session.commit()
 
         # optional initial payment
@@ -91,10 +131,11 @@ def create_invoice():
 
 @billing_bp.route("/view/<int:id>", methods=["GET"])
 def view_invoice(id):
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
 
-    inv = Invoice.query.get_or_404(id)
+    inv = get_secure_invoice(id)
+
     paid = sum(p.amount for p in inv.payments)
     balance = inv.total_amount - paid
     return render_template("billing/view_invoice.html", inv=inv, paid=paid, balance=balance)
@@ -123,9 +164,10 @@ def download_invoice(id):
 
 @billing_bp.route("/delete/<int:id>", methods=["GET"])
 def delete_invoice(id):
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
-    inv = Invoice.query.get_or_404(id)
+    inv = get_secure_invoice(id)
+
     # cascade delete items & payments if you prefer; removing rows explicitly:
     InvoiceItem.query.filter_by(invoice_id=inv.id).delete()
     Payment.query.filter_by(invoice_id=inv.id).delete()
@@ -136,10 +178,13 @@ def delete_invoice(id):
 
 @billing_bp.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit_invoice(id):
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
-    inv = Invoice.query.get_or_404(id)
-    patients = Patient.query.order_by(Patient.name).all()
+    inv = get_secure_invoice(id)
+    patients = Patient.query.filter_by(
+        user_id=session["user_id"]
+    ).order_by(Patient.name).all()
+
 
     if request.method == "POST":
         inv.patient_id = int(request.form["patient_id"])
@@ -163,9 +208,10 @@ def edit_invoice(id):
 
 @billing_bp.route("/add_payment/<int:id>", methods=["POST"])
 def add_payment(id):
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
-    inv = Invoice.query.get_or_404(id)
+    inv = get_secure_invoice(id)
+
     amt = float(request.form.get("amount", 0) or 0)
     method = request.form.get("method", "Cash")
     if amt <= 0:
