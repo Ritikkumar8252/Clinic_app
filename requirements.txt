@@ -5,4 +5,5 @@ flask_migrate
 psycopg2-binary
 reportlab
 gunicorn
+Flask-Mail
 
