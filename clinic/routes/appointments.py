@@ -210,28 +210,26 @@ def consult(id):
 @appointments_bp.route("/autosave/<int:id>", methods=["POST"])
 def autosave(id):
     appt = get_secure_appointment(id)
-
     data = request.get_json()
 
-    # Update symptoms & findings
-    appt.symptoms = data.get("symptoms", "")
-    appt.diagnosis = data.get("diagnosis", "")
-    appt.prescription = data.get("prescription", "")
-    appt.advice = data.get("advice", "")
+    # 🚨 ignore empty or invalid payload
+    if not data:
+        return {"status": "ignored"}
 
-    # Update vitals
-    appt.bp = data.get("bp", "")
-    appt.pulse = data.get("pulse", "")
-    appt.spo2 = data.get("spo2", "")
-    appt.temperature = data.get("temperature", "")
-    appt.weight = data.get("weight", "")
+    # only update fields that are actually sent
+    fields = [
+        "symptoms", "diagnosis", "prescription", "advice",
+        "bp", "pulse", "spo2", "temperature", "weight",
+        "follow_up_date"
+    ]
 
-    # Follow-up
-    appt.follow_up_date = data.get("follow_up_date", "")
+    for field in fields:
+        if field in data:
+            setattr(appt, field, data[field])
 
     db.session.commit()
-
     return {"status": "saved"}
+
 
 
 

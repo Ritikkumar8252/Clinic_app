@@ -588,6 +588,10 @@ tbody tr:hover {
     opacity: 0.85;
 }
 /* --------patient profile */
+.quick-actions {
+    margin: 10px 0 15px;
+}
+
 .patient-info-card, .section-box {
     background: white;
     padding: 20px;

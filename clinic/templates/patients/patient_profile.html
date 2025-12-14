@@ -51,6 +51,13 @@
         <!-- Patient Info -->
         <div class="section-box">
             <h3 class="section-title">Patient Details</h3>
+            <div class="quick-actions">
+                <a href="{{ url_for('patients_bp.patient_visits', patient_id=patient.id) }}"
+                class="btn btn-primary">
+                    Visit History ({{ visits|length }})
+                </a>
+            </div>
+
 
             <div class="info-grid">
                 <div>

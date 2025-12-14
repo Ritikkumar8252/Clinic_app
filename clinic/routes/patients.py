@@ -126,7 +126,7 @@ def edit_patient(id):
 
         db.session.commit()
         flash("Patient updated successfully!")
-        return redirect(url_for("patients_bp.patients"))
+        return redirect(url_for("patients_bp.patient_profile",  id=patient.id))
 
     return render_template("patients/edit_patient.html", patient=patient)
 
@@ -172,7 +172,7 @@ def upload_record(id):
             flash("Record uploaded successfully!")
             return redirect(url_for("patients_bp.patient_profile", id=id))
 
-    return render_template("upload_record.html", patient=patient)
+    return render_template("records/upload_record.html", patient=patient)
 
 @patients_bp.route("/generate_certificate/<int:id>")
 def generate_certificate(id):
@@ -183,3 +183,26 @@ def generate_certificate(id):
     user_id=session["user_id"]
     ).first_or_404()
     return f"Certificate generation is coming soon for: {patient.name}"
+
+@patients_bp.route("/<int:patient_id>/visits")
+def patient_visits(patient_id):
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+
+    patient = Patient.query.filter_by(
+        id=patient_id,
+        user_id=session["user_id"]
+    ).first_or_404()
+
+    visits = (
+        Appointment.query
+        .filter_by(patient_id=patient.id, status="Completed")
+        .order_by(Appointment.date.desc())
+        .all()
+    )
+
+    return render_template(
+        "patients/visit_history.html",
+        patient=patient,
+        visits=visits
+    )

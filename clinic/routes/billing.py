@@ -72,62 +72,75 @@ def create_invoice():
         user_id=session["user_id"]
     ).order_by(Patient.name).all()
 
-
     new_invoice_number = next_invoice_number()
 
     if request.method == "POST":
-         # ✅ ONLY NOW access request.form
+        # patient validation
         patient = Patient.query.filter_by(
             id=int(request.form["patient_id"]),
             user_id=session["user_id"]
         ).first_or_404()
+
         invoice_number = request.form.get("invoice_number", new_invoice_number)
         description = request.form.get("description", "")
         total = float(request.form.get("total_amount", 0) or 0)
-        created_at = datetime.now().strftime("%Y-%m-%d")
 
+        # ✅ FIX 1: store real datetime, NOT string
         invoice = Invoice(
             patient_id=patient.id,
             invoice_number=invoice_number,
             description=description,
             total_amount=total,
-            created_at=created_at,
+            created_at=datetime.now(),
             status="Unpaid"
         )
-        db.session.add(invoice)
-        db.session.commit()
 
-        # items
+        db.session.add(invoice)
+        db.session.commit()   # invoice.id needed for items
+
+        # ✅ FIX 2: store invoice items ONCE (no duplicates)
         names = request.form.getlist("item_name[]")
         amounts = request.form.getlist("item_amount[]")
+
         for name, amt in zip(names, amounts):
             if not name.strip():
                 continue
-            item = InvoiceItem(invoice_id=invoice.id, item_name=name.strip(), amount=float(amt or 0))
-            db.session.add(InvoiceItem(
-                    invoice_id=invoice.id,
-                    item_name=name.strip(),
-                    amount=float(amt or 0)
-                ))
+
+            item = InvoiceItem(
+                invoice_id=invoice.id,
+                item_name=name.strip(),
+                amount=float(amt or 0)
+            )
+            db.session.add(item)
+
         db.session.commit()
 
         # optional initial payment
         paid_now = float(request.form.get("paid_now", 0) or 0)
         if paid_now > 0:
-            payment = Payment(invoice_id=invoice.id, amount=paid_now, paid_at=datetime.now().strftime("%Y-%m-%d"))
+            payment = Payment(
+                invoice_id=invoice.id,
+                amount=paid_now,
+                paid_at=datetime.now()
+            )
             db.session.add(payment)
 
-            # update status
+            # update invoice status
             if abs(paid_now - invoice.total_amount) < 0.001:
                 invoice.status = "Paid"
             else:
                 invoice.status = "Partial"
+
             db.session.commit()
 
         flash("Invoice created successfully.", "success")
         return redirect(url_for("billing_bp.billing"))
 
-    return render_template("billing/create_invoice.html", patients=patients, new_invoice_number=new_invoice_number)
+    return render_template(
+        "billing/create_invoice.html",
+        patients=patients,
+        new_invoice_number=new_invoice_number
+    )
 
 @billing_bp.route("/view/<int:id>", methods=["GET"])
 def view_invoice(id):

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block body %}
+<style>.hint-text {
+    font-size: 13px;
+    color: #777;
+    margin-top: 6px;
+}
+</style>
+
+<div class="history-page">
+
+    <div class="history-header">
+        <h2>Visit History</h2>
+        <p>{{ patient.name }} • {{ patient.gender }}, {{ patient.age }} yrs</p>
+    </div>
+
+    {% if visits %}
+        <div class="visit-grid">
+            {% for v in visits %}
+                <div class="visit-card">
+                    
+                    <div class="visit-top">
+                        <span class="visit-date">{{ v.date }}</span>
+                        <span class="visit-status {{ v.status|lower }}">
+                            {{ v.status }}
+                        </span>
+                    </div>
+
+                    <div class="visit-body">
+                        <p><strong>Symptoms:</strong><br>
+                            {{ v.symptoms or "—" }}
+                        </p>
+
+                        <p><strong>Diagnosis:</strong><br>
+                            {{ v.diagnosis or "—" }}
+                        </p>
+                    </div>
+
+                    <div class="visit-footer">
+                        <a href="{{ url_for('appointments_bp.consult', id=v.id) }}"
+                           class="btn btn-small">
+                            View Details
+                        </a>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No completed visits found.</p>
+    {% endif %}
+
+</div>
+
+{% endblock %}

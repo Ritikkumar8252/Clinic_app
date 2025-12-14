@@ -14,18 +14,35 @@ function sendSaveRequest() {
         return;
     }
 
-    const payload = {
-        symptoms: document.getElementById("symptoms-hidden").value || "",
-        diagnosis: document.getElementById("diagnosis-hidden").value || "",
-        advice: document.getElementById("advice-hidden").value || "",
+    const payload = {};
 
-        bp: document.getElementById("bp")?.value || "",
-        pulse: document.getElementById("pulse")?.value || "",
-        spo2: document.getElementById("spo2")?.value || "",
-        temperature: document.getElementById("temperature")?.value || "",
-        weight: document.getElementById("weight")?.value || "",
-        follow_up_date: document.getElementById("follow_up_date")?.value || ""
-    };
+    const symptoms = document.getElementById("symptoms-hidden");
+    if (symptoms && symptoms.value.trim() !== "") {
+        payload.symptoms = symptoms.value;
+    }
+
+    const diagnosis = document.getElementById("diagnosis-hidden");
+    if (diagnosis && diagnosis.value.trim() !== "") {
+        payload.diagnosis = diagnosis.value;
+    }
+
+    const advice = document.getElementById("advice-hidden");
+    if (advice && advice.value.trim() !== "") {
+        payload.advice = advice.value;
+    }
+
+    const fields = ["bp", "pulse", "spo2", "temperature", "weight", "follow_up_date"];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.value.trim() !== "") {
+            payload[id] = el.value;
+        }
+    });
+
+    // do not send empty payload
+    if (Object.keys(payload).length === 0) {
+        return;
+    }
 
     fetch(window.autosaveUrl, {
         method: "POST",
