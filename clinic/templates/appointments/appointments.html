@@ -1,6 +1,50 @@
 {% extends "base.html" %}
 {% block body %}
+<style>
+    /* ===== Appointments page: remove text cursor ===== */
 
+/* Disable text selection on appointment UI */
+.appt-header,
+.appt-header *,
+
+.filter-bar,
+.filter-bar *,
+
+.appt-tabs,
+.appt-tabs *,
+
+.appt-list,
+.appt-list * {
+    user-select: none;
+    cursor: default;
+}
+
+/* Appointment cards (important) */
+.appointment-card,
+.appointment-card * {
+    user-select: none;
+    cursor: default;
+}
+
+/* Enable pointer for clickable items */
+a,
+button,
+.btn,
+.tab {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Keep form inputs usable */
+.search-box,
+.date-box,
+input,
+select {
+    cursor: text;
+    user-select: text;
+}
+
+</style>
 <!-- HEADER -->
 <div class="appt-header">
     <div class="left">

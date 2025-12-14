@@ -2,7 +2,56 @@
 {% block body %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboards.css') }}">
+<style>
+    /* ===== Dashboard: remove text cursor (app-like) ===== */
 
+/* Disable text selection on dashboard UI */
+.dashboard-container,
+.dashboard-container *,
+
+.page-top,
+.page-top *,
+
+.stats-section,
+.stats-section *,
+
+.chart-wrapper,
+.chart-wrapper *,
+
+.table-wrapper,
+.table-wrapper *,
+
+.styled-table,
+.styled-table * {
+    user-select: none;
+    cursor: default;
+}
+
+/* Enable pointer for clickable items */
+a,
+button,
+.admin-btn,
+.stat-card,
+.status-badge {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Keep inputs usable */
+input,
+.search-bar input {
+    user-select: text;
+    cursor: text;
+}
+
+/* Prevent image selection */
+canvas,
+img {
+    user-select: none;
+    pointer-events: none;
+}
+
+</style>
 <div class="dashboard-container">
 
     <!-- HEADER -->

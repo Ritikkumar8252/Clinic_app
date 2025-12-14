@@ -1,11 +1,42 @@
 {% extends "base.html" %}
 {% block body %}
+<style>/* Disable text selection on patient profile content */
+.profile-card,
+.profile-card *,
 
+.section-box,
+.section-box *,
+
+.record-item,
+.record-item *,
+
+.styled-table,
+.styled-table * {
+    user-select: none;
+    cursor: default;
+}
+
+/* Re-enable pointer cursor for clickable elements */
+a,
+button,
+.btn,
+.record-actions a {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Keep inputs normal (future safe) */
+input,
+textarea,
+select {
+    user-select: text;
+    cursor: text;
+}</style>
 <!-- TOP YELLOW BAR -->
 <div class="top-banner">
     <div class="banner-info">
         <h2>{{ patient.name }}</h2>
-        <p>MRN: {{ patient.id }} &nbsp;&bull;&nbsp; Last Visit: {{ patient.last_visit }}</p>
+        <p>MRN: {{ patient.patient_no }} &nbsp;&bull;&nbsp; Last Visit: {{ patient.last_visit }}</p>
     </div>
 
     <div class="right-buttons">
@@ -126,10 +157,12 @@
 
 
         <!-- MEDICAL RECORD -->
+                
         <div class="section-box">
             <div class="section-header">
                 <h3 class="section-title">Medical Records</h3>
-                <a href="{{ url_for('patients_bp.upload_record', id=patient.id) }}" class="btn btn-primary">
+                <a href="{{ url_for('patients_bp.upload_record', id=patient.id) }}"
+                class="btn btn-primary">
                     Upload Record
                 </a>
             </div>
@@ -137,16 +170,32 @@
             {% if patient.records %}
                 <ul class="record-list">
                     {% for r in patient.records %}
-                    <li>
-                        <span>{{ r.filename }}</span>
-                        <a href="{{ url_for('static', filename='records/' ~ r.filename) }}" target="_blank">View</a>
+                    <li class="record-item">
+
+                        <div class="record-info">
+                            <strong>{{ r.filename }}</strong>
+                            <span class="record-date">
+                                Uploaded on {{ r.uploaded_at.strftime('%d %b %Y') }}
+                            </span>
+                        </div>
+
+                        <div class="record-actions">
+                            <a href="{{ url_for('static',
+                                filename='records/' ~ r.filename) }}"
+                            target="_blank"
+                            class="btn btn-small btn-secondary">
+                                View
+                            </a>
+                        </div>
+
                     </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <p class="empty-state">No medical records uploaded.</p>
+                <p class="empty-state">No medical records uploaded yet.</p>
             {% endif %}
         </div>
+
 
 
         <!-- CERTIFICATES -->

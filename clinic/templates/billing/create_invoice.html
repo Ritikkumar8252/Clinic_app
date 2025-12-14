@@ -23,7 +23,7 @@
             <select name="patient_id" required>
                 <option value="">Select Patient</option>
                 {% for p in patients %}
-                <option value="{{ p.id }}">{{ p.name }} ({{ p.phone }})</option>
+                <option value="{{ p.patient_no }}">{{ p.name }} ({{ p.phone }})</option>
                 {% endfor %}
             </select>
         </div>

@@ -2,6 +2,9 @@ from flask import Flask
 from flask_mail import Mail
 from .extensions import db
 from .models import User
+from flask_migrate import Migrate
+
+migrate = Migrate()
 
 # create mail object
 mail = Mail()
@@ -32,13 +35,17 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    # ✅ RECORD UPLOAD CONFIG (THIS IS MANDATORY)
+    app.config["RECORD_UPLOAD_FOLDER"] = os.path.join(
+        app.root_path, "static", "records"
+    )
     # ******** EMAIL ********
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
     app.config['MAIL_USERNAME'] = "yourgmail@gmail.com"
     app.config['MAIL_PASSWORD'] = "your_app_password"
-
+    
     # Init extensions
     db.init_app(app)
     mail.init_app(app)
@@ -66,5 +73,7 @@ def create_app():
             db.session.add(admin)
             db.session.commit()
             print("Admin user created")
+
+    migrate.init_app(app, db)
 
     return app

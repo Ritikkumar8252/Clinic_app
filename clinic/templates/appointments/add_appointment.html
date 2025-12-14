@@ -32,7 +32,7 @@
         <select id="patientSelect" name="patient_id" class="input-box" required>
             <option value="">Search patient by name or phone…</option>
             {% for p in patients %}
-            <option value="{{ p.id }}">{{ p.name }} - ({{ p.phone }})</option>
+            <option value="{{ p.id }}">{{ p.patient_no }} • {{ p.name }} - ({{ p.phone }})</option>
             {% endfor %}
         </select>
 

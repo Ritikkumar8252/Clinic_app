@@ -67,7 +67,7 @@ body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var
       <img src="{{ url_for('static', filename='patient_images/' + (patient.image or 'default_profile.png')) }}" class="patient-photo" alt="photo">
       <div class="patient-info">
         <div style="font-weight:700;font-size:16px">{{ patient.name }}</div>
-        <div class="small">ID: {{ patient.id }} · {{ patient.age }} / {{ patient.gender }}</div>
+        <div class="small">ID: {{ patient.patient_no }} · {{ patient.age }} / {{ patient.gender }}</div>
         <div class="small">Phone: {{ patient.phone or '-' }}</div>
         <div class="small">Visit: {{ appt.date }} · {{ appt.type }}</div>
       </div>

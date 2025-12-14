@@ -1,11 +1,179 @@
-{% extends "base.html" %}
-{% block body %}
+<style>
+/* ===== Compact Practo Records (Readable) ===== */
+.record-row,
+.record-name,
+.record-date {
+    user-select: none;
+    cursor: default;
+}
 
-<h2>Upload Medical Record for {{ patient.name }}</h2>
+.records-box {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 16px;
+}
 
-<form method="POST" enctype="multipart/form-data">
-    <input type="file" name="record" required>
-    <button class="btn-primary">Upload</button>
-</form>
+/* Header */
+.records-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
 
-{% endblock %}
+.records-top h3 {
+    font-size: 17px;           /* ⬆ bigger */
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+/* Upload button */
+.upload-btn {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;        /* ⬆ bigger */
+    font-size: 13px;          /* ⬆ bigger */
+    border-radius: 16px;
+    cursor: pointer;
+}
+
+.upload-btn:hover {
+    background: #1e40af;
+}
+
+/* List */
+.records-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.record-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;          /* ⬆ spacing */
+    border-top: 1px solid #f1f5f9;
+}
+
+/* File info */
+.record-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.record-name {
+    font-size: 15px;          /* ⬆ bigger */
+    font-weight: 500;
+    color: #111827;
+}
+
+.record-date {
+    font-size: 13px;          /* ⬆ bigger */
+    color: #6b7280;
+}
+
+/* Actions */
+.record-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    padding: 6px 12px;        /* ⬆ bigger */
+    font-size: 13px;          /* ⬆ bigger */
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* View */
+.view-btn {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+/* Delete */
+.delete-btn {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* Empty */
+.empty-msg {
+    font-size: 14px;          /* ⬆ bigger */
+    color: #6b7280;
+    margin-top: 8px;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .record-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+</style>
+
+<div class="records-box">
+
+    <div class="records-top">
+        <h3>Medical Records</h3>
+
+        <!-- Practo-style upload -->
+        <form action="{{ url_for('patients_bp.upload_record', id=patient.id) }}"
+              method="POST"
+              enctype="multipart/form-data">
+
+            <input type="file"
+                   name="record"
+                   id="recordInput"
+                   hidden
+                   onchange="this.form.submit()">
+
+            <button type="button"
+                    class="upload-btn"
+                    onclick="document.getElementById('recordInput').click()">
+                + Upload
+            </button>
+        </form>
+    </div>
+
+    {% if patient.records %}
+        <ul class="records-list">
+            {% for r in patient.records %}
+            <li class="record-row">
+
+                <div class="record-info">
+                    <span class="record-name">{{ r.filename }}</span>
+                    <span class="record-date">
+                        {{ r.uploaded_at.strftime('%d %b %Y') }}
+                    </span>
+                </div>
+
+                <div class="record-actions">
+                    <a href="{{ url_for('static', filename='records/' ~ r.filename) }}"
+                       target="_blank"
+                       class="action-btn view-btn">
+                        View
+                    </a>
+
+                    <a href="{{ url_for('patients_bp.delete_record', record_id=r.id) }}"
+                       onclick="return confirm('Delete this record?')"
+                       class="action-btn delete-btn">
+                        Delete
+                    </a>
+                </div>
+
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-msg">No medical records uploaded.</p>
+    {% endif %}
+
+</div>

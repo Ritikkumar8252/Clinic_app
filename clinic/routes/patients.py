@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash,current_app
 from ..extensions import db
-from ..models import Patient, Invoice, Visit, Appointment
+from ..models import Patient, Invoice, Visit, Appointment ,MedicalRecord
+
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -31,7 +32,7 @@ def patients():
     if date_filter:
         query = query.filter(Patient.last_visit == date_filter)
 
-    patients = query.order_by(Patient.id.desc()).all()
+    patients = query.order_by(Patient.patient_no.desc()).all()
 
     return render_template("patients/patients.html", patients=patients)
 
@@ -42,7 +43,7 @@ def add_patient():
     if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
 
-    from_page = request.args.get("from_page")  # check if redirected from add_appointment
+    from_page = request.args.get("from_page")
 
     if request.method == "POST":
         name = request.form.get("name")
@@ -58,18 +59,34 @@ def add_patient():
         city = request.form.get("city")
         state = request.form.get("state")
 
+        # ---------- PATIENT NO LOGIC (NEW) ----------
+        last_patient = (
+            Patient.query
+            .filter_by(user_id=session["user_id"])
+            .order_by(Patient.patient_no.desc())
+            .first()
+        )
+
+        patient_no = (last_patient.patient_no + 1) if last_patient else 1
+        # --------------------------------------------
+
         # PHOTO UPLOAD
         image_file = request.files.get("image")
         filename = "default_profile.png"
 
-        if image_file and image_file.filename != "":
+        if image_file and image_file.filename:
             filename = secure_filename(image_file.filename)
-            save_path = os.path.join(current_app.config["PATIENT_UPLOAD_FOLDER"], filename)
+            save_path = os.path.join(
+                current_app.config["PATIENT_UPLOAD_FOLDER"],
+                filename
+            )
             image_file.save(save_path)
 
         # Create patient entry
         new_patient = Patient(
             user_id=session["user_id"],
+            patient_no=patient_no,   # 👈 IMPORTANT
+
             name=name,
             age=age,
             gender=gender,
@@ -89,13 +106,11 @@ def add_patient():
 
         flash("Patient added successfully!", "success")
 
-        # If coming from add_appointment → redirect back there
         if request.form.get("from_page") == "add_appointment":
             return redirect(url_for("appointments_bp.add_appointment"))
 
         return redirect(url_for("patients_bp.patients"))
 
-    # GET request → show form
     return render_template("patients/add_patient.html", from_page=from_page)
 
 
@@ -152,27 +167,82 @@ def patient_profile(id):
     )
 
 
+from clinic.models import MedicalRecord
+
 @patients_bp.route("/upload_record/<int:id>", methods=["GET", "POST"])
 def upload_record(id):
+
     if "user_id" not in session:
         return redirect(url_for("auth_bp.login"))
+
     patient = Patient.query.filter_by(
-    id=id,
-    user_id=session["user_id"]
+        id=id,
+        user_id=session["user_id"]
     ).first_or_404()
 
     if request.method == "POST":
-        file = request.files["record"]
+        file = request.files.get("record")
 
-        if file:
-            filename = file.filename
-            filepath = os.path.join("clinic/static/records", filename)
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+
+            # Upload folder
+            upload_dir = current_app.config["RECORD_UPLOAD_FOLDER"]
+            os.makedirs(upload_dir, exist_ok=True)
+
+            filepath = os.path.join(upload_dir, filename)
             file.save(filepath)
 
-            flash("Record uploaded successfully!")
-            return redirect(url_for("patients_bp.patient_profile", id=id))
+            # ✅ SAVE RECORD IN DB (THIS WAS MISSING)
+            record = MedicalRecord(
+                patient_id=patient.id,
+                filename=filename
+            )
+            db.session.add(record)
+            db.session.commit()
 
-    return render_template("records/upload_record.html", patient=patient)
+            flash("Record uploaded successfully!", "success")
+            return redirect(
+                url_for("patients_bp.patient_profile", id=id)
+            )
+
+    return render_template(
+        "records/upload_record.html",
+        patient=patient
+    )
+
+@patients_bp.route("/delete_record/<int:record_id>")
+def delete_record(record_id):
+
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+
+    record = MedicalRecord.query.get_or_404(record_id)
+
+    # Security check: record must belong to logged-in user's patient
+    patient = Patient.query.filter_by(
+        id=record.patient_id,
+        user_id=session["user_id"]
+    ).first_or_404()
+
+    # Delete file from disk
+    file_path = os.path.join(
+        current_app.config["RECORD_UPLOAD_FOLDER"],
+        record.filename
+    )
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    # Delete DB record
+    db.session.delete(record)
+    db.session.commit()
+
+    flash("Medical record deleted successfully", "success")
+    return redirect(
+        url_for("patients_bp.patient_profile", id=patient.id)
+    )
+
 
 @patients_bp.route("/generate_certificate/<int:id>")
 def generate_certificate(id):

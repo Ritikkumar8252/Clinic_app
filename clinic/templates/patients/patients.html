@@ -1,6 +1,55 @@
 {% extends "base.html" %}
 {% block body %}
+<style>
+/* ===== Patients page: app-like behavior ===== */
 
+/* Disable text selection on patient UI */
+.top-banner,
+.top-banner *,
+
+.controls-bar,
+.controls-bar *,
+
+.table-container,
+.table-container *,
+
+.patients-table,
+.patients-table * {
+    user-select: none;
+    cursor: default;
+}
+
+
+/* Patient row hover (nice polish) */
+.patients-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* Enable pointer for actions */
+a,
+.btn-view,
+.btn-upload,
+.btn-cert,
+.btn-add {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Keep search & date inputs usable */
+.search-box,
+.date-box,
+input {
+    user-select: text;
+    cursor: text;
+}
+
+/* Images should not be selectable */
+.patient-mini {
+    user-select: none;
+    pointer-events: none;
+}
+
+</style>
 <h1 class="page-title">Patients</h1>
 
 <!-- TOP DOCTOR HEADER -->
@@ -52,7 +101,7 @@
         {% if patients %}
             {% for p in patients %}
             <tr>
-                <td>{{ p.id }}</td>
+                <td>{{ p.patient_no }}</td>
                 <td>
                     <div class="patient-info">
                         <img src="{{ url_for('static', filename='patient_images/' + p.image) }}" class="patient-mini">

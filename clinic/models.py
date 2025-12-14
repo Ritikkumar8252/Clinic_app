@@ -24,6 +24,7 @@ class User(db.Model):
 
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    patient_no = db.Column(db.Integer, nullable=False)  # 👈 NEW
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     age = db.Column(db.Integer)
@@ -38,6 +39,8 @@ class Patient(db.Model):
     city = db.Column(db.String(50))
     state = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    records = db.relationship("MedicalRecord", back_populates="patient", lazy=True)
+
 
 
 
@@ -81,6 +84,15 @@ class Visit(db.Model):
     notes = db.Column(db.Text)
 
     patient = db.relationship('Patient', backref=db.backref('visits', lazy=True))
+
+class MedicalRecord(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"))
+    filename = db.Column(db.String(200), nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    patient = db.relationship("Patient", back_populates="records")
+
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)

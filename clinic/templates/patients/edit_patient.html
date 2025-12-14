@@ -1,46 +1,211 @@
 {% extends "base.html" %}
 {% block body %}
 
-<h2 class="page-title">Edit Patient</h2>
+<style>
+/* ===== Page Header ===== */
+.edit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
 
-<div class="form-container">
+.patient-meta {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+}
 
-    <form method="POST" action="{{ url_for('patients_bp.edit_patient', id=patient.id) }}">
+/* ===== Card ===== */
+.edit-card {
+    background: #ffffff;
+    padding: 28px;
+    border-radius: 12px;
+    max-width: 900px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+}
 
-        <label>Name</label>
-        <input 
-            type="text" 
-            name="name" 
-            value="{{ patient.name }}" 
-            required
-        >
+/* ===== Form Grid ===== */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
 
-        <label>Disease</label>
-        <input 
-            type="text" 
-            name="disease" 
-            value="{{ patient.disease }}" 
-            required
-        >
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+}
 
-        <label>Last Visit</label>
-        <input 
-            type="date" 
-            name="last_visit" 
-            value="{{ patient.last_visit }}" 
-            required
-        >
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    font-size: 14px;
+}
 
-        <label>Status</label>
-        <select name="status" required>
-            <option value="Active" {% if patient.status == 'Active' %}selected{% endif %}>Active</option>
-            <option value="Follow-up" {% if patient.status == 'Follow-up' %}selected{% endif %}>Follow-up</option>
-        </select>
+.field-hint {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
 
-        <button class="btn-primary" type="submit">Update Patient</button>
+/* ===== Footer ===== */
+.form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 26px;
+}
+
+.hint-text {
+    font-size: 13px;
+    color: #777;
+}
+
+/* ===== Buttons ===== */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+</style>
+
+<!-- ===== HEADER ===== -->
+<div class="edit-header">
+    <div>
+        <h2>Edit Patient</h2>
+        <p class="patient-meta">
+            {{ patient.name }} • {{ patient.gender }} • {{ patient.age }} yrs
+        </p>
+    </div>
+
+    <a href="{{ url_for('patients_bp.patient_profile', id=patient.id) }}"
+       class="btn btn-secondary">
+        ← Back
+    </a>
+</div>
+
+<!-- ===== CARD ===== -->
+<div class="edit-card">
+    <form method="POST"
+          action="{{ url_for('patients_bp.edit_patient', id=patient.id) }}"
+          id="editForm">
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Patient Name</label>
+                <input type="text"
+                       name="name"
+                       value="{{ patient.name }}"
+                       minlength="2"
+                       required>
+                <span class="field-hint">Minimum 2 characters</span>
+            </div>
+
+            <div class="form-group">
+                <label>Primary Issue</label>
+                <input type="text"
+                       name="disease"
+                       value="{{ patient.disease }}"
+                       required>
+                <span class="field-hint">Example: Fever, Diabetes</span>
+            </div>
+
+            <div class="form-group">
+                <label>Last Visit</label>
+                <input type="date"
+                       name="last_visit"
+                       value="{{ patient.last_visit }}"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status" required>
+                    <option value="Active" {% if patient.status == 'Active' %}selected{% endif %}>
+                        Active
+                    </option>
+                    <option value="Follow-up" {% if patient.status == 'Follow-up' %}selected{% endif %}>
+                        Follow-up
+                    </option>
+                    <option value="Closed" {% if patient.status == 'Closed' %}selected{% endif %}>
+                        Closed
+                    </option>
+                </select>
+            </div>
+
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <div class="form-footer">
+            <p class="hint-text">
+                Only basic patient details can be edited here.
+            </p>
+
+            <div>
+                <button type="submit"
+                        class="btn btn-primary"
+                        id="saveBtn"
+                        disabled>
+                    Save Changes
+                </button>
+
+                <a href="{{ url_for('patients_bp.patient_profile', id=patient.id) }}"
+                   class="btn btn-danger-outline">
+                    Cancel
+                </a>
+            </div>
+        </div>
 
     </form>
-
 </div>
+
+<!-- ===== JS: Enable save only on change + warn before leave ===== -->
+<script>
+const form = document.getElementById("editForm");
+const saveBtn = document.getElementById("saveBtn");
+const initialData = new FormData(form);
+
+let formChanged = false;
+
+form.addEventListener("input", () => {
+    const currentData = new FormData(form);
+    let changed = false;
+
+    for (let [key, value] of currentData.entries()) {
+        if (value !== initialData.get(key)) {
+            changed = true;
+            break;
+        }
+    }
+
+    formChanged = changed;
+    saveBtn.disabled = !changed;
+});
+
+window.addEventListener("beforeunload", function (e) {
+    if (formChanged) {
+        e.preventDefault();
+        e.returnValue = "";
+    }
+});
+</script>
 
 {% endblock %}
