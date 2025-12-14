@@ -127,10 +127,6 @@ def edit_appointment(id):
 
     return render_template("appointments/edit_appointment.html", app=app_item)
 
-@appointments_bp.route("/walkin")
-def walkin():
-    # Later you can replace this with a real page
-    return "Walk-in consultation page coming soon!"
 
 # ---------------- STATUS ACTIONS ----------------
 def get_secure_appointment(id):
@@ -365,6 +361,107 @@ def prescription_pdf(id):
         mimetype="application/pdf"
     )
 
+# -----------walkin-----
+#  walkin landing page
+@appointments_bp.route("/walkin", methods=["GET", "POST"])
+def walkin():
+
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+
+    user_id = session["user_id"]
+    patients = Patient.query.filter_by(user_id=user_id).all()
+
+    if request.method == "POST":
+
+        patient_id = request.form.get("patient_id")
+
+        # ---------- NEW PATIENT ----------
+        if patient_id == "new":
+
+            name = request.form["name"]
+            phone = request.form["phone"]
+            age = request.form.get("age")
+            gender = request.form.get("gender")
+
+            last_patient = Patient.query.filter_by(
+                user_id=user_id
+            ).order_by(Patient.patient_no.desc()).first()
+
+            patient_no = last_patient.patient_no + 1 if last_patient else 1
+
+            patient = Patient(
+                patient_no=patient_no,
+                user_id=user_id,
+                name=name,
+                phone=phone,
+                age=age,
+                gender=gender,
+                disease="Pending Diagnosis",   # ✔ SAFE
+                last_visit=datetime.today().date(),
+                status="Active",
+                image="default_patient.png"
+            )
+
+            db.session.add(patient)
+            db.session.flush()  # get patient.id safely
+
+        # ---------- EXISTING PATIENT ----------
+        else:
+            patient = Patient.query.filter_by(
+                id=patient_id,
+                user_id=user_id
+            ).first_or_404()
+
+        # ---------- CREATE WALK-IN APPOINTMENT ----------
+        appt = Appointment(
+            patient_id=patient.id,
+            type="Walk-in",
+            date=datetime.today().date(),
+            time=datetime.now().strftime("%H:%M"),
+            status="In Progress"
+        )
+
+        db.session.add(appt)
+        db.session.commit()
+
+        return redirect(url_for("appointments_bp.consult", id=appt.id))
+
+    return render_template(
+        "appointments/walkin.html",
+        patients=patients
+    )
 
 
+@appointments_bp.route("/walkin/create", methods=["POST"])
+def create_walkin():
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+
+    patient_id = request.form.get("patient_id")
+    user_id = session["user_id"]
+
+    patient = Patient.query.filter_by(
+        id=patient_id,
+        user_id=user_id
+    ).first_or_404()
+
+    now = datetime.now()
+
+    appt = Appointment(
+        patient_id=patient.id,
+        type="Walk-in",
+        date=now.date(),
+        time=now.strftime("%H:%M"),
+        status="In Progress"
+    )
+
+    patient.last_visit = now.date()
+
+    db.session.add(appt)
+    db.session.commit()
+
+    return redirect(
+        url_for("appointments_bp.consult", id=appt.id)
+    )
 

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block body %}
+
+<style>
+.walkin-wrapper {
+    max-width: 520px;
+    margin: 40px auto;
+}
+
+.walkin-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.walkin-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.walkin-subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.walkin-card label {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.walkin-card select,
+.walkin-card input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font-size: 15px;
+    margin-bottom: 14px;
+}
+
+.walkin-card input:focus,
+.walkin-card select:focus {
+    outline: none;
+    border-color: #4f46e5;
+}
+
+.new-patient-box {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 10px;
+    display: none;
+}
+
+.new-patient-box h4 {
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: #333;
+}
+
+.walkin-btn {
+    width: 100%;
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.walkin-btn:hover {
+    opacity: 0.95;
+}
+</style>
+
+<div class="walkin-wrapper">
+
+    <form method="POST" class="walkin-card">
+
+        <div class="walkin-title">Start Walk-In Consultation</div>
+        <div class="walkin-subtitle">
+            No appointment required. Consultation starts immediately.
+        </div>
+
+        <!-- Existing Patient -->
+        <label>Select Patient</label>
+        <select name="patient_id" id="patientSelect" required>
+            <option value="">Search patient by name / phone</option>
+            {% for p in patients %}
+                <option value="{{ p.id }}">
+                    {{ p.patient_no }} • {{ p.name }} ({{ p.phone }})
+                </option>
+            {% endfor %}
+            <option value="new">+ New Patient</option>
+        </select>
+
+        <!-- New Patient -->
+        <div id="newPatientBox" class="new-patient-box">
+            <h4>New Patient Details</h4>
+
+            <input type="text" name="name" placeholder="Patient Name">
+            <input type="text" name="phone" placeholder="Mobile Number">
+            <input type="number" name="age" placeholder="Age">
+
+            <select name="gender">
+                <option value="">Gender</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+            </select>
+        </div>
+
+        <button class="walkin-btn">
+            Start Consultation
+        </button>
+
+    </form>
+
+</div>
+
+<script>
+document.getElementById("patientSelect").addEventListener("change", function () {
+    document.getElementById("newPatientBox").style.display =
+        this.value === "new" ? "block" : "none";
+});
+</script>
+
+{% endblock %}
