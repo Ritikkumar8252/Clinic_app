@@ -1,8 +1,8 @@
-Flask
-Flask-SQLAlchemy
-Flask-Bcrypt
-Flask-Login
-Flask-Mail
-Werkzeug
+flask
+flask_sqlalchemy
+flask_login
+flask_migrate
+psycopg2-binary
+reportlab
 gunicorn
-python-dotenv
+

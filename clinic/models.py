@@ -2,126 +2,153 @@ from .extensions import db
 from datetime import datetime
 
 
+
+# =========================
+# USER / DOCTOR
+# =========================
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
     fullname = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(60), nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+
     role = db.Column(db.String(20), default="staff")
     phone = db.Column(db.String(20))
+
+    # Documents
     aadhar = db.Column(db.String(200))
     mrc_certificate = db.Column(db.String(200))
     clinic_license = db.Column(db.String(200))
     profile_photo = db.Column(db.String(200))
+
     # Clinic details
     clinic_name = db.Column(db.String(200))
     clinic_phone = db.Column(db.String(50))
     clinic_address = db.Column(db.String(300))
     speciality = db.Column(db.String(100))
-    patients = db.relationship('Patient', backref='user', lazy=True)
 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    patients = db.relationship("Patient", backref="user", lazy=True)
 
+# =========================
+# PATIENT
+# =========================
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    patient_no = db.Column(db.Integer, nullable=False)  # 👈 NEW
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    patient_no = db.Column(db.Integer, nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
     name = db.Column(db.String(100), nullable=False)
     age = db.Column(db.Integer)
     gender = db.Column(db.String(20))
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(20), index=True)
+
     disease = db.Column(db.String(120), nullable=False)
-    last_visit = db.Column(db.String(20), nullable=False)
-    status = db.Column(db.String(20), nullable=False)
+
+    last_visit = db.Column(db.Date)
+    status = db.Column(db.String(20), default="Active")
+
     image = db.Column(db.String(255), default="default_patient.png")
+
     address = db.Column(db.String(200))
     pincode = db.Column(db.String(20))
     city = db.Column(db.String(50))
     state = db.Column(db.String(50))
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    records = db.relationship("MedicalRecord", back_populates="patient", lazy=True)
 
+    appointments = db.relationship("Appointment", backref="patient", lazy=True)
+    records = db.relationship("MedicalRecord", backref="patient", lazy=True)
+    invoices = db.relationship("Invoice", backref="patient", lazy=True)
 
-
-
+# =========================
+# APPOINTMENT / CONSULTATION
+# =========================
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable=False)
 
-    type = db.Column(db.String(100))
-    date = db.Column(db.String(20))
-    time = db.Column(db.String(20))
+    type = db.Column(db.String(50))  # First / Follow-up / Walk-in
+    date = db.Column(db.Date, nullable=False)
+    time = db.Column(db.Time, nullable=False)
 
-    status = db.Column(db.String(50), default="Queue")
+    status = db.Column(db.String(20), default="Queue")
+    # Queue | In Progress | Completed | Cancelled
 
-    # Consultation fields
+    # -------- Consultation --------
     symptoms = db.Column(db.Text, default="")
     diagnosis = db.Column(db.Text, default="")
     prescription = db.Column(db.Text, default="")
     advice = db.Column(db.Text, default="")
 
-    # Vitals
-    bp = db.Column(db.String(20), default="")
-    pulse = db.Column(db.String(20), default="")
-    spo2 = db.Column(db.String(20), default="")
-    temperature = db.Column(db.String(20), default="")
-    weight = db.Column(db.String(20), default="")
+    # -------- Vitals --------
+    bp = db.Column(db.String(20))
+    pulse = db.Column(db.String(20))
+    spo2 = db.Column(db.String(20))
+    temperature = db.Column(db.String(20))
+    weight = db.Column(db.String(20))
 
-    # Follow-up
-    follow_up_date = db.Column(db.String(20), default="")
+    follow_up_date = db.Column(db.Date)
 
-    # Relationship
-    patient = db.relationship("Patient", backref="appointments")
+    # -------- Control --------
+    prescription_locked = db.Column(db.Boolean, default=False)
 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Visit(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
-    visit_date = db.Column(db.String(20), default=datetime.now().strftime("%Y-%m-%d"))
-    diagnosis = db.Column(db.String(255))
-    treatment = db.Column(db.String(255))
-    notes = db.Column(db.Text)
-
-    patient = db.relationship('Patient', backref=db.backref('visits', lazy=True))
-
+# =========================
+# MEDICAL RECORDS
+# =========================
 class MedicalRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"))
+
+    patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable=False)
     filename = db.Column(db.String(200), nullable=False)
+
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    patient = db.relationship("Patient", back_populates="records")
-
-
+# =========================
+# INVOICE
+# =========================
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
-    invoice_number = db.Column(db.String(40), unique=True, nullable=False)
+
+    patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable=False)
+
+    invoice_number = db.Column(db.String(50), unique=True, nullable=False)
     description = db.Column(db.String(255))
-    total_amount = db.Column(db.Float, nullable=False, default=0.0)
-    created_at = db.Column(db.String(20), default=datetime.now().strftime("%Y-%m-%d"))
-    due_date = db.Column(db.String(20))
+
+    total_amount = db.Column(db.Float, default=0.0)
     status = db.Column(db.String(20), default="Unpaid")
 
-    patient = db.relationship('Patient', backref=db.backref('invoices', lazy=True))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    due_date = db.Column(db.Date)
 
+    items = db.relationship("InvoiceItem", backref="invoice", lazy=True)
+    payments = db.relationship("Payment", backref="invoice", lazy=True)
 
+# =========================
+# INVOICE ITEMS
+# =========================
 class InvoiceItem(db.Model):
-    __tablename__ = "invoice_item"
     id = db.Column(db.Integer, primary_key=True)
+
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoice.id"), nullable=False)
-    item_name = db.Column(db.String(255), nullable=False)
+
+    item_name = db.Column(db.String(200), nullable=False)
     amount = db.Column(db.Float, nullable=False)
 
-    invoice = db.relationship("Invoice", backref=db.backref("items", lazy=True))
-
-
+# =========================
+# PAYMENTS
+# =========================
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    invoice_id = db.Column(db.Integer, db.ForeignKey('invoice.id'), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-    method = db.Column(db.String(50), default="Cash")
-    paid_at = db.Column(db.String(20), default=datetime.now().strftime("%Y-%m-%d"))
 
-    invoice = db.relationship('Invoice', backref=db.backref('payments', lazy=True))
+    invoice_id = db.Column(db.Integer, db.ForeignKey("invoice.id"), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+
+    method = db.Column(db.String(50), default="Cash")
+    paid_at = db.Column(db.DateTime, default=datetime.utcnow)

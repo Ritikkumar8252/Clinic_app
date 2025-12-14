@@ -154,6 +154,7 @@ def complete(id):
         return redirect(url_for("auth_bp.login"))
 
     appt = get_secure_appointment(id)
+    appt.prescription_locked = True
     appt.status = "Completed"
     db.session.commit()
     return redirect(url_for("appointments_bp.appointments"))
@@ -232,6 +233,12 @@ def autosave(id):
 @appointments_bp.route("/prescription/<int:id>")
 def prescription_pdf(id):
     appt = get_secure_appointment(id)
+
+    # 🚫 Block download if not finalized
+    if not getattr(appt, "prescription_locked", False):
+        flash("Finalize prescription before downloading", "warning")
+        return redirect(url_for("appointments_bp.consult", id=id))
+
     patient = Patient.query.get_or_404(appt.patient_id)
 
     buffer = BytesIO()
@@ -240,114 +247,62 @@ def prescription_pdf(id):
     width, height = A4
     y = height - 2 * cm
 
-    # -------------------- HEADER -------------------------
+    # ---------- HEADER ----------
     pdf.setFont("Helvetica-Bold", 22)
     pdf.drawString(2 * cm, y, "Your Clinic Name")
 
     pdf.setFont("Helvetica", 12)
-    pdf.drawString(2 * cm, y - 20, "Specialization: General Physician")
-    pdf.drawString(2 * cm, y - 35, "Phone: +91 9876543210")
-    pdf.drawString(2 * cm, y - 50, "Address: Your Clinic Full Address")
-    
-    # Optional Logo
-    # pdf.drawImage("static/images/logo.png", width - 4*cm, y - 10, width=60, height=60)
+    pdf.drawString(2 * cm, y - 20, "General Physician")
+    pdf.drawString(2 * cm, y - 35, "Phone: +91 XXXXXXXX")
 
-    # Divider Line
-    pdf.setStrokeColor(colors.grey)
-    pdf.setLineWidth(1)
-    pdf.line(2*cm, y - 65, width - 2*cm, y - 65)
+    pdf.line(2*cm, y - 55, width - 2*cm, y - 55)
+    y -= 90
 
-    # -------------------- PATIENT BOX -------------------------
-    y -= 110
+    # ---------- PATIENT INFO ----------
     pdf.setFont("Helvetica-Bold", 14)
     pdf.drawString(2 * cm, y, "Patient Information")
 
-    # Patient Box Border
-    pdf.rect(2*cm, y - 55, width - 4*cm, 50, stroke=1, fill=0)
-
     pdf.setFont("Helvetica", 12)
-    pdf.drawString(2.3 * cm, y - 20, f"Name: {patient.name}")
-    pdf.drawString(width/2, y - 20, f"Age: {patient.age}")
-    pdf.drawString(2.3 * cm, y - 40, f"Gender: {patient.gender}")
-    pdf.drawString(width/2, y - 40, f"Phone: {patient.phone}")
+    pdf.drawString(2 * cm, y - 20, f"Name: {patient.name}")
+    pdf.drawString(2 * cm, y - 40, f"Age: {patient.age} | Gender: {patient.gender}")
+    pdf.drawString(2 * cm, y - 60, f"Phone: {patient.phone}")
 
-    y -= 90
+    y -= 100
 
-    # -------------------- PRESCRIPTION SECTION -------------------------
+    # ---------- PRESCRIPTION ----------
     pdf.setFont("Helvetica-Bold", 16)
     pdf.drawString(2 * cm, y, "Prescription (Rx)")
-    y -= 20
+    y -= 25
 
-    pdf.setFont("Helvetica", 12)
+    # ✅ SAFE TEXT WRAPPING (REAL CLINIC STYLE)
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.platypus import Paragraph
 
-    # Table Header
-    headers = ["Medicine", "Dosage", "Duration", "Notes"]
-    col_widths = [6*cm, 3*cm, 3*cm, 5*cm]
+    styles = getSampleStyleSheet()
 
-    x_start = 2 * cm
-    y_table = y
+    prescription_text = appt.prescription or "No medicines prescribed"
+    prescription_text = prescription_text.replace("\n", "<br/>")
 
-    # Background
-    pdf.setFillColor(colors.lightgrey)
-    pdf.rect(x_start, y_table - 15, sum(col_widths), 18, fill=1, stroke=0)
-    pdf.setFillColor(colors.black)
+    p = Paragraph(prescription_text, styles["Normal"])
+    w, h = p.wrap(width - 4*cm, height)
+    p.drawOn(pdf, 2*cm, y - h)
+    y = y - h - 25
 
-    # Draw header text
-    x = x_start
-    for i, header in enumerate(headers):
-        pdf.drawString(x + 5, y_table - 5, header)
-        x += col_widths[i]
-
-    y_table -= 25
-
-    # Example medicines — replace later with DB data
-    medicines = [
-        ["Paracetamol 650mg", "1-0-1", "5 Days", "Fever"],
-        ["Pantoprazole 40mg", "1-0-0", "7 Days", "Acidity"],
-        ["ORS", "As needed", "2 Days", "Hydration"]
-    ]
-
-    for med in medicines:
-        x = x_start
-        for i, value in enumerate(med):
-            pdf.drawString(x + 5, y_table, value)
-            x += col_widths[i]
-        y_table -= 18
-
-    y = y_table - 20
-
-    # -------------------- DOCTOR NOTES -------------------------
+    # ---------- DIAGNOSIS ----------
     pdf.setFont("Helvetica-Bold", 14)
-    pdf.drawString(2 * cm, y, "Doctor Notes:")
+    pdf.drawString(2 * cm, y, "Diagnosis")
     y -= 20
-
     pdf.setFont("Helvetica", 12)
-    notes = [
-        "- Drink plenty of water.",
-        "- Take adequate rest.",
-        "- Contact doctor if symptoms persist."
-    ]
-
-    for line in notes:
-        pdf.drawString(2.3 * cm, y, line)
-        y -= 16
-
-    y -= 30
-
-    # -------------------- SIGNATURE -------------------------
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(width - 8 * cm, y, "_______________________")
-    pdf.drawString(width - 7 * cm, y - 15, "Doctor's Signature")
+    pdf.drawString(2.2 * cm, y, appt.diagnosis or "-")
 
     y -= 40
 
-    # -------------------- FOOTER -------------------------
-    pdf.setStrokeColor(colors.grey)
-    pdf.line(2*cm, y, width - 2*cm, y)
-
-    pdf.setFont("Helvetica", 10)
-    pdf.drawString(2*cm, y - 15, "Thank you for visiting our clinic.")
-    pdf.drawString(2*cm, y - 30, "For emergencies, visit immediately or contact 9876543210.")
+    # ---------- ADVICE ----------
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(2 * cm, y, "Advice")
+    y -= 20
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(2.2 * cm, y, appt.advice or "-")
 
     pdf.showPage()
     pdf.save()
@@ -360,6 +315,16 @@ def prescription_pdf(id):
         download_name=f"Prescription_{patient.name}.pdf",
         mimetype="application/pdf"
     )
+
+
+@appointments_bp.route("/finalize_prescription/<int:id>", methods=["POST"])
+def finalize_prescription(id):
+    appt = get_secure_appointment(id)
+    appt.prescription_locked = True
+    db.session.commit()
+
+    return redirect(url_for("appointments_bp.prescription_pdf", id=id))
+
 
 # -----------walkin-----
 #  walkin landing page

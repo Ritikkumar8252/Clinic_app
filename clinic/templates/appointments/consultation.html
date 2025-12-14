@@ -15,7 +15,11 @@
     <div class="top-actions">
         <button class="btn-save" onclick="sendSaveRequest()">💾 Save</button>
         <a class="btn-complete" href="{{ url_for('appointments_bp.complete', id=appt.id) }}">✔ Finish</a>
-        <a class="btn-pres" target="_blank" href="{{ url_for('appointments_bp.prescription_pdf', id=appt.id) }}">📝 Print</a>
+        <form method="POST"
+      action="{{ url_for('appointments_bp.finalize_prescription', id=appt.id) }}">
+    <button class="btn-pres">✔ Finalize & Print</button>
+</form>
+
     </div>
 </div>
 

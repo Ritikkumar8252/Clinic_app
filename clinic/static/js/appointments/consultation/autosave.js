@@ -1,12 +1,16 @@
 let saveTimeout = null;
 
-// Called when typing in any field
+/* ===============================
+   AUTOSAVE TRIGGER
+================================ */
 function autoSave() {
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(sendSaveRequest, 800);
 }
 
-// Send consultation data to backend
+/* ===============================
+   SEND DATA TO BACKEND
+================================ */
 function sendSaveRequest() {
 
     if (!window.autosaveUrl) {
@@ -16,46 +20,44 @@ function sendSaveRequest() {
 
     const payload = {};
 
-    const symptoms = document.getElementById("symptoms-hidden");
-    if (symptoms && symptoms.value.trim() !== "") {
-        payload.symptoms = symptoms.value;
+    // Prescription (from prescription.js)
+    if (window.buildPrescriptionText) {
+        const pres = buildPrescriptionText();
+        if (pres) payload.prescription = pres;
     }
 
-    const diagnosis = document.getElementById("diagnosis-hidden");
-    if (diagnosis && diagnosis.value.trim() !== "") {
-        payload.diagnosis = diagnosis.value;
-    }
-
-    const advice = document.getElementById("advice-hidden");
-    if (advice && advice.value.trim() !== "") {
-        payload.advice = advice.value;
-    }
-
-    const fields = ["bp", "pulse", "spo2", "temperature", "weight", "follow_up_date"];
-    fields.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && el.value.trim() !== "") {
-            payload[id] = el.value;
+    // Hidden fields
+    ["symptoms", "diagnosis", "advice"].forEach(field => {
+        const el = document.getElementById(field + "-hidden");
+        if (el && el.value.trim()) {
+            payload[field] = el.value;
         }
     });
 
-    // do not send empty payload
-    if (Object.keys(payload).length === 0) {
-        return;
-    }
+    // Vitals
+    ["bp", "pulse", "spo2", "temperature", "weight", "follow_up_date"]
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.value.trim()) payload[id] = el.value;
+        });
+
+    if (Object.keys(payload).length === 0) return;
 
     fetch(window.autosaveUrl, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
     .then(() => showToast())
     .catch(err => console.error("Autosave failed:", err));
 }
 
-// Show "Saved" toast
+/* ===============================
+   SAVE TOAST
+================================ */
 function showToast() {
     const toast = document.getElementById("saveToast");
+    if (!toast) return;
     toast.style.opacity = "1";
     setTimeout(() => toast.style.opacity = "0", 1200);
 }

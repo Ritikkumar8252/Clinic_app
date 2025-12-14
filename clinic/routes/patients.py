@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash,current_app
 from ..extensions import db
-from ..models import Patient, Invoice, Visit, Appointment ,MedicalRecord
+from ..models import Patient, Invoice, Appointment ,MedicalRecord
 
 from datetime import datetime
 import os
