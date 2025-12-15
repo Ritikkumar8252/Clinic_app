@@ -30,7 +30,8 @@ def patients():
 
     # Filter by last visit date
     if date_filter:
-        query = query.filter(Patient.last_visit == date_filter)
+        date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
+        query = query.filter(Patient.last_visit == date_obj)
 
     patients = query.order_by(Patient.patient_no.desc()).all()
 
@@ -47,11 +48,15 @@ def add_patient():
 
     if request.method == "POST":
         name = request.form.get("name")
-        age = request.form.get("age")
+        age = int(request.form.get("age")) if request.form.get("age") else None
+
         gender = request.form.get("gender")
         phone = request.form.get("phone")
         disease = request.form.get("disease")
-        last_visit = request.form.get("last_visit")
+        last_visit_str = request.form.get("last_visit")
+        last_visit = None
+        if last_visit_str:
+            last_visit = datetime.strptime(last_visit_str, "%Y-%m-%d").date()
         status = request.form.get("status", "Active")
 
         address = request.form.get("address")
@@ -116,6 +121,9 @@ def add_patient():
 
 @patients_bp.route("/delete_patient/<int:id>")
 def delete_patient(id):
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+
     patient = Patient.query.filter_by(
         id=id,
         user_id=session["user_id"]
@@ -136,9 +144,13 @@ def edit_patient(id):
     if request.method == "POST":
         patient.name = request.form["name"]
         patient.disease = request.form["disease"]
-        patient.last_visit = request.form["last_visit"]
+        last_visit_str = request.form.get("last_visit")
+        
         patient.status = request.form["status"]
-
+        patient.last_visit = (
+            datetime.strptime(last_visit_str, "%Y-%m-%d").date()
+            if last_visit_str else None
+        )
         db.session.commit()
         flash("Patient updated successfully!")
         return redirect(url_for("patients_bp.patient_profile",  id=patient.id))

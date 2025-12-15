@@ -36,7 +36,8 @@ def appointments():
 
     # Apply Date Filter
     if date_filter:
-        base_query = base_query.filter(Appointment.date == date_filter)
+        date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
+        base_query = base_query.filter(Appointment.date == date_obj)
 
     # GET DATA FOR EACH TAB
     queue = base_query.filter(Appointment.status == "Queue").all()
@@ -71,8 +72,10 @@ def add_appointment():
     if request.method == "POST":
         patient_id = request.form["patient_id"]
         visit_type = request.form["type"]
-        time = request.form["time"]
-        date = request.form["date"]
+        time_str = request.form["time"]
+        time = datetime.strptime(time_str, "%H:%M").time()
+        date_str = request.form["date"]
+        date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
         patient = Patient.query.filter_by(
             id=patient_id,
@@ -87,7 +90,7 @@ def add_appointment():
             status="Queue"
         )
 
-        patient.last_visit = request.form["date"]
+        patient.last_visit = date
 
         db.session.add(ap)
         db.session.commit()
@@ -117,8 +120,15 @@ def edit_appointment(id):
     if request.method == "POST":
         app_item.patient_name = request.form["patient_name"]
         app_item.doctor = request.form["doctor"]
-        app_item.date = request.form["date"]
-        app_item.time = request.form["time"]
+        date_str = request.form.get("date")
+        time_str = request.form.get("time")
+
+        if date_str:
+            app_item.date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+        if time_str:
+            app_item.time = datetime.strptime(time_str, "%H:%M").time()
+
         app_item.status = request.form["status"]
 
         db.session.commit()
@@ -142,6 +152,9 @@ def get_secure_appointment(id):
 
 @appointments_bp.route("/start/<int:id>")
 def start(id):
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+
     appt = get_secure_appointment(id)
     appt.status = "In Progress"
     db.session.commit()
@@ -161,6 +174,9 @@ def complete(id):
 
 @appointments_bp.route("/cancel/<int:id>")
 def cancel(id):
+    if "user_id" not in session:
+        return redirect(url_for("auth_bp.login"))
+
     appt = get_secure_appointment(id)
     appt.status = "Cancelled"
     db.session.commit()
@@ -189,7 +205,11 @@ def consult(id):
         appt.temperature = request.form.get("temperature")
         appt.weight = request.form.get("weight")
 
-        appt.follow_up_date = request.form.get("follow_up_date")
+        fu = request.form.get("follow_up_date")
+        appt.follow_up_date = (
+            datetime.strptime(fu, "%Y-%m-%d").date() if fu else None
+        )
+
 
         db.session.commit()
         flash("Consultation saved")
@@ -221,8 +241,11 @@ def autosave(id):
     ]
 
     for field in fields:
-        if field in data:
+        if field == "follow_up_date" and data[field]:
+            appt.follow_up_date = datetime.strptime(data[field], "%Y-%m-%d").date()
+        else:
             setattr(appt, field, data[field])
+
 
     db.session.commit()
     return {"status": "saved"}
@@ -346,7 +369,8 @@ def walkin():
 
             name = request.form["name"]
             phone = request.form["phone"]
-            age = request.form.get("age")
+            age = int(request.form.get("age")) if request.form.get("age") else None
+
             gender = request.form.get("gender")
 
             last_patient = Patient.query.filter_by(
@@ -383,7 +407,7 @@ def walkin():
             patient_id=patient.id,
             type="Walk-in",
             date=datetime.today().date(),
-            time=datetime.now().strftime("%H:%M"),
+            time=datetime.now().time(), 
             status="In Progress"
         )
 
@@ -417,7 +441,7 @@ def create_walkin():
         patient_id=patient.id,
         type="Walk-in",
         date=now.date(),
-        time=now.strftime("%H:%M"),
+        time=now.time(),
         status="In Progress"
     )
 

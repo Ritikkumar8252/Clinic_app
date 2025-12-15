@@ -18,7 +18,7 @@ def dashboard():
     total_patients = Patient.query.filter_by(user_id=user_id).count()
 
     # ✅ TODAY'S APPOINTMENTS (USER-SPECIFIC)
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now().date()
     today_appointments = (
         Appointment.query
         .join(Patient)

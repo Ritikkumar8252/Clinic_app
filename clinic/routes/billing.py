@@ -230,7 +230,7 @@ def add_payment(id):
     if amt <= 0:
         flash("Enter valid amount.", "danger")
         return redirect(url_for("billing_bp.view_invoice", id=id))
-    payment = Payment(invoice_id=inv.id, amount=amt, method=method, paid_at=datetime.now().strftime("%Y-%m-%d"))
+    payment = Payment(invoice_id=inv.id, amount=amt, method=method, paid_at=datetime.now() )
     db.session.add(payment)
     db.session.commit()
 

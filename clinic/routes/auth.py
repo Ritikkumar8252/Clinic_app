@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from clinic.extensions import db
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from functools import wraps
 from clinic.models import User
 from clinic import mail
