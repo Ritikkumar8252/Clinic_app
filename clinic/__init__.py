@@ -1,13 +1,10 @@
 from flask import Flask
-from flask_mail import Mail
-from .extensions import db
-from .models import User
-from flask_migrate import Migrate
+import os
 
-migrate = Migrate()
+from .extensions import db, mail
 
-# create mail object
-mail = Mail()
+# IMPORTANT: import models so SQLAlchemy knows them
+from . import models  
 
 from .routes.auth import auth_bp
 from .routes.dashboard import dashboard_bp
@@ -17,40 +14,49 @@ from .routes.billing import billing_bp
 from .routes.admin import admin_bp
 from .routes.settings import settings_bp
 from .routes.home import home_bp
-import os
 
 
 def create_app():
-    app = Flask(__name__)
+    # 👇 enable instance folder
+    app = Flask(__name__, instance_relative_config=True)
     app.secret_key = "secret123"
 
-    # ********* UPLOAD FOLDERS *********
-    app.config["PATIENT_UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/patient_images")
-    app.config["DOC_UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/uploads")
+    # ---------------- INSTANCE FOLDER ----------------
+    os.makedirs(app.instance_path, exist_ok=True)
+
+    # ---------------- DATABASE (INSIDE instance/) ----------------
+    db_path = os.path.join(app.instance_path, "site.db")
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    print(">>> USING DATABASE:", db_path)
+
+    # ---------------- MAIL ----------------
+    app.config["MAIL_SERVER"] = "smtp.gmail.com"
+    app.config["MAIL_PORT"] = 587
+    app.config["MAIL_USE_TLS"] = True
+    app.config["MAIL_USERNAME"] = "yourgmail@gmail.com"
+    app.config["MAIL_PASSWORD"] = "your_app_password"
+
+    # ---------------- UPLOAD FOLDERS ----------------
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    app.config["PATIENT_UPLOAD_FOLDER"] = os.path.join(BASE_DIR, "static/patient_images")
+    app.config["DOC_UPLOAD_FOLDER"] = os.path.join(BASE_DIR, "static/uploads")
+    app.config["RECORD_UPLOAD_FOLDER"] = os.path.join(BASE_DIR, "static/records")
 
     os.makedirs(app.config["PATIENT_UPLOAD_FOLDER"], exist_ok=True)
     os.makedirs(app.config["DOC_UPLOAD_FOLDER"], exist_ok=True)
+    os.makedirs(app.config["RECORD_UPLOAD_FOLDER"], exist_ok=True)
 
-    # ********* DATABASE *********
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    # ✅ RECORD UPLOAD CONFIG (THIS IS MANDATORY)
-    app.config["RECORD_UPLOAD_FOLDER"] = os.path.join(
-        app.root_path, "static", "records"
-    )
-    # ******** EMAIL ********
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = "yourgmail@gmail.com"
-    app.config['MAIL_PASSWORD'] = "your_app_password"
-    
-    # Init extensions
+    # ---------------- INIT EXTENSIONS ----------------
     db.init_app(app)
     mail.init_app(app)
 
-    # Register blueprints
+    # ---------------- CREATE TABLES ----------------
+    with app.app_context():
+        db.create_all()
+
+    # ---------------- BLUEPRINTS ----------------
     app.register_blueprint(home_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -59,23 +65,5 @@ def create_app():
     app.register_blueprint(billing_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(settings_bp)
-
-    # Auto-create admin (DEV / INITIAL SETUP ONLY)
-    with app.app_context():
-        db.create_all()
-
-        admin = User.query.filter_by(email="admin@gmail.com").first()
-        if not admin:
-            admin = User(
-                fullname="Admin",
-                email="admin@gmail.com",
-                role="admin"
-            )
-            admin.set_password("admin123")  # hashed password
-            db.session.add(admin)
-            db.session.commit()
-            print("Admin user created")
-
-    migrate.init_app(app, db)
 
     return app

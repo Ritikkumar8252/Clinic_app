@@ -3,7 +3,6 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-
 # =========================
 # USER / DOCTOR
 # =========================
@@ -13,7 +12,6 @@ class User(db.Model):
     fullname = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-
 
     role = db.Column(db.String(20), default="staff")
     phone = db.Column(db.String(20))
@@ -33,13 +31,14 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     patients = db.relationship("Patient", backref="user", lazy=True)
+
     # ---------- PASSWORD METHODS ----------
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
-    
+
 
 # =========================
 # PATIENT
@@ -72,6 +71,7 @@ class Patient(db.Model):
     appointments = db.relationship("Appointment", backref="patient", lazy=True)
     records = db.relationship("MedicalRecord", backref="patient", lazy=True)
     invoices = db.relationship("Invoice", backref="patient", lazy=True)
+
 
 # =========================
 # APPOINTMENT / CONSULTATION
@@ -108,6 +108,7 @@ class Appointment(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 # =========================
 # MEDICAL RECORDS
 # =========================
@@ -118,6 +119,15 @@ class MedicalRecord(db.Model):
     filename = db.Column(db.String(200), nullable=False)
 
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# =========================
+# INVOICE SEQUENCE (CRITICAL)
+# =========================
+class InvoiceSequence(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    last_number = db.Column(db.Integer, nullable=False, default=0)
+
 
 # =========================
 # INVOICE
@@ -133,11 +143,14 @@ class Invoice(db.Model):
     total_amount = db.Column(db.Float, default=0.0)
     status = db.Column(db.String(20), default="Unpaid")
 
+    is_locked = db.Column(db.Boolean, default=False)  
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     due_date = db.Column(db.Date)
 
     items = db.relationship("InvoiceItem", backref="invoice", lazy=True)
     payments = db.relationship("Payment", backref="invoice", lazy=True)
+
 
 # =========================
 # INVOICE ITEMS
@@ -149,6 +162,7 @@ class InvoiceItem(db.Model):
 
     item_name = db.Column(db.String(200), nullable=False)
     amount = db.Column(db.Float, nullable=False)
+
 
 # =========================
 # PAYMENTS
