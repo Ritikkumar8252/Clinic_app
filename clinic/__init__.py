@@ -60,16 +60,18 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(settings_bp)
 
-    # Auto-create admin
+    # Auto-create admin (DEV / INITIAL SETUP ONLY)
     with app.app_context():
         db.create_all()
-        if not User.query.filter_by(email="admin@gmail.com").first():
+
+        admin = User.query.filter_by(email="admin@gmail.com").first()
+        if not admin:
             admin = User(
                 fullname="Admin",
                 email="admin@gmail.com",
-                password="admin123",
                 role="admin"
             )
+            admin.set_password("admin123")  # hashed password
             db.session.add(admin)
             db.session.commit()
             print("Admin user created")

@@ -62,14 +62,19 @@ def settings():
         # -------- CHANGE PASSWORD ----------
         if "change_password" in request.form:
 
-            if user.password != request.form["old_password"]:
+            old = request.form["old_password"]
+            new = request.form["new_password"]
+
+            if not user.check_password(old):
                 flash("Old password incorrect.")
                 return redirect(url_for("settings_bp.settings"))
 
-            user.password = request.form["new_password"]
+            user.set_password(new)
             db.session.commit()
-            flash("Password updated.")
+
+            flash("Password updated successfully.")
             return redirect(url_for("settings_bp.settings"))
+
 
         
         # -------- CLINIC SETTINGS ----------
