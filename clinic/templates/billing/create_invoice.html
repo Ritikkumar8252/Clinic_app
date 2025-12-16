@@ -3,11 +3,9 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/create_invoice.css') }}">
 
-
 <h2 class="page-title">Create Invoice</h2>
 
 <div class="invoice-container">
-
 <form method="POST" class="invoice-form">
 
     <!-- Invoice Header -->
@@ -15,7 +13,7 @@
 
         <div class="form-group">
             <label>Invoice Number</label>
-            <input type="text" name="invoice_number" value="{{ new_invoice_number }}" readonly>
+            <input type="text" value="{{ new_invoice_number }}" readonly disabled>
         </div>
 
         <div class="form-group">
@@ -23,7 +21,7 @@
             <select name="patient_id" required>
                 <option value="">Select Patient</option>
                 {% for p in patients %}
-                <option value="{{ p.patient_no }}">{{ p.name }} ({{ p.phone }})</option>
+                <option value="{{ p.id }}">{{ p.name }} ({{ p.phone }})</option>
                 {% endfor %}
             </select>
         </div>
@@ -35,7 +33,6 @@
         <label>Description</label>
         <input type="text" name="description" placeholder="Consultation, Medicines, Tests">
     </div>
-
 
     <!-- Items Table -->
     <h3 class="section-title">Invoice Items</h3>
@@ -53,13 +50,14 @@
             <tr>
                 <td><input type="text" name="item_name[]" required></td>
                 <td><input type="number" name="item_amount[]" class="amount-field" required></td>
-                <td><button type="button" class="remove-btn" onclick="removeRow(this)">×</button></td>
+                <td>
+                    <button type="button" class="remove-btn" onclick="removeRow(this)">×</button>
+                </td>
             </tr>
         </tbody>
     </table>
 
     <button type="button" id="addRowBtn" class="btn-secondary">+ Add Item</button>
-
 
     <!-- Total Amount -->
     <div class="total-box">
@@ -67,20 +65,12 @@
         <input type="text" id="totalAmount" name="total_amount" readonly>
     </div>
 
-    <!-- Payment -->
-    <h3 class="section-title">Initial Payment</h3>
-
-    <div class="form-group">
-        <label>Amount Paid Now</label>
-        <input type="number" name="paid_now" value="0">
-    </div>
-
-    <button class="btn-primary submit-btn" type="submit">Create Invoice</button>
+    <button class="btn-primary submit-btn" type="submit">
+        Create Invoice
+    </button>
 
 </form>
-
 </div>
 
-<!-- External JS file -->
 <script src="{{ url_for('static', filename='js/billing/create_invoice.js') }}"></script>
 {% endblock %}

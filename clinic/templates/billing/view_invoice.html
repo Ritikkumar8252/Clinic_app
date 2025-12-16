@@ -3,36 +3,66 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/billing.css') }}">
 
 <div class="invoice-view shadow-card">
-    <div class="row" style="display:flex; justify-content:space-between; align-items:center;">
+
+    <!-- HEADER -->
+    <div style="display:flex; justify-content:space-between; align-items:center;">
         <h2>Invoice - {{ inv.invoice_number }}</h2>
         <div>
-            <a class="btn-secondary" href="{{ url_for('billing_bp.download_invoice', id=inv.id) }}" target="_blank">Print / PDF</a>
-            <a class="btn-primary" href="{{ url_for('billing_bp.edit_invoice', id=inv.id) }}">Edit</a>
+            <a class="btn-secondary"
+               href="{{ url_for('billing_bp.download_invoice', id=inv.id) }}"
+               target="_blank">
+               Print / PDF
+            </a>
+
+            {% if not inv.is_locked %}
+                <a class="btn-primary"
+                   href="{{ url_for('billing_bp.edit_invoice', id=inv.id) }}">
+                   Edit
+                </a>
+            {% endif %}
         </div>
     </div>
 
-    <div class="meta-row" style="display:flex; justify-content:space-between; margin-top:12px;">
+    <!-- META -->
+    <div style="display:flex; justify-content:space-between; margin-top:12px;">
         <div>
-            <strong>Patient:</strong> {{ inv.patient.name }} <br>
-            <strong>Phone:</strong> {{ inv.patient.phone or '-' }}
+            <strong>Patient:</strong> {{ inv.patient.name }}<br>
+            <strong>Phone:</strong> {{ inv.patient.phone or "-" }}
         </div>
         <div>
-            <strong>Date:</strong> {{ inv.created_at }}<br>
-            <strong>Due:</strong> {{ inv.due_date or '-' }}
+            <strong>Date:</strong> {{ inv.created_at.strftime('%d-%m-%Y') }}<br>
+            <strong>Status:</strong>
+            {% if inv.is_locked %}
+                <span style="color:green; font-weight:bold;">Paid</span>
+            {% elif inv.status == "Partial" %}
+                <span style="color:orange;">Partial</span>
+            {% else %}
+                <span style="color:red;">Unpaid</span>
+            {% endif %}
         </div>
     </div>
 
     <hr>
 
-    <table class="items-table" style="margin-top:12px;">
-        <thead><tr><th>Item</th><th>Amount</th></tr></thead>
+    <!-- ITEMS -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
         <tbody>
             {% for it in inv.items %}
-            <tr><td>{{ it.item_name }}</td><td>₹ {{ "%.2f"|format(it.amount) }}</td></tr>
+            <tr>
+                <td>{{ it.item_name }}</td>
+                <td>₹ {{ "%.2f"|format(it.amount) }}</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
 
+    <!-- TOTALS -->
     <div style="display:flex; justify-content:flex-end; margin-top:12px;">
         <div style="text-align:right;">
             <div><strong>Total:</strong> ₹ {{ "%.2f"|format(inv.total_amount) }}</div>
@@ -41,52 +71,88 @@
         </div>
     </div>
 
+    <!-- PAY BUTTON -->
     <div style="margin-top:16px;">
-        <button class="btn-primary" onclick="openPaymentModal()">pay Bill</button>
+        {% if not inv.is_locked and balance > 0 %}
+            <button class="btn-primary" onclick="openPaymentModal()">
+                Pay Bill
+            </button>
+        {% else %}
+            <span style="color:green; font-weight:bold;">
+                Invoice Fully Paid ✔
+            </span>
+        {% endif %}
     </div>
 
-    <!-- Payments list -->
-    <h3 style="margin-top:18px;">Payments</h3>
+    <!-- PAYMENTS LIST -->
+    <h3 style="margin-top:20px;">Payments</h3>
     <table class="items-table">
-        <thead><tr><th>Date</th><th>Amount</th><th>Method</th></tr></thead>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+            </tr>
+        </thead>
         <tbody>
             {% for p in inv.payments %}
-            <tr><td>{{ p.paid_at or p.paid_at }}</td><td>₹ {{ "%.2f"|format(p.amount) }}</td><td>{{ p.method or 'Cash' }}</td></tr>
+            <tr>
+                <td>{{ p.paid_at.strftime('%d-%m-%Y') }}</td>
+                <td>₹ {{ "%.2f"|format(p.amount) }}</td>
+                <td>{{ p.method }}</td>
+            </tr>
             {% else %}
-            <tr><td colspan="3" style="text-align:center;">No payments</td></tr>
+            <tr>
+                <td colspan="3" style="text-align:center;">
+                    No payments recorded
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
+
 </div>
 
-<!-- Payment Modal (simple) -->
+<!-- PAYMENT MODAL -->
 <div id="paymentModal" class="modal" style="display:none;">
     <div class="modal-content">
         <span class="close" onclick="closePaymentModal()">×</span>
-        <h3>Pay Bill</h3>
-        <form method="POST" action="{{ url_for('billing_bp.add_payment', id=inv.id) }}">
+
+        <h3>Pay Invoice</h3>
+
+        <form method="POST"
+              action="{{ url_for('billing_bp.add_payment', id=inv.id) }}">
+
             <div class="form-group">
-                <label>Amount</label>
-                <input type="number" name="amount" step="0.01" required>
+                <label>Amount (Remaining: ₹ {{ "%.2f"|format(balance) }})</label>
+                <input type="number"
+                       name="amount"
+                       step="0.01"
+                       max="{{ balance }}"
+                       required>
             </div>
+
             <div class="form-group">
                 <label>Method</label>
                 <select name="method">
-                    <option>Cash</option>
-                    <option>Card</option>
-                    <option>UPI</option>
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Card">Card</option>
                 </select>
             </div>
-            <button class="btn-primary" type="submit">Save Payment</button>
+
+            <button class="btn-primary" type="submit">
+                Save Payment
+            </button>
         </form>
     </div>
 </div>
 
+<!-- MODAL JS (UI ONLY) -->
 <script>
 function openPaymentModal() {
     document.getElementById("paymentModal").style.display = "flex";
 }
-
 function closePaymentModal() {
     document.getElementById("paymentModal").style.display = "none";
 }

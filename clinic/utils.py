@@ -1,16 +1,16 @@
-from clinic.extensions import db
-from clinic.models import InvoiceSequence
+from clinic.models import Invoice, Patient
 
-def generate_invoice_number():
-    seq = InvoiceSequence.query.with_for_update().first()
+def generate_invoice_number(user_id):
+    last_invoice = (
+        Invoice.query
+        .join(Patient)
+        .filter(Patient.user_id == user_id)
+        .order_by(Invoice.id.desc())
+        .first()
+    )
 
-    if not seq:
-        seq = InvoiceSequence(last_number=1)
-        db.session.add(seq)
-        db.session.flush()
-        return f"INV-{seq.last_number:05d}"
+    if not last_invoice:
+        return "INV-0001"
 
-    seq.last_number += 1
-    db.session.flush()
-
-    return f"INV-{seq.last_number:05d}"
+    last_no = int(last_invoice.invoice_number.split("-")[1])
+    return f"INV-{last_no + 1:04}"

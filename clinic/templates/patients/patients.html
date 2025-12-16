@@ -49,6 +49,45 @@ input {
     pointer-events: none;
 }
 
+
+.filter-bar {
+    background: white;
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.search-box {
+    padding: 9px;
+    width: 230px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.filter-select {
+    padding: 9px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-left: 8px;
+}
+
+/* Reset button */
+.btn-reset {
+    padding: 9px 14px;
+    border-radius: 8px;
+    background:  #2563eb;
+    color: white;
+    text-decoration: none;
+    border: 2px solid black;
+    font-weight: 500;
+    margin-left: 6px;
+}
+
+.btn-reset:hover {
+    background: #2563eb;
+}
+
 </style>
 <h1 class="page-title">Patients</h1>
 
@@ -80,6 +119,13 @@ input {
            class="date-box"
            value="{{ request.args.get('date','') }}"
            onchange="this.form.submit()">
+    <button class="btn btn-primary" type="submit">Filter</button>
+
+        <!-- RESET -->
+        <a href="{{ url_for('patients_bp.patients') }}"
+           class="btn btn-reset">
+            Reset
+        </a>
 
 </form>
 

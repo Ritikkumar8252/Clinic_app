@@ -43,6 +43,21 @@ select {
     cursor: text;
     user-select: text;
 }
+/* Reset button */
+.btn-reset {
+    padding: 7px 14px;
+    border-radius: 7px;
+    background: #2563eb;
+    color: #374151;
+    text-decoration: none;
+    border: 2px solid black;
+    font-weight: 500;
+}
+
+.btn-reset:hover {
+    background: #2563eb;
+}
+
 
 </style>
 <!-- HEADER -->
@@ -67,8 +82,8 @@ select {
 <!-- FILTER BAR -->
 <div class="filter-bar">
 
-    <!-- Search -->
-    <form method="GET" class="filter-form">
+    <form method="GET" class="filter-form" action="{{ url_for('appointments_bp.appointments') }}">
+
         <input type="hidden" name="tab" value="{{ tab }}">
 
         <input type="text" 
@@ -82,10 +97,18 @@ select {
                value="{{ date_filter }}"
                class="date-box">
 
-        <button class="btn btn-primary">Filter</button>
+        <button class="btn btn-primary" type="submit">Filter</button>
+
+        <!-- RESET -->
+        <a href="{{ url_for('appointments_bp.appointments') }}" 
+           class="btn btn-reset">
+            Reset
+        </a>
+
     </form>
 
 </div>
+
 
 
 

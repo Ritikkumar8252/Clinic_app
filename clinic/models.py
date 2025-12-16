@@ -137,7 +137,7 @@ class Invoice(db.Model):
 
     patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable=False)
 
-    invoice_number = db.Column(db.String(50), unique=True, nullable=False)
+    invoice_number = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(255))
 
     total_amount = db.Column(db.Float, default=0.0)

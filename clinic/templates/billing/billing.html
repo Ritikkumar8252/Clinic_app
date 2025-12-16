@@ -171,43 +171,65 @@ td, tr {
 .btn-primary:hover {
     background: #1e50c2;
 }
+/* Reset button */
+.btn-secondary {
+    padding: 8px 15px;
+    margin-left: 8px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+
+    background: #2563eb;        /* light gray */
+    color: white;             /* dark gray text */
+    border: 1px solid #d1d5db;
+
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: #1e50c2;
+    color: #234897;
+}
+
 
 </style>
 
 
-
 <h2 class="page-title">Billing & Invoices</h2>
-   
+
 <div class="billing-top">
-    <div class="left-info">
-        <span class="due-label">Due Invoices:</span>
+    <div>
+        <strong>Due Invoices:</strong>
         <span class="due-count">{{ due_count }}</span>
     </div>
-    <div class="right-actions">
-        <a href="{{ url_for('billing_bp.create_invoice') }}" class="btn-primary">+ Create Invoice</a>
-    </div>
+    <a href="{{ url_for('billing_bp.create_invoice') }}" class="btn-primary">
+        + Create Invoice
+    </a>
 </div>
-
 
 <!-- FILTER BAR -->
 <div class="filter-bar">
-    <form method="get" action="{{ url_for('billing_bp.billing') }}">
-        <input type="text" name="search" placeholder="Search by patient or invoice"
-               class="search-box"
-               value="{{ request.args.get('search','') }}">
+    <form method="GET" action="{{ url_for('billing_bp.billing') }}">
+        <input
+            type="text"
+            name="search"
+            placeholder="Search by patient or invoice"
+            class="search-box"
+            value="{{ request.args.get('search','') }}"
+        >
 
         <select name="status" class="filter-select">
             <option value="">All Status</option>
-            <option value="Paid" {% if request.args.get('status')=='Paid' %}selected{% endif %}>Paid</option>
-            <option value="Partial" {% if request.args.get('status')=='Partial' %}selected{% endif %}>Partial</option>
-            <option value="Unpaid" {% if request.args.get('status')=='Unpaid' %}selected{% endif %}>Unpaid</option>
+            <option value="Paid" {% if request.args.get('status') == 'Paid' %}selected{% endif %}>Paid</option>
+            <option value="Unpaid" {% if request.args.get('status') == 'Unpaid' %}selected{% endif %}>Unpaid</option>
         </select>
 
-        <button class="btn-filter" type="submit">Filter</button>
+        <button type="submit" class="btn-filter">Filter</button>
+
+        <a href="{{ url_for('billing_bp.billing') }}" class="btn-secondary">Reset</a>
     </form>
 </div>
-
-
 
 <!-- TABLE -->
 <table class="billing-table">
@@ -224,72 +246,61 @@ td, tr {
     </thead>
 
     <tbody>
-        {% for inv in invoices %}
-            {% set paid = inv.payments | sum(attribute='amount') %}
-            {% set balance = inv.total_amount - paid %}
+    {% for inv in invoices %}
+        {% set paid = inv.payments | sum(attribute='amount') %}
+        {% set balance = inv.total_amount - paid %}
 
-            <tr>
-                <td>#{{ inv.invoice_number }}</td>
-                <td>{{ inv.patient.name }}</td>
-                <td>{{ inv.description }}</td>
-                <td>₹ {{ "%.2f"|format(inv.total_amount) }}</td>
-                <td>
-                    <span class="status-badge 
-                        {% if inv.status=='Paid' %}paid
-                        {% elif inv.status=='Partial' %}partial
-                        {% else %}unpaid
+        <tr>
+            <td>{{ inv.invoice_number }}</td>
+            <td>{{ inv.patient.name }}</td>
+            <td>{{ inv.description or '-' }}</td>
+            <td>₹ {{ "%.2f"|format(inv.total_amount) }}</td>
+            <td>
+                <span class="status-badge {{ 'paid' if inv.status == 'Paid' else 'unpaid' }}">
+                    {{ inv.status }}
+                </span>
+            </td>
+            <td>₹ {{ "%.2f"|format(balance) }}</td>
+
+            <td>
+                <div class="action-menu">
+                    <button type="button" class="menu-btn">⋮</button>
+                    <div class="menu-dropdown">
+                        <a href="{{ url_for('billing_bp.view_invoice', id=inv.id) }}">👁 View</a>
+                        <a href="{{ url_for('billing_bp.download_invoice', id=inv.id) }}">📄 PDF</a>
+
+                        {% if not inv.is_locked %}
+                        <a href="{{ url_for('billing_bp.delete_invoice', id=inv.id) }}"
+                           onclick="return confirm('Delete invoice?')">
+                           🗑 Delete
+                        </a>
                         {% endif %}
-                    ">
-                        {{ inv.status }}
-                    </span>
-                </td>
-                <td>₹ {{ "%.2f"|format(balance) }}</td>
-
-                <!-- FIXED ACTION BUTTON -->
-                <td class="actions">
-                    <div class="action-menu">
-                        <button class="menu-btn">⋮</button>
-
-                        <div class="menu-dropdown">
-                            <a href="{{ url_for('billing_bp.view_invoice', id=inv.id) }}">👁 View Invoice</a>
-                            <a href="{{ url_for('billing_bp.download_invoice', id=inv.id) }}">📄 Download PDF</a>
-                            <a href="{{ url_for('billing_bp.delete_invoice', id=inv.id) }}"
-                               onclick="return confirm('Delete invoice?');">
-                               🗑 Delete Invoice
-                            </a>
-                        </div>
                     </div>
-                </td>
-            </tr>
-
-        {% else %}
-            <tr>
-                <td colspan="7" style="text-align:center; padding:18px;">
-                    No invoices found
-                </td>
-            </tr>
-        {% endfor %}
+                </div>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="7" style="text-align:center;padding:16px;">
+                No invoices found
+            </td>
+        </tr>
+    {% endfor %}
     </tbody>
 </table>
 
-
-
 <script>
-// Close all dropdowns if clicking elsewhere
 document.addEventListener("click", () => {
-    document.querySelectorAll(".menu-dropdown").forEach(menu => menu.classList.remove("show"));
+    document.querySelectorAll(".menu-dropdown").forEach(m => m.classList.remove("show"));
 });
 
-// Toggle dropdown on click
-document.addEventListener("click", function (e) {
+document.addEventListener("click", e => {
     const btn = e.target.closest(".menu-btn");
     if (btn) {
         e.stopPropagation();
-        let menu = btn.nextElementSibling;
-        menu.classList.toggle("show");
+        btn.nextElementSibling.classList.toggle("show");
     }
 });
 </script>
-
 
 {% endblock %}

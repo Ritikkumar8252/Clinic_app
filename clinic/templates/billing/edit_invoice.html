@@ -4,18 +4,28 @@
 
 <h2 class="page-title">Edit Invoice {{ inv.invoice_number }}</h2>
 
+{% if inv.is_locked %}
+<div class="alert alert-danger">
+    This invoice is paid and cannot be edited.
+</div>
+{% endif %}
+
 <div class="invoice-container">
 <form method="POST">
+
     <div class="form-row">
         <div class="form-group">
             <label>Invoice Number</label>
-            <input type="text" name="invoice_number" value="{{ inv.invoice_number }}" readonly>
+            <input type="text" value="{{ inv.invoice_number }}" readonly>
         </div>
+
         <div class="form-group">
             <label>Patient</label>
             <select name="patient_id" required>
                 {% for p in patients %}
-                <option value="{{ p.patient_no }}" {% if p.id == inv.patient_id %}selected{% endif %}>{{ p.name }}</option>
+                <option value="{{ p.id }}" {% if p.id == inv.patient_id %}selected{% endif %}>
+                    {{ p.name }}
+                </option>
                 {% endfor %}
             </select>
         </div>
@@ -28,30 +38,41 @@
 
     <h3 class="section-title">Items</h3>
     <table class="items-table">
-        <thead><tr><th>Item</th><th>Amount</th><th></th></tr></thead>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Amount</th>
+                <th></th>
+            </tr>
+        </thead>
         <tbody id="itemsBody">
             {% for it in inv.items %}
             <tr>
                 <td><input type="text" name="item_name[]" value="{{ it.item_name }}" required></td>
                 <td><input type="number" name="item_amount[]" class="amount-field" value="{{ it.amount }}" required></td>
-                <td><button type="button" class="remove-btn" onclick="removeRow(this)">×</button></td>
+                <td>
+                    <button type="button" class="remove-btn" onclick="removeRow(this)" {% if inv.is_locked %}disabled{% endif %}>×</button>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <button type="button" id="addRowBtn" class="btn-secondary">+ Add Item</button>
+    <button type="button" id="addRowBtn" class="btn-secondary" {% if inv.is_locked %}disabled{% endif %}>
+        + Add Item
+    </button>
 
     <div class="total-box">
         <label>Total Amount</label>
         <input type="text" id="totalAmount" name="total_amount" readonly value="{{ inv.total_amount }}">
     </div>
 
-    <button class="btn-primary submit-btn" type="submit">Save Changes</button>
+    <button class="btn-primary submit-btn" type="submit" {% if inv.is_locked %}disabled{% endif %}>
+        Save Changes
+    </button>
+
 </form>
 </div>
 
-<!-- External JS -->
 <script src="{{ url_for('static', filename='js/billing/edit_invoice.js') }}"></script>
-
 {% endblock %}
