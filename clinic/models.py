@@ -177,15 +177,28 @@ class Payment(db.Model):
     paid_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # =========================
-# AUDIT LOGS (SECURITY)
+# AUDIT LOG (SECURITY)
 # =========================
 class AuditLog(db.Model):
+    __tablename__ = "audit_log"
+
     id = db.Column(db.Integer, primary_key=True)
 
-    user_id = db.Column(db.Integer, nullable=True)
-    action = db.Column(db.String(100), nullable=False)
+    # ✅ THIS IS THE FIX
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="SET NULL"),
+        nullable=True
+    )
 
+    action = db.Column(db.String(100), nullable=False)
     ip_address = db.Column(db.String(45))
     user_agent = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # ✅ Relationship now works
+    user = db.relationship(
+        "User",
+        backref=db.backref("audit_logs", lazy="dynamic")
+    )

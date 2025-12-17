@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2 class="page-title">Audit Logs</h2>
+
+<table class="styled-table">
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>IP</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.created_at.strftime("%d %b %Y %H:%M") }}</td>
+            <td>{{ log.user.email if log.user else "System" }}</td>
+            <td>{{ log.action }}</td>
+            <td>{{ log.ip_address or "-" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

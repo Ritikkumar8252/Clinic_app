@@ -3,6 +3,12 @@
 
 <h2 class="page-title">Admin Dashboard</h2>
 
+<div style="margin-bottom:16px;">
+    <a href="{{ url_for('admin_bp.audit_logs') }}" class="btn-primary">
+        View Audit Logs
+    </a>
+</div>
+
 <!-- STATS BOXES -->
 <div class="stats-grid">
 
@@ -51,14 +57,22 @@
             <td>{{ u.role }}</td>
 
             <td class="actions">
-                <a href="{{ url_for('admin_bp.edit_user', id=u.id) }}" class="btn-edit">Edit</a>
-
-                {% if u.email != 'admin@gmail.com' %}
-                <a href="{{ url_for('admin_bp.delete_user', id=u.id) }}"
-                   class="btn-delete"
-                   onclick="return confirm('Delete this user?');">
-                    Delete
+                <a href="{{ url_for('admin_bp.edit_user', id=u.id) }}"
+                   class="btn-edit">
+                   Edit
                 </a>
+
+                {% if u.role != 'admin' %}
+                <form method="POST"
+                      action="{{ url_for('admin_bp.delete_user', id=u.id) }}"
+                      style="display:inline;"
+                      onsubmit="return confirm('Delete this user?');">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-delete">
+                        Delete
+                    </button>
+                </form>
                 {% endif %}
             </td>
         </tr>

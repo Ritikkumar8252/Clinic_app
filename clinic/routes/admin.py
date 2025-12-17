@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request
 from clinic.extensions import db
 from functools import wraps
-from clinic.models import User, Patient, Appointment, Invoice
+from clinic.models import User, Patient, Appointment, Invoice, AuditLog
 
 admin_bp = Blueprint("admin_bp", __name__)
 
@@ -14,6 +14,7 @@ def admin_required(f):
             return redirect(url_for("auth_bp.login"))
         return f(*args, **kwargs)
     return wrapper
+
 
 # ---------------- ADMIN DASHBOARD ----------------
 @admin_bp.route("/admin")
@@ -35,6 +36,32 @@ def admin_panel():
         total_invoices=total_invoices,
         users=users
     )
+
+
+# ---------------- ADMIN AUDIT LOGS (READ ONLY) ----------------
+@admin_bp.route("/admin/audit-logs")
+@admin_required
+def audit_logs():
+
+    page = request.args.get("page", 1, type=int)
+
+    logs = (
+        AuditLog.query
+        .order_by(AuditLog.created_at.desc())
+        .paginate(page=page, per_page=20, error_out=False)
+    )
+
+    users = {
+        u.id: u.fullname
+        for u in User.query.with_entities(User.id, User.fullname).all()
+    }
+
+    return render_template(
+        "admin/audit_logs.html",
+        logs=logs,
+        users=users
+    )
+
 
 # ---------------- EDIT USER ----------------
 @admin_bp.route("/admin/edit_user/<int:id>", methods=["GET", "POST"])
@@ -59,8 +86,9 @@ def edit_user(id):
 
     return render_template("admin/edit_user.html", user=user)
 
+
 # ---------------- DELETE USER ----------------
-@admin_bp.route("/admin/delete_user/<int:id>")
+@admin_bp.route("/admin/delete_user/<int:id>", methods=["POST"])
 @admin_required
 def delete_user(id):
     user = User.query.get_or_404(id)
