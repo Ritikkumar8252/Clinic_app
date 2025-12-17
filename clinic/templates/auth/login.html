@@ -1,3 +1,6 @@
+{% extends "auth/auth_base.html" %}
+
+{% block body %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -169,3 +172,5 @@
   <script src="{{ url_for('static', filename='js/auth/login.js') }}"></script>
 </body>
 </html>
+
+{% endblock %}

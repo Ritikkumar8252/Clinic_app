@@ -4,7 +4,7 @@ from functools import wraps
 from clinic.models import User
 from clinic import mail
 from flask_mail import Message
-import random
+import secrets,time
 
 auth_bp = Blueprint("auth_bp", __name__)
 
@@ -93,17 +93,26 @@ def forgot_password():
             flash("Email not found.")
             return redirect(url_for("auth_bp.forgot_password"))
 
-        otp = str(random.randint(100000, 999999))
+        otp = str(secrets.randbelow(900000) + 100000)
 
+        session.clear()  # clear old auth data safely
         session["reset_email"] = email
         session["reset_otp"] = otp
+        session["otp_expiry"] = time.time() + 300  # 5 minutes
+        session["otp_attempts"] = 0
 
         msg = Message(
             "Password Reset OTP",
             recipients=[email]
         )
         msg.body = f"Your OTP for password reset is: {otp}"
-        mail.send(msg)
+
+        try:
+            mail.send(msg)
+        except Exception as e:
+            print("Mail error:", e)
+            flash("Unable to send OTP email. Try again later.")
+            return redirect(url_for("auth_bp.forgot_password"))
 
         flash("OTP sent to your email.")
         return redirect(url_for("auth_bp.verify_otp"))
@@ -115,16 +124,34 @@ def forgot_password():
 @auth_bp.route("/verify-otp", methods=["GET", "POST"])
 def verify_otp():
 
+    if "reset_otp" not in session:
+        flash("Session expired. Try again.")
+        return redirect(url_for("auth_bp.forgot_password"))
+
+    if time.time() > session.get("otp_expiry", 0):
+        session.clear()
+        flash("OTP expired. Request a new one.")
+        return redirect(url_for("auth_bp.forgot_password"))
+
     if request.method == "POST":
         entered = request.form["otp"]
 
+        session["otp_attempts"] += 1
+
+        if session["otp_attempts"] > 5:
+            session.clear()
+            flash("Too many attempts. Try again later.")
+            return redirect(url_for("auth_bp.forgot_password"))
+
         if entered == session.get("reset_otp"):
+            session.pop("reset_otp")  # invalidate OTP
             flash("OTP verified. Set a new password.")
             return redirect(url_for("auth_bp.reset_password"))
 
         flash("Invalid OTP.")
 
     return render_template("auth/verify_otp.html")
+
 
 
 # ---------------- RESET PASSWORD ----------------
@@ -139,18 +166,23 @@ def reset_password():
     user = User.query.filter_by(email=email).first_or_404()
 
     if request.method == "POST":
-        new_password = request.form["password"]
+        password = request.form["password"]
+        confirm = request.form["confirm_password"]
 
-        user.set_password(new_password)
+        if password != confirm:
+            flash("Passwords do not match.")
+            return redirect(url_for("auth_bp.reset_password"))
+
+        user.set_password(password)
         db.session.commit()
 
-        session.pop("reset_email", None)
-        session.pop("reset_otp", None)
+        session.clear()
 
         flash("Password reset successfully. Please login.")
         return redirect(url_for("auth_bp.login"))
 
     return render_template("auth/reset_password.html")
+
 
 
 # ---------------- LOGOUT ----------------
