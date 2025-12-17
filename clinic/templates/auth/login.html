@@ -1,176 +1,191 @@
 {% extends "auth/auth_base.html" %}
+{% set title = "Login" %}
 
 {% block body %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login</title>
-  <style>
-    :root {
-      --bg: #f4f6f8;
-      --card: #ffffff;
-      --accent: #2563eb;
-      --muted: #6b7280;
-      --danger: #ef4444;
-    }
 
-    * {box-sizing: border-box}
-    html,body {height:100%}
-    body{
-      margin:0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: linear-gradient(180deg, var(--bg), #eef2f6 60%);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --accent: #2563eb;
+    --muted: #6b7280;
+    --danger: #ef4444;
+  }
 
-    .card{
-      width:100%;
-      max-width:420px;
-      background:var(--card);
-      border-radius:12px;
-      box-shadow: 0 8px 30px rgba(20,25,35,0.08);
-      padding:28px;
-    }
+  * { box-sizing: border-box; }
 
-    h1{margin:0 0 8px;font-size:20px}
-    p.lead{margin:0 0 20px;color:var(--muted);font-size:14px}
+  .card{
+    width:100%;
+    max-width:420px;
+    background:var(--card);
+    border-radius:12px;
+    box-shadow: 0 8px 30px rgba(20,25,35,0.08);
+    padding:28px;
+    margin: 10vh auto;
+  }
 
-    form .field{margin-bottom:14px}
-    label{display:block;margin-bottom:6px;font-weight:600;font-size:13px}
-    input[type="email"], input[type="password"]{
-      width:100%;
-      padding:10px 12px;
-      font-size:14px;
-      border:1px solid #e6e9ef;
-      border-radius:8px;
-      outline:none;
-    }
-    input:focus { 
-      box-shadow:0 0 0 4px rgba(37,99,235,0.08); 
-      border-color:var(--accent); 
-    }
+  h1{margin:0 0 8px;font-size:20px}
+  p.lead{margin:0 0 20px;color:var(--muted);font-size:14px}
 
-    .actions{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-top:6px;
-    }
+  form .field{margin-bottom:14px}
+  label{display:block;margin-bottom:6px;font-weight:600;font-size:13px}
 
-    button.primary{
-      background:var(--accent);
-      color:white;
-      border:0;
-      padding:10px 14px;
-      border-radius:8px;
-      font-weight:600;
-      cursor:pointer;
-    }
-    button.primary:disabled{opacity:.6;cursor:not-allowed}
+  input[type="email"],
+  input[type="password"]{
+    width:100%;
+    padding:10px 12px;
+    font-size:14px;
+    border:1px solid #e6e9ef;
+    border-radius:8px;
+    outline:none;
+  }
 
-    .small{font-size:13px;color:var(--muted)}
+  input:focus { 
+    box-shadow:0 0 0 4px rgba(37,99,235,0.08); 
+    border-color:var(--accent); 
+  }
 
-    .row{
-      display:flex;
-      gap:8px;
-      align-items:center;
-    }
+  .actions{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:6px;
+  }
 
-    .show-toggle{
-      background:transparent;
-      border:0;
-      cursor:pointer;
-      font-size:13px;
-      color:var(--muted);
-      padding:6px;
-    }
+  button.primary{
+    width:100%;
+    background:var(--accent);
+    color:white;
+    border:0;
+    padding:10px 14px;
+    border-radius:8px;
+    font-weight:600;
+    cursor:pointer;
+  }
 
-    .error{color:var(--danger);font-size:13px;margin-top:6px}
+  button.primary:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+  }
+  html, body {
+  height: 100%;
+  overflow: hidden;
+ }
 
-    @media (max-width:420px){
-      .card{padding:20px;border-radius:10px}
-    }
-  </style>
-</head>
 
-<body>
-  <main class="card" role="main" aria-labelledby="loginTitle">
-    <h1 id="loginTitle">Welcome back</h1>
-    <p class="lead">Sign in to your account</p>
+  .small{font-size:13px;color:var(--muted)}
 
-    <!-- FLASH MESSAGE HERE -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <p class="error">{{ messages[0] }}</p>
-      {% endif %}
-    {% endwith %}
+  .row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
 
-    <!-- UPDATED FORM ACTION -->
-    <form id="loginForm" action="{{ url_for('auth_bp.login') }}" method="post" novalidate>
-      
-      <div class="field">
-        <label for="email">Email</label>
+  .show-toggle{
+    background:transparent;
+    border:0;
+    cursor:pointer;
+    font-size:13px;
+    color:var(--muted);
+    padding:6px;
+  }
+
+  .error{
+    color:var(--danger);
+    font-size:13px;
+    margin-bottom:10px;
+  }
+
+  @media (max-width:420px){
+    .card{padding:20px;border-radius:10px}
+  }
+</style>
+
+<main class="card" role="main" aria-labelledby="loginTitle">
+
+  <h1 id="loginTitle">Welcome back</h1>
+  <p class="lead">Sign in to your account</p>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <p class="error">{{ messages[0] }}</p>
+    {% endif %}
+  {% endwith %}
+
+  <form id="loginForm"
+        action="{{ url_for('auth_bp.login') }}"
+        method="post"
+        novalidate>
+
+    <!-- CSRF TOKEN (EXPLICIT & SAFE) -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="you@example.com"
+        required
+        autocomplete="username"
+        inputmode="email"
+      />
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <div style="position:relative;display:flex;align-items:center;">
         <input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="you@example.com"
+          id="password"
+          name="password"
+          type="password"
+          placeholder="••••••••"
           required
-          autocomplete="username"
-          inputmode="email"
+          autocomplete="current-password"
+          style="flex:1"
         />
+        <button
+          type="button"
+          class="show-toggle"
+          id="togglePwd"
+          aria-pressed="false">
+          Show
+        </button>
       </div>
+    </div>
 
-      <div class="field">
-        <label for="password">Password</label>
-        <div style="position:relative;display:flex;align-items:center;">
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            required
-            autocomplete="current-password"
-            style="flex:1"
-          />
-          <button type="button" class="show-toggle" id="togglePwd" aria-pressed="false">
-            Show
-          </button>
-        </div>
-      </div>
+    <div class="field actions">
+      <label class="row small">
+        <input
+          id="remember"
+          name="remember"
+          type="checkbox"
+          style="margin-right:8px" />
+        Remember me
+      </label>
 
-      <div class="field actions">
-        <label class="row small">
-          <input id="remember" name="remember" type="checkbox" style="margin-right:8px" />
-          Remember me
-        </label>
+      <a class="small"
+         href="{{ url_for('auth_bp.forgot_password') }}">
+        Forgot password?
+      </a>
+    </div>
 
-        <a class="small" href="{{ url_for('auth_bp.forgot_password') }}">Forgot password?</a>
+    <div class="field" style="margin-top:18px">
+      <button class="primary" id="submitBtn" type="submit">
+        Sign in
+      </button>
+    </div>
 
-      </div>
+    <p class="small" style="margin-top:12px">
+      Don't have an account?
+      <a href="{{ url_for('auth_bp.signup') }}">Create one</a>.
+    </p>
 
-      <div class="field" style="margin-top:18px">
-        <button class="primary" id="submitBtn" type="submit">Sign in</button>
-      </div>
+  </form>
+</main>
 
-      <p class="small" style="margin-top:12px">
-        Don't have an account?  
-        <a href="{{ url_for('auth_bp.signup') }}">Create one</a>.
-      </p>
-
-      <p id="error" class="error" style="display:none"></p>
-    </form>
-  </main>
-
-  <!-- Load external JS -->
-  <script src="{{ url_for('static', filename='js/auth/login.js') }}"></script>
-</body>
-</html>
+<script src="{{ url_for('static', filename='js/auth/login.js') }}"></script>
 
 {% endblock %}

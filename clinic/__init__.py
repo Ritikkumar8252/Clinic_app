@@ -1,7 +1,7 @@
 from flask import Flask
 import os
 
-from .extensions import db, mail
+from .extensions import db, mail, csrf
 
 # IMPORTANT: import models so SQLAlchemy knows them
 from . import models  
@@ -51,7 +51,7 @@ def create_app():
     # ---------------- INIT EXTENSIONS ----------------
     db.init_app(app)
     mail.init_app(app)
-
+    csrf.init_app(app) 
     # ---------------- CREATE TABLES ----------------
     with app.app_context():
         db.create_all()

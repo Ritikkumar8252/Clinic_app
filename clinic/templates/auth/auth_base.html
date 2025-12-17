@@ -6,11 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
-        body {
+        /* GLOBAL AUTH FIXES */
+        html, body {
+            height: 100%;
             margin: 0;
-            height: 100vh;
-            background: #f4f6f8;
+            overflow: hidden; /* NO SCROLL EVER */
             font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+
+        /* AUTH WRAPPER (prevents jump on keyboard open) */
+        .auth-wrapper {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Flash messages */
@@ -49,15 +60,17 @@
 {% endif %}
 {% endwith %}
 
-{% block body %}{% endblock %}
+<div class="auth-wrapper">
+    {% block body %}{% endblock %}
+</div>
 
 <script>
-setTimeout(() => {
-    document.querySelectorAll(".flash").forEach(f => {
-        f.style.opacity = "0";
-        setTimeout(() => f.remove(), 400);
-    });
-}, 3000);
+    setTimeout(() => {
+        document.querySelectorAll(".flash").forEach(f => {
+            f.style.opacity = "0";
+            setTimeout(() => f.remove(), 400);
+        });
+    }, 3000);
 </script>
 
 </body>

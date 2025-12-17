@@ -1,112 +1,152 @@
 {% extends "auth/auth_base.html" %}
+{% set title = "Sign Up" %}
 
 {% block body %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up</title>
+<style>
+  /* Prevent text selection (UI polish) */
+  h2, label, p {
+    user-select: none;
+    cursor: default;
+  }
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #eef2f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
+  .box {
+    background: white;
+    padding: 24px;
+    width: 100%;
+    max-width: 360px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
 
+  h2 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* FIXED INPUT SIZE (NO TEXTAREA FEEL) */
+  input {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    margin-top: 6px;
+    margin-bottom: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40,167,69,0.15);
+  }
+
+  button {
+    width: 100%;
+    height: 44px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  button:hover {
+    background: #1e7e34;
+  }
+
+  .login-link {
+    margin-top: 12px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .login-link a {
+    color: #2563eb;
+    text-decoration: none;
+  }
+
+  .login-link a:hover {
+    text-decoration: underline;
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 480px) {
     .box {
-      background: white;
-      padding: 25px;
-      width: 350px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
     }
+  }
+</style>
 
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+<div class="box">
 
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #28a745;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
+  <h2>Create Account</h2>
 
-    button:hover {
-      background: #1e7e34;
-    }
-  </style>
-</head>
+  <form action="{{ url_for('auth_bp.signup') }}" method="POST">
 
-<body>
+    <!-- CSRF TOKEN -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-  <div class="box">
+    <label for="fullname">Full Name</label>
+    <input
+      type="text"
+      id="fullname"
+      name="fullname"
+      placeholder="Enter full name"
+      required
+      autocomplete="name"
+    >
 
-    <h2>Create Account</h2>
+    <label for="email">Email</label>
+    <input
+      type="email"
+      id="email"
+      name="email"
+      placeholder="Enter email"
+      required
+      autocomplete="email"
+      autocapitalize="none"
+    >
 
-    <!-- UPDATED FORM ACTION -->
-    <form action="{{ url_for('auth_bp.signup') }}" method="POST">
+    <label for="password">Password</label>
+    <input
+      type="password"
+      id="password"
+      name="password"
+      placeholder="Create password"
+      required
+      autocomplete="new-password"
+    >
 
-      <label for="fullname">Full Name</label>
-      <input 
-        type="text" 
-        id="fullname" 
-        name="fullname" 
-        placeholder="Enter full name" 
-        required>
+    <label for="confirm">Confirm Password</label>
+    <input
+      type="password"
+      id="confirm"
+      name="confirm_password"
+      placeholder="Re-enter password"
+      required
+      autocomplete="new-password"
+    >
 
-      <label for="email">Email</label>
-      <input 
-        type="email" 
-        id="email" 
-        name="email" 
-        placeholder="Enter email" 
-        required>
+    <button type="submit">Sign Up</button>
+  </form>
 
-      <label for="password">Password</label>
-      <input 
-        type="password" 
-        id="password" 
-        name="password" 
-        placeholder="Create password" 
-        required>
-
-      <label for="confirm">Confirm Password</label>
-      <input 
-        type="password" 
-        id="confirm" 
-        name="confirm_password" 
-        placeholder="Re-enter password" 
-        required>
-
-      <button type="submit">Sign Up</button>
-    </form>
-
-    <p style="margin-top: 10px; font-size: 14px;">
-      Already have an account? 
-      <!-- UPDATED LOGIN LINK -->
-      <a href="{{ url_for('auth_bp.login') }}">Login</a>
-    </p>
+  <div class="login-link">
+    Already have an account?
+    <a href="{{ url_for('auth_bp.login') }}">Login</a>
   </div>
-  <!-- external JS -->
-  <script src="{{ url_for('static', filename='js/auth/signup.js') }}"></script>
-</body>
-</html>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/auth/signup.js') }}"></script>
 
 {% endblock %}
