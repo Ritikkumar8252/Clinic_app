@@ -1,11 +1,8 @@
 from flask import Flask
 import os
-
+from datetime import timedelta
 from .extensions import db, mail, csrf
-
-# IMPORTANT: import models so SQLAlchemy knows them
-from . import models  
-
+from . import models
 from .routes.auth import auth_bp
 from .routes.dashboard import dashboard_bp
 from .routes.patients import patients_bp
@@ -17,26 +14,42 @@ from .routes.home import home_bp
 
 
 def create_app():
-    # 👇 enable instance folder
     app = Flask(__name__, instance_relative_config=True)
+
+    # 🔐 SECRET KEY (move to env later)
     app.secret_key = "secret123"
 
     # ---------------- INSTANCE FOLDER ----------------
     os.makedirs(app.instance_path, exist_ok=True)
 
-    # ---------------- DATABASE (INSIDE instance/) ----------------
+    # ---------------- DATABASE ----------------
     db_path = os.path.join(app.instance_path, "site.db")
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     print(">>> USING DATABASE:", db_path)
 
-    # ---------------- MAIL ----------------
-    app.config["MAIL_SERVER"] = "smtp.gmail.com"
-    app.config["MAIL_PORT"] = 587
-    app.config["MAIL_USE_TLS"] = True
-    app.config["MAIL_USERNAME"] = "yourgmail@gmail.com"
-    app.config["MAIL_PASSWORD"] = "your_app_password"
+    # ---------------- MAIL CONFIG ----------------
+    app.config.update(
+        MAIL_SERVER="sandbox.smtp.mailtrap.io",
+        MAIL_PORT=587,
+        MAIL_USE_TLS=True,
+        MAIL_USERNAME="f01ffa9fd0ba38",      #  real gmail
+        MAIL_PASSWORD="b79474cd0e8dae",         #  gmail app password
+        MAIL_DEFAULT_SENDER="cliniccare.dev"
+    )
+
+    # ---------------- SESSION + CSRF HARDENING ----------------
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,            # JS cannot access cookies
+        SESSION_COOKIE_SECURE=not app.debug,     # 🔥 Auto: True in prod, False locally
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_NAME="clinic_session",
+        PERMANENT_SESSION_LIFETIME=timedelta(minutes=60),
+        SESSION_REFRESH_EACH_REQUEST=True,
+        WTF_CSRF_TIME_LIMIT=None                 # Prevent CSRF expiry issues
+    )
+
 
     # ---------------- UPLOAD FOLDERS ----------------
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -51,7 +64,8 @@ def create_app():
     # ---------------- INIT EXTENSIONS ----------------
     db.init_app(app)
     mail.init_app(app)
-    csrf.init_app(app) 
+    csrf.init_app(app)
+
     # ---------------- CREATE TABLES ----------------
     with app.app_context():
         db.create_all()

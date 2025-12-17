@@ -1,9 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from clinic.extensions import db, mail
 from clinic.models import User
+from clinic.utils import log_action
 from flask_mail import Message
 from functools import wraps
-import secrets, time
+import secrets
+import time
 
 auth_bp = Blueprint("auth_bp", __name__)
 
@@ -24,7 +26,7 @@ def login():
 
     now = time.time()
 
-    # RATE LIMIT CHECK
+    # ---- LOGIN RATE LIMIT ----
     if session.get("login_locked_until"):
         if now < session["login_locked_until"]:
             flash("Too many failed attempts. Try again later.", "danger")
@@ -42,19 +44,28 @@ def login():
         if not user or not user.check_password(password):
             session["login_attempts"] = session.get("login_attempts", 0) + 1
 
+            log_action("LOGIN_FAILED")
+
             if session["login_attempts"] >= 5:
-                session["login_locked_until"] = now + 15 * 60
+                session["login_locked_until"] = now + (15 * 60)
                 flash("Account locked for 15 minutes.", "danger")
             else:
                 flash("Invalid email or password.", "danger")
 
             return redirect(url_for("auth_bp.login"))
 
-        # SUCCESS
-        session.clear()   # session fixation protection
+        # ---- SUCCESS ----
+        session.clear()
+        session.permanent = True
+
         session["user_id"] = user.id
         session["user_email"] = user.email
         session["role"] = user.role
+
+        log_action("LOGIN_SUCCESS", user.id)
+
+        if user.role == "admin":
+            return redirect(url_for("admin_bp.admin_panel"))
 
         return redirect(url_for("dashboard_bp.dashboard"))
 
@@ -88,8 +99,12 @@ def signup():
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
-        except Exception:
+
+            log_action("SIGNUP", user.id)
+
+        except Exception as e:
             db.session.rollback()
+            print("SIGNUP ERROR:", e)
             flash("Something went wrong. Try again.", "danger")
             return redirect(url_for("auth_bp.signup"))
 
@@ -103,28 +118,28 @@ def signup():
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
 
-    now = time.time()
-
-    if session.get("otp_send_locked_until"):
-        if now < session["otp_send_locked_until"]:
-            flash("Too many OTP requests. Try later.", "warning")
-            return redirect(url_for("auth_bp.forgot_password"))
-        else:
-            session.pop("otp_send_locked_until", None)
-            session.pop("otp_send_count", None)
-
     if request.method == "POST":
-        email = request.form["email"]
-        user = User.query.filter_by(email=email).first()
+        email = request.form.get("email")
 
+        if not email:
+            flash("Email required.", "danger")
+            return redirect(url_for("auth_bp.forgot_password"))
+
+        user = User.query.filter_by(email=email).first()
         if not user:
             flash("Email not found.", "danger")
             return redirect(url_for("auth_bp.forgot_password"))
 
-        session["otp_send_count"] = session.get("otp_send_count", 0) + 1
+        now = time.time()
 
+        # ---- OTP rate limit ----
+        if session.get("otp_send_locked_until") and now < session["otp_send_locked_until"]:
+            flash("Too many OTP requests. Try later.", "warning")
+            return redirect(url_for("auth_bp.forgot_password"))
+
+        session["otp_send_count"] = session.get("otp_send_count", 0) + 1
         if session["otp_send_count"] >= 3:
-            session["otp_send_locked_until"] = now + 10 * 60
+            session["otp_send_locked_until"] = now + 600
             flash("OTP blocked for 10 minutes.", "warning")
             return redirect(url_for("auth_bp.forgot_password"))
 
@@ -136,16 +151,14 @@ def forgot_password():
         session["otp_attempts"] = 0
 
         msg = Message(
-            "Password Reset OTP",
+            subject="Password Reset OTP",
             recipients=[email],
             body=f"Your OTP is {otp}. Valid for 5 minutes."
         )
 
-        try:
-            mail.send(msg)
-        except Exception:
-            flash("Unable to send OTP. Try again.", "danger")
-            return redirect(url_for("auth_bp.forgot_password"))
+        mail.send(msg)
+
+        log_action("OTP_SENT", user.id)
 
         flash("OTP sent to your email.", "success")
         return redirect(url_for("auth_bp.verify_otp"))
@@ -163,21 +176,23 @@ def verify_otp():
 
     if time.time() > session.get("otp_expiry", 0):
         session.clear()
-        flash("OTP expired.", "danger")
+        flash("OTP expired. Request a new one.", "danger")
         return redirect(url_for("auth_bp.forgot_password"))
 
     if request.method == "POST":
-        entered = request.form["otp"]
         session["otp_attempts"] += 1
 
         if session["otp_attempts"] > 5:
             session.clear()
-            flash("Too many wrong attempts.", "danger")
+            flash("Too many incorrect attempts.", "danger")
             return redirect(url_for("auth_bp.forgot_password"))
 
-        if entered == session["reset_otp"]:
-            session.pop("reset_otp")
-            flash("OTP verified. Set new password.", "success")
+        if request.form.get("otp") == session.get("reset_otp"):
+            session.pop("reset_otp", None)
+
+            log_action("OTP_VERIFIED")
+
+            flash("OTP verified. Set a new password.", "success")
             return redirect(url_for("auth_bp.reset_password"))
 
         flash("Invalid OTP.", "danger")
@@ -197,8 +212,8 @@ def reset_password():
     user = User.query.filter_by(email=email).first_or_404()
 
     if request.method == "POST":
-        password = request.form["password"]
-        confirm = request.form["confirm_password"]
+        password = request.form.get("password")
+        confirm = request.form.get("confirm_password")
 
         if password != confirm or len(password) < 6:
             flash("Invalid password.", "danger")
@@ -207,8 +222,10 @@ def reset_password():
         user.set_password(password)
         db.session.commit()
 
+        log_action("PASSWORD_RESET", user.id)
+
         session.clear()
-        flash("Password reset successful.", "success")
+        flash("Password reset successful. Please login.", "success")
         return redirect(url_for("auth_bp.login"))
 
     return render_template("auth/reset_password.html")
@@ -217,6 +234,20 @@ def reset_password():
 # ---------------- LOGOUT ----------------
 @auth_bp.route("/logout")
 def logout():
+    log_action("LOGOUT", session.get("user_id"))
     session.clear()
     flash("Logged out successfully.", "success")
     return redirect(url_for("auth_bp.login"))
+
+
+# ---------------- MAIL TEST (DEV ONLY) ----------------
+@auth_bp.route("/mail-test")
+def mail_test():
+    msg = Message(
+        subject="Clinic Test Mail",
+        sender=current_app.config["MAIL_USERNAME"],
+        recipients=["YOUR_PERSONAL_EMAIL@gmail.com"],
+        body="If you received this, SMTP is working."
+    )
+    mail.send(msg)
+    return "Mail sent"
