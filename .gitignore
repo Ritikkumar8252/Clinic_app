@@ -1,0 +1,20 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Flask instance
+instance/
+
+# Database
+*.db
+
+# Uploads
+static/uploads/
+static/patient_images/
+static/records/
