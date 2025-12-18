@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app,abort
 from clinic.extensions import db, mail
 from clinic.models import User, PasswordResetToken
 from clinic.utils import log_action
@@ -21,28 +21,21 @@ def login_required(f):
     return wrapper
 
 # ---------------- ROLE REQUIRED ----------------
-from flask import session, redirect, url_for, flash
-from functools import wraps
-
-def role_required(*roles):
+def role_required(*allowed_roles):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
+            role = session.get("role")
 
-            # 🚨 request ke bahar ho to allow (CLI / migrations)
-            if not session:
-                return f(*args, **kwargs)
+            if not role:
+                abort(401)  # not logged in
 
-            user_role = session.get("role")
-
-            if user_role not in roles:
-                flash("Access denied.", "danger")
-                return redirect(url_for("dashboard_bp.dashboard"))
+            if role not in allowed_roles:
+                abort(403)  # forbidden
 
             return f(*args, **kwargs)
         return wrapper
     return decorator
-
 
 
 # ---------------- LOGIN ----------------

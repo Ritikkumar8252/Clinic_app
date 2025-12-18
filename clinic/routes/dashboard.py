@@ -4,26 +4,30 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 from clinic.extensions import db
 from clinic.routes.auth import login_required, role_required
-from clinic.utils import ROLE_LABELS
+from clinic.utils import ROLE_LABELS, get_current_clinic_owner_id
+
 
 dashboard_bp = Blueprint("dashboard_bp", __name__)
 
 @dashboard_bp.route("/dashboard")
 @login_required
 def dashboard():
-    user_id = session["user_id"]
+    
 
+    clinic_owner_id = get_current_clinic_owner_id()
     # ✅ TOTAL PATIENTS (USER-SPECIFIC)
-    total_patients = Patient.query.filter_by(user_id=user_id).count()
-
+    total_patients = (
+    Patient.query
+    .filter_by(clinic_owner_id=clinic_owner_id)
+    .count()
+)
     # ✅ TODAY'S APPOINTMENTS (USER-SPECIFIC)
     today = datetime.now().date()
     today_appointments = (
         Appointment.query
         .join(Patient)
         .filter(
-            Patient.user_id == user_id,
-            Appointment.date == today
+            Patient.clinic_owner_id == clinic_owner_id,            Appointment.date == today
         )
         .count()
     )
@@ -33,8 +37,7 @@ def dashboard():
         Invoice.query
         .join(Patient)
         .filter(
-            Patient.user_id == user_id,
-            Invoice.status != "Paid"
+            Patient.clinic_owner_id == clinic_owner_id,            Invoice.status != "Paid"
         )
         .count()
     )
@@ -43,14 +46,14 @@ def dashboard():
     total_invoices = (
         Invoice.query
         .join(Patient)
-        .filter(Patient.user_id == user_id)
+        .filter(Patient.clinic_owner_id == clinic_owner_id)
         .count()
     )
 
     # ✅ RECENT PATIENTS (USER-SPECIFIC)
     recent_patients = (
         Patient.query
-        .filter_by(user_id=user_id)
+        .filter_by(clinic_owner_id=clinic_owner_id)
         .order_by(Patient.id.desc())
         .limit(3)
         .all()
@@ -65,8 +68,7 @@ def dashboard():
             func.count(Patient.id)
         )
         .filter(
-            Patient.user_id == user_id,
-            Patient.created_at >= start_date
+            Patient.clinic_owner_id == clinic_owner_id,            Patient.created_at >= start_date
         )
         .group_by(func.date(Patient.created_at))
         .order_by(func.date(Patient.created_at))

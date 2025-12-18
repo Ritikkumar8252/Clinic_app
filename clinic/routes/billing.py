@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file
 from clinic.extensions import db
 from clinic.models import Patient, Invoice, InvoiceItem, Payment
-from clinic.utils import generate_invoice_number, get_clinic_owner_id
+from clinic.utils import generate_invoice_number, get_current_clinic_owner_id
 from datetime import datetime
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
@@ -14,14 +14,14 @@ billing_bp = Blueprint("billing_bp", __name__, url_prefix="/billing")
 
 # ---------------- SECURE FETCH (CLINIC SAFE) ----------------
 def get_secure_invoice(id):
-    clinic_owner_id = get_clinic_owner_id()
+    clinic_owner_id = get_current_clinic_owner_id()
 
     return (
         Invoice.query
         .join(Patient)
         .filter(
             Invoice.id == id,
-            Patient.user_id == clinic_owner_id
+            Patient.clinic_owner_id == clinic_owner_id
         )
         .first_or_404()
     )
@@ -32,7 +32,7 @@ def get_secure_invoice(id):
 @login_required
 @role_required( "reception", "doctor")
 def billing():
-    clinic_owner_id = get_clinic_owner_id()
+    clinic_owner_id = get_current_clinic_owner_id()
 
     q = request.args.get("search", "").strip()
     status = request.args.get("status", "").strip()
@@ -40,7 +40,7 @@ def billing():
     query = (
         Invoice.query
         .join(Patient)
-        .filter(Patient.user_id == clinic_owner_id)
+        .filter(Patient.clinic_owner_id == clinic_owner_id)
     )
 
     if q:
@@ -60,7 +60,7 @@ def billing():
         Invoice.query
         .join(Patient)
         .filter(
-            Patient.user_id == clinic_owner_id,
+            Patient.clinic_owner_id == clinic_owner_id,
             Invoice.status != "Paid"
         )
         .count()
@@ -78,8 +78,8 @@ def billing():
 @login_required
 @role_required("reception")
 def create_invoice():
-    clinic_owner_id = get_clinic_owner_id()
-    patients = Patient.query.filter_by(user_id=clinic_owner_id).all()
+    clinic_owner_id = get_current_clinic_owner_id()
+    patients = Patient.query.filter(Patient.clinic_owner_id == clinic_owner_id).all()
 
     if request.method == "POST":
         invoice = Invoice(
@@ -135,7 +135,7 @@ def view_invoice(id):
 @login_required
 @role_required("reception")
 def edit_invoice(id):
-    clinic_owner_id = get_clinic_owner_id()
+    clinic_owner_id = get_current_clinic_owner_id()
     inv = get_secure_invoice(id)
 
     if inv.is_locked:

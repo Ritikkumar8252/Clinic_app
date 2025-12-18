@@ -4,7 +4,7 @@ from ..models import Appointment, Patient
 from datetime import datetime
 from io import BytesIO
 from clinic.routes.auth import login_required, role_required
-from clinic.utils import get_clinic_owner_id
+from clinic.utils import get_current_clinic_owner_id
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
@@ -18,14 +18,14 @@ appointments_bp = Blueprint("appointments_bp", __name__)
 # SECURE HELPERS (CLINIC SAFE)
 # ------------------------------------------------
 def get_secure_appointment(id):
-    clinic_owner_id = get_clinic_owner_id()
+    clinic_owner_id = get_current_clinic_owner_id()
 
     return (
         Appointment.query
         .join(Patient)
         .filter(
             Appointment.id == id,
-            Patient.user_id == clinic_owner_id
+            Patient.clinic_owner_id == clinic_owner_id
         )
         .first_or_404()
     )
@@ -37,7 +37,7 @@ def get_secure_appointment(id):
 @login_required
 @role_required( "reception", "doctor")
 def appointments():
-    clinic_owner_id = get_clinic_owner_id()
+    clinic_owner_id = get_current_clinic_owner_id()
 
     tab = request.args.get("tab", "queue")
     search = request.args.get("search", "").strip()
@@ -46,7 +46,7 @@ def appointments():
     base_query = (
         Appointment.query
         .join(Patient)
-        .filter(Patient.user_id == clinic_owner_id)
+        .filter(Patient.clinic_owner_id == clinic_owner_id)
     )
 
     if search:
@@ -79,8 +79,8 @@ def appointments():
 @login_required
 @role_required("reception")
 def add_appointment():
-    clinic_owner_id = get_clinic_owner_id()
-    patients = Patient.query.filter_by(user_id=clinic_owner_id).all()
+    clinic_owner_id = get_current_clinic_owner_id()
+    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id).all()
 
     if request.method == "POST":
         patient_id = request.form["patient_id"]
@@ -90,7 +90,7 @@ def add_appointment():
 
         patient = Patient.query.filter_by(
             id=patient_id,
-            user_id=clinic_owner_id
+            clinic_owner_id=clinic_owner_id
         ).first_or_404()
 
         appt = Appointment(
@@ -161,15 +161,15 @@ def edit_appointment(id):
 @login_required
 @role_required("doctor")
 def walkin():
-    clinic_owner_id = get_clinic_owner_id()
-    patients = Patient.query.filter_by(user_id=clinic_owner_id).all()
+    clinic_owner_id = get_current_clinic_owner_id()
+    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id).all()
 
     if request.method == "POST":
         patient_id = request.form.get("patient_id")
 
         patient = Patient.query.filter_by(
             id=patient_id,
-            user_id=clinic_owner_id
+            clinic_owner_id=clinic_owner_id
         ).first_or_404()
 
         now = datetime.now()
@@ -233,11 +233,11 @@ def cancel(id):
 @role_required("doctor")
 def consult(id):
     appt = get_secure_appointment(id)
-    clinic_owner_id = get_clinic_owner_id()
+    clinic_owner_id = get_current_clinic_owner_id()
 
     patient = Patient.query.filter_by(
         id=appt.patient_id,
-        user_id=clinic_owner_id
+        clinic_owner_id=clinic_owner_id
     ).first_or_404()
 
     if request.method == "POST":
@@ -342,10 +342,10 @@ def prescription_pdf(id):
         flash("Finalize prescription before downloading", "warning")
         return redirect(url_for("appointments_bp.consult", id=id))
 
-    clinic_owner_id = get_clinic_owner_id()
+    clinic_owner_id = get_current_clinic_owner_id()
     patient = Patient.query.filter_by(
         id=appt.patient_id,
-        user_id=clinic_owner_id
+        clinic_owner_id=clinic_owner_id
     ).first_or_404()
 
     buffer = BytesIO()

@@ -15,29 +15,25 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
 
-    # admin | doctor | reception
-    role = db.Column(db.String(20), default="doctor")
+    # doctor = clinic owner + admin
+    # reception | lab | pharmacy = staff
+    role = db.Column(db.String(20), nullable=False)
+
     phone = db.Column(db.String(20))
 
-    # 👇 LINK TO CLINIC OWNER (DOCTOR)
+    # staff → doctor (clinic owner)
     created_by = db.Column(
         db.Integer,
         db.ForeignKey("user.id"),
-        nullable=True
+        nullable=True,
+        index=True
     )
 
-    # Doctor → staff relationship
     parent = db.relationship(
         "User",
         remote_side=[id],
         backref=db.backref("staff", lazy=True)
     )
-
-    # Documents
-    aadhar = db.Column(db.String(200))
-    mrc_certificate = db.Column(db.String(200))
-    clinic_license = db.Column(db.String(200))
-    profile_photo = db.Column(db.String(200))
 
     # Clinic details (doctor only)
     clinic_name = db.Column(db.String(200))
@@ -47,15 +43,12 @@ class User(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Patients owned by doctor
-    patients = db.relationship("Patient", backref="clinic_owner", lazy=True)
-
-    # ---------- PASSWORD METHODS ----------
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
+
 
 
 # =========================
@@ -65,7 +58,13 @@ class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # 👇 ALWAYS DOCTOR ID
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    # clinic owner (doctor)
+    clinic_owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        index=True
+    )
     patient_no = db.Column(db.Integer, nullable=False, index=True)
 
     name = db.Column(db.String(100), nullable=False)
@@ -90,7 +89,9 @@ class Patient(db.Model):
     appointments = db.relationship("Appointment", backref="patient", lazy=True)
     records = db.relationship("MedicalRecord", backref="patient", lazy=True)
     invoices = db.relationship("Invoice", backref="patient", lazy=True)
-
+    __table_args__ = (
+        db.UniqueConstraint("clinic_owner_id", "patient_no"),
+    )
 
 # =========================
 # APPOINTMENT / CONSULTATION
@@ -121,6 +122,13 @@ class Appointment(db.Model):
     prescription_locked = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    prescription_obj = db.relationship(
+    "Prescription",
+    backref="appointment",
+    uselist=False,
+    cascade="all, delete-orphan"
+    )
+
 
 
 # =========================
@@ -166,6 +174,21 @@ class InvoiceItem(db.Model):
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoice.id"), nullable=False)
     item_name = db.Column(db.String(200), nullable=False)
     amount = db.Column(db.Float, nullable=False)
+# =========================
+# INVOICE SEQUENCES
+# =========================
+class InvoiceSequence(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    clinic_owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+
+    last_number = db.Column(db.Integer, default=0)
 
 
 # =========================
@@ -188,6 +211,12 @@ class AuditLog(db.Model):
     __tablename__ = "audit_log"
 
     id = db.Column(db.Integer, primary_key=True)
+    clinic_owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        index=True
+    )
     user_id = db.Column(
         db.Integer,
         db.ForeignKey("user.id", ondelete="SET NULL"),
@@ -202,6 +231,7 @@ class AuditLog(db.Model):
 
     user = db.relationship(
         "User",
+        foreign_keys=[user_id],
         backref=db.backref("audit_logs", lazy="dynamic")
     )
 
@@ -217,3 +247,46 @@ class PasswordResetToken(db.Model):
     used = db.Column(db.Boolean, default=False)
 
     user = db.relationship("User", backref="reset_tokens")
+
+# =========================
+# PRESCRIPTION
+# =========================
+class Prescription(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    appointment_id = db.Column(
+        db.Integer,
+        db.ForeignKey("appointment.id"),
+        nullable=False,
+        unique=True
+    )
+    items = db.relationship(
+    "PrescriptionItem",
+    backref="prescription",
+    cascade="all, delete-orphan",
+    lazy=True
+    )
+
+
+    finalized = db.Column(db.Boolean, default=False)
+
+    # snapshot for PDF / legal
+    final_text = db.Column(db.Text)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    finalized_at = db.Column(db.DateTime)
+
+
+class PrescriptionItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    prescription_id = db.Column(
+        db.Integer,
+        db.ForeignKey("prescription.id"),
+        nullable=False
+    )
+
+    medicine_name = db.Column(db.String(200), nullable=False)
+    dose = db.Column(db.String(100))
+    duration_days = db.Column(db.Integer)
+    instructions = db.Column(db.String(200))

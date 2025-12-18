@@ -1,8 +1,8 @@
-"""initial schema with created_by
+"""initial schema with structured prescription
 
-Revision ID: 0814f19d27af
+Revision ID: ac3ced79df81
 Revises: 
-Create Date: 2025-12-18 23:07:56.301594
+Create Date: 2025-12-19 03:58:40.505348
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '0814f19d27af'
+revision = 'ac3ced79df81'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,13 +23,9 @@ def upgrade():
     sa.Column('fullname', sa.String(length=100), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
     sa.Column('password_hash', sa.String(length=255), nullable=False),
-    sa.Column('role', sa.String(length=20), nullable=True),
+    sa.Column('role', sa.String(length=20), nullable=False),
     sa.Column('phone', sa.String(length=20), nullable=True),
     sa.Column('created_by', sa.Integer(), nullable=True),
-    sa.Column('aadhar', sa.String(length=200), nullable=True),
-    sa.Column('mrc_certificate', sa.String(length=200), nullable=True),
-    sa.Column('clinic_license', sa.String(length=200), nullable=True),
-    sa.Column('profile_photo', sa.String(length=200), nullable=True),
     sa.Column('clinic_name', sa.String(length=200), nullable=True),
     sa.Column('clinic_phone', sa.String(length=50), nullable=True),
     sa.Column('clinic_address', sa.String(length=300), nullable=True),
@@ -39,16 +35,34 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
+    with op.batch_alter_table('user', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_user_created_by'), ['created_by'], unique=False)
+
     op.create_table('audit_log',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('clinic_owner_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('action', sa.String(length=100), nullable=False),
     sa.Column('ip_address', sa.String(length=45), nullable=True),
     sa.Column('user_agent', sa.String(length=255), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['clinic_owner_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
+    with op.batch_alter_table('audit_log', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_audit_log_clinic_owner_id'), ['clinic_owner_id'], unique=False)
+
+    op.create_table('invoice_sequence',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('clinic_owner_id', sa.Integer(), nullable=False),
+    sa.Column('last_number', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['clinic_owner_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('invoice_sequence', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_invoice_sequence_clinic_owner_id'), ['clinic_owner_id'], unique=True)
+
     op.create_table('password_reset_token',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -61,7 +75,7 @@ def upgrade():
     )
     op.create_table('patient',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('clinic_owner_id', sa.Integer(), nullable=False),
     sa.Column('patient_no', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('age', sa.Integer(), nullable=True),
@@ -76,10 +90,12 @@ def upgrade():
     sa.Column('city', sa.String(length=50), nullable=True),
     sa.Column('state', sa.String(length=50), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.ForeignKeyConstraint(['clinic_owner_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('clinic_owner_id', 'patient_no')
     )
     with op.batch_alter_table('patient', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_patient_clinic_owner_id'), ['clinic_owner_id'], unique=False)
         batch_op.create_index(batch_op.f('ix_patient_patient_no'), ['patient_no'], unique=False)
         batch_op.create_index(batch_op.f('ix_patient_phone'), ['phone'], unique=False)
 
@@ -143,11 +159,34 @@ def upgrade():
     sa.ForeignKeyConstraint(['invoice_id'], ['invoice.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('prescription',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('appointment_id', sa.Integer(), nullable=False),
+    sa.Column('finalized', sa.Boolean(), nullable=True),
+    sa.Column('final_text', sa.Text(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('finalized_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['appointment_id'], ['appointment.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('appointment_id')
+    )
+    op.create_table('prescription_item',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('prescription_id', sa.Integer(), nullable=False),
+    sa.Column('medicine_name', sa.String(length=200), nullable=False),
+    sa.Column('dose', sa.String(length=100), nullable=True),
+    sa.Column('duration_days', sa.Integer(), nullable=True),
+    sa.Column('instructions', sa.String(length=200), nullable=True),
+    sa.ForeignKeyConstraint(['prescription_id'], ['prescription.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('prescription_item')
+    op.drop_table('prescription')
     op.drop_table('payment')
     op.drop_table('invoice_item')
     op.drop_table('medical_record')
@@ -156,9 +195,20 @@ def downgrade():
     with op.batch_alter_table('patient', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_patient_phone'))
         batch_op.drop_index(batch_op.f('ix_patient_patient_no'))
+        batch_op.drop_index(batch_op.f('ix_patient_clinic_owner_id'))
 
     op.drop_table('patient')
     op.drop_table('password_reset_token')
+    with op.batch_alter_table('invoice_sequence', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_invoice_sequence_clinic_owner_id'))
+
+    op.drop_table('invoice_sequence')
+    with op.batch_alter_table('audit_log', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_audit_log_clinic_owner_id'))
+
     op.drop_table('audit_log')
+    with op.batch_alter_table('user', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_user_created_by'))
+
     op.drop_table('user')
     # ### end Alembic commands ###
