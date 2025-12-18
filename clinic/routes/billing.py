@@ -1,47 +1,48 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file
 from clinic.extensions import db
 from clinic.models import Patient, Invoice, InvoiceItem, Payment
-from clinic.utils import generate_invoice_number
+from clinic.utils import generate_invoice_number, get_clinic_owner_id
 from datetime import datetime
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+from clinic.routes.auth import login_required, role_required
+from sqlalchemy import or_
 
 billing_bp = Blueprint("billing_bp", __name__, url_prefix="/billing")
 
 
-# ---------------- SECURE FETCH ----------------
+# ---------------- SECURE FETCH (CLINIC SAFE) ----------------
 def get_secure_invoice(id):
+    clinic_owner_id = get_clinic_owner_id()
+
     return (
         Invoice.query
         .join(Patient)
         .filter(
             Invoice.id == id,
-            Patient.user_id == session["user_id"]
+            Patient.user_id == clinic_owner_id
         )
         .first_or_404()
     )
 
 
 # ---------------- DASHBOARD ----------------
-from sqlalchemy import or_
-
 @billing_bp.route("/", methods=["GET"])
+@login_required
+@role_required("admin", "reception", "doctor")
 def billing():
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
+    clinic_owner_id = get_clinic_owner_id()
 
     q = request.args.get("search", "").strip()
     status = request.args.get("status", "").strip()
 
-    # Base query (secure per doctor)
     query = (
         Invoice.query
         .join(Patient)
-        .filter(Patient.user_id == session["user_id"])
+        .filter(Patient.user_id == clinic_owner_id)
     )
 
-    # 🔍 Search by patient name OR invoice number
     if q:
         query = query.filter(
             or_(
@@ -50,19 +51,16 @@ def billing():
             )
         )
 
-    # ✅ Status filter (exact match)
     if status:
         query = query.filter(Invoice.status == status)
 
-    # Final ordering
     invoices = query.order_by(Invoice.created_at.desc()).all()
 
-    # Due invoices count
     due_count = (
         Invoice.query
         .join(Patient)
         .filter(
-            Patient.user_id == session["user_id"],
+            Patient.user_id == clinic_owner_id,
             Invoice.status != "Paid"
         )
         .count()
@@ -75,19 +73,18 @@ def billing():
     )
 
 
-
 # ---------------- CREATE INVOICE ----------------
 @billing_bp.route("/create_invoice", methods=["GET", "POST"])
+@login_required
+@role_required("reception")
 def create_invoice():
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
-    patients = Patient.query.filter_by(user_id=session["user_id"]).all()
+    clinic_owner_id = get_clinic_owner_id()
+    patients = Patient.query.filter_by(user_id=clinic_owner_id).all()
 
     if request.method == "POST":
         invoice = Invoice(
             patient_id=request.form["patient_id"],
-            invoice_number=generate_invoice_number(session["user_id"]),
+            invoice_number=generate_invoice_number(),
             created_at=datetime.utcnow(),
             description=request.form.get("description", ""),
             total_amount=float(request.form.get("total_amount", 0)),
@@ -119,16 +116,26 @@ def create_invoice():
 
 # ---------------- VIEW ----------------
 @billing_bp.route("/view/<int:id>")
+@login_required
+@role_required("reception", "doctor", "admin")
 def view_invoice(id):
     inv = get_secure_invoice(id)
     paid = sum(p.amount for p in inv.payments)
     balance = inv.total_amount - paid
-    return render_template("billing/view_invoice.html", inv=inv, paid=paid, balance=balance)
+    return render_template(
+        "billing/view_invoice.html",
+        inv=inv,
+        paid=paid,
+        balance=balance
+    )
 
 
 # ---------------- EDIT (BLOCKED IF LOCKED) ----------------
 @billing_bp.route("/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+@role_required("reception")
 def edit_invoice(id):
+    clinic_owner_id = get_clinic_owner_id()
     inv = get_secure_invoice(id)
 
     if inv.is_locked:
@@ -140,6 +147,7 @@ def edit_invoice(id):
         inv.total_amount = float(request.form.get("total_amount", 0))
 
         InvoiceItem.query.filter_by(invoice_id=inv.id).delete()
+
         for name, amt in zip(
             request.form.getlist("item_name[]"),
             request.form.getlist("item_amount[]")
@@ -157,12 +165,14 @@ def edit_invoice(id):
         flash("Invoice updated.", "success")
         return redirect(url_for("billing_bp.view_invoice", id=id))
 
-    patients = Patient.query.filter_by(user_id=session["user_id"]).all()
+    patients = Patient.query.filter_by(user_id=clinic_owner_id).all()
     return render_template("billing/edit_invoice.html", inv=inv, patients=patients)
 
 
 # ---------------- DELETE (BLOCKED IF LOCKED) ----------------
 @billing_bp.route("/delete/<int:id>")
+@login_required
+@role_required("reception")
 def delete_invoice(id):
     inv = get_secure_invoice(id)
 
@@ -181,10 +191,11 @@ def delete_invoice(id):
 
 # ---------------- ADD PAYMENT (EXACT ONLY) ----------------
 @billing_bp.route("/add_payment/<int:id>", methods=["POST"])
+@login_required
+@role_required("reception")
 def add_payment(id):
     inv = get_secure_invoice(id)
 
-    # 🚫 Block if already paid
     if inv.is_locked:
         flash("Invoice already fully paid.", "warning")
         return redirect(url_for("billing_bp.view_invoice", id=id))
@@ -202,12 +213,13 @@ def add_payment(id):
     paid_so_far = sum(p.amount for p in inv.payments)
     remaining = inv.total_amount - paid_so_far
 
-    # ❌ enforce exact payment
     if abs(amt - remaining) > 0.01:
-        flash(f"You must pay the exact remaining amount: ₹ {remaining:.2f}", "danger")
+        flash(
+            f"You must pay the exact remaining amount: ₹ {remaining:.2f}",
+            "danger"
+        )
         return redirect(url_for("billing_bp.view_invoice", id=id))
 
-    # ✅ record payment
     payment = Payment(
         invoice_id=inv.id,
         amount=amt,
@@ -215,17 +227,18 @@ def add_payment(id):
     )
     db.session.add(payment)
 
-    # ✅ mark invoice as paid & lock
     inv.status = "Paid"
     inv.is_locked = True
 
     db.session.commit()
-
     flash("Invoice paid successfully.", "success")
     return redirect(url_for("billing_bp.view_invoice", id=id))
 
+
 # ---------------- DOWNLOAD PDF ----------------
 @billing_bp.route("/download/<int:id>")
+@login_required
+@role_required("reception")
 def download_invoice(id):
     inv = get_secure_invoice(id)
 

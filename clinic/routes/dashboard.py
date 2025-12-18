@@ -3,15 +3,14 @@ from clinic.models import User, Patient, Appointment, Invoice
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from clinic.extensions import db
+from clinic.routes.auth import login_required, role_required
+from clinic.utils import ROLE_LABELS
 
 dashboard_bp = Blueprint("dashboard_bp", __name__)
 
 @dashboard_bp.route("/dashboard")
+@login_required
 def dashboard():
-
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
     user_id = session["user_id"]
 
     # ✅ TOTAL PATIENTS (USER-SPECIFIC)
@@ -91,5 +90,6 @@ def dashboard():
         total_invoices=total_invoices,
         recent_patients=recent_patients,
         chart_labels=chart_labels,
-        chart_data=chart_data
+        chart_data=chart_data,
+        ROLE_LABELS=ROLE_LABELS
     )

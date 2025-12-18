@@ -39,6 +39,8 @@
                     </div>
 
                     <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                         <input type="hidden" name="update_profile">
 
                         <label>Full Name</label>
@@ -66,6 +68,8 @@
                     <h2>Government & Medical Documents</h2>
 
                     <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                         <input type="hidden" name="upload_docs">
 
                         <!-- Aadhar -->
@@ -117,6 +121,8 @@
                     <h2>Account Security</h2>
 
                     <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                         <input type="hidden" name="change_password">
 
                         <label>Old Password</label>
@@ -173,7 +179,7 @@
                 <div class="card">
                     <h2>Clinic Details</h2>
 
-                    <form method="POST">
+                    <form >
                         <input type="hidden" name="clinic_save">
 
                         <label>Clinic Name</label>
@@ -201,6 +207,8 @@
                     <h2>Theme</h2>
 
                     <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                         <label>Select Theme</label>
                         <select name="theme">
                             <option value="light" {% if session.get('theme')=='light' %}selected{% endif %}>Light</option>

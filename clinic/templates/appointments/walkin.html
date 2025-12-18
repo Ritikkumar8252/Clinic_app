@@ -84,6 +84,7 @@
 <div class="walkin-wrapper">
 
     <form method="POST" class="walkin-card">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="walkin-title">Start Walk-In Consultation</div>
         <div class="walkin-subtitle">

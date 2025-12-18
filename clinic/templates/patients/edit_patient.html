@@ -106,7 +106,7 @@ button:disabled {
     <form method="POST"
           action="{{ url_for('patients_bp.edit_patient', id=patient.id) }}"
           id="editForm">
-
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-grid">
 
             <div class="form-group">

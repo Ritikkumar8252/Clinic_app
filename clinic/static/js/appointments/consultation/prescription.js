@@ -89,3 +89,51 @@ function applyTemplate(name) {
     autoSave();
     toggleTemplates();
 }
+/* ======================================
+    FINALIZE
+====================================== */
+function prepareFinalize() {
+    let text = buildPrescriptionText();
+
+    if (!text.trim()) {
+        alert("Prescription is empty. Add at least one medicine.");
+        return false;
+    }
+
+    document.getElementById("finalPrescription").value = text;
+    return true;
+}
+
+function finalizeAndPrint(e) {
+    e.preventDefault();
+
+    let text = buildPrescriptionText();
+
+    if (!text.trim()) {
+        alert("Please add at least one medicine");
+        return false;
+    }
+
+    document.getElementById("finalPrescription").value = text;
+
+    const form = e.target;
+
+    fetch(form.action, {
+        method: "POST",
+        body: new FormData(form)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Finalize failed");
+
+        // 👇 OPEN PDF IN NEW TAB (GUARANTEED)
+        window.open(
+            `/prescription/${window.apptId}`,
+            "_blank"
+        );
+    })
+    .catch(() => {
+        alert("Failed to finalize prescription");
+    });
+
+    return false;
+}

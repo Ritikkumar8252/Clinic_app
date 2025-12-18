@@ -20,6 +20,7 @@
     <h2 class="form-title">Add Appointment</h2>
 
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="add-new-patient-box">
             <p>Can't find the patient?</p>
             <a href="{{ url_for('patients_bp.add_patient', from_page='add_appointment') }}" 

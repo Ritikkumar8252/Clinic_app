@@ -74,7 +74,7 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="topbar">
-            <div class="user-badge">Hi, {{ session.get('name', 'User') }}</div>
+            <div class="user-badge">Hi, {{ session.get('user_email', 'User') }}</div>
 
             <div>
                 <button class="dark-toggle" onclick="toggleDark()">🌙 / ☀️</button>

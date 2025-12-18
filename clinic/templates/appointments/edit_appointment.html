@@ -6,6 +6,7 @@
 <div class="form-container">
 
     <form method="POST" action="{{ url_for('appointments_bp.edit_appointment', id=app.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <label>Patient Name</label>
         <input 

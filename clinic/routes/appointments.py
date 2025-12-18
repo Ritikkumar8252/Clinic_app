@@ -3,7 +3,8 @@ from ..extensions import db
 from ..models import Appointment, Patient
 from datetime import datetime
 from io import BytesIO
-
+from clinic.routes.auth import login_required, role_required
+from clinic.utils import get_clinic_owner_id
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
@@ -13,15 +14,17 @@ from reportlab.lib.styles import getSampleStyleSheet
 appointments_bp = Blueprint("appointments_bp", __name__)
 
 # ------------------------------------------------
-# SECURE HELPERS
+# SECURE HELPERS (CLINIC SAFE)
 # ------------------------------------------------
 def get_secure_appointment(id):
+    clinic_owner_id = get_clinic_owner_id()
+
     return (
         Appointment.query
         .join(Patient)
         .filter(
             Appointment.id == id,
-            Patient.user_id == session["user_id"]
+            Patient.user_id == clinic_owner_id
         )
         .first_or_404()
     )
@@ -30,11 +33,10 @@ def get_secure_appointment(id):
 # APPOINTMENTS LIST
 # ------------------------------------------------
 @appointments_bp.route("/appointments")
+@login_required
+@role_required("admin", "reception", "doctor")
 def appointments():
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
-    user_id = session["user_id"]
+    clinic_owner_id = get_clinic_owner_id()
 
     tab = request.args.get("tab", "queue")
     search = request.args.get("search", "").strip()
@@ -43,7 +45,7 @@ def appointments():
     base_query = (
         Appointment.query
         .join(Patient)
-        .filter(Patient.user_id == user_id)
+        .filter(Patient.user_id == clinic_owner_id)
     )
 
     if search:
@@ -73,23 +75,21 @@ def appointments():
 # ADD APPOINTMENT
 # ------------------------------------------------
 @appointments_bp.route("/add_appointment", methods=["GET", "POST"])
+@login_required
+@role_required("reception")
 def add_appointment():
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
-    user_id = session["user_id"]
-    patients = Patient.query.filter_by(user_id=user_id).all()
+    clinic_owner_id = get_clinic_owner_id()
+    patients = Patient.query.filter_by(user_id=clinic_owner_id).all()
 
     if request.method == "POST":
         patient_id = request.form["patient_id"]
         visit_type = request.form["type"]
-
         date = datetime.strptime(request.form["date"], "%Y-%m-%d").date()
         time = datetime.strptime(request.form["time"], "%H:%M").time()
 
         patient = Patient.query.filter_by(
             id=patient_id,
-            user_id=user_id
+            user_id=clinic_owner_id
         ).first_or_404()
 
         appt = Appointment(
@@ -114,10 +114,9 @@ def add_appointment():
 # DELETE APPOINTMENT
 # ------------------------------------------------
 @appointments_bp.route("/delete_appointment/<int:id>")
+@login_required
+@role_required("reception")
 def delete_appointment(id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
     appt = get_secure_appointment(id)
     db.session.delete(appt)
     db.session.commit()
@@ -126,13 +125,12 @@ def delete_appointment(id):
     return redirect(url_for("appointments_bp.appointments"))
 
 # ------------------------------------------------
-# EDIT APPOINTMENT (FIXED)
+# EDIT APPOINTMENT
 # ------------------------------------------------
 @appointments_bp.route("/edit_appointment/<int:id>", methods=["GET", "POST"])
+@login_required
+@role_required("reception")
 def edit_appointment(id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
     appt = get_secure_appointment(id)
 
     if request.method == "POST":
@@ -154,24 +152,23 @@ def edit_appointment(id):
         return redirect(url_for("appointments_bp.appointments"))
 
     return render_template("appointments/edit_appointment.html", appt=appt)
+
 # ------------------------------------------------
-# WALKIN CONSULTATION
+# WALK-IN CONSULTATION
 # ------------------------------------------------
 @appointments_bp.route("/walkin", methods=["GET", "POST"])
+@login_required
+@role_required("doctor")
 def walkin():
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
-    user_id = session["user_id"]
-    patients = Patient.query.filter_by(user_id=user_id).all()
+    clinic_owner_id = get_clinic_owner_id()
+    patients = Patient.query.filter_by(user_id=clinic_owner_id).all()
 
     if request.method == "POST":
         patient_id = request.form.get("patient_id")
 
-        # Existing patient
         patient = Patient.query.filter_by(
             id=patient_id,
-            user_id=user_id
+            user_id=clinic_owner_id
         ).first_or_404()
 
         now = datetime.now()
@@ -196,57 +193,50 @@ def walkin():
         patients=patients
     )
 
-
 # ------------------------------------------------
 # STATUS ACTIONS
 # ------------------------------------------------
 @appointments_bp.route("/start/<int:id>")
+@login_required
+@role_required("reception", "doctor")
 def start(id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
     appt = get_secure_appointment(id)
     appt.status = "In Progress"
     db.session.commit()
-
     return redirect(url_for("appointments_bp.consult", id=id))
 
 @appointments_bp.route("/complete/<int:id>")
+@login_required
+@role_required("doctor")
 def complete(id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
     appt = get_secure_appointment(id)
     appt.prescription_locked = True
     appt.status = "Completed"
     db.session.commit()
-
     return redirect(url_for("appointments_bp.appointments"))
 
 @appointments_bp.route("/cancel/<int:id>")
+@login_required
+@role_required("reception")
 def cancel(id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
     appt = get_secure_appointment(id)
     appt.status = "Cancelled"
     db.session.commit()
-
     return redirect(url_for("appointments_bp.appointments"))
 
 # ------------------------------------------------
 # CONSULTATION
 # ------------------------------------------------
 @appointments_bp.route("/consult/<int:id>", methods=["GET", "POST"])
+@login_required
+@role_required("doctor")
 def consult(id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
     appt = get_secure_appointment(id)
+    clinic_owner_id = get_clinic_owner_id()
 
     patient = Patient.query.filter_by(
         id=appt.patient_id,
-        user_id=session["user_id"]
+        user_id=clinic_owner_id
     ).first_or_404()
 
     if request.method == "POST":
@@ -281,41 +271,37 @@ def consult(id):
 # AUTOSAVE (SAFE)
 # ------------------------------------------------
 @appointments_bp.route("/autosave/<int:id>", methods=["POST"])
+@login_required
 def autosave(id):
-    if "user_id" not in session:
-        return {"status": "unauthorized"}, 401
-
     appt = get_secure_appointment(id)
-    data = request.get_json()
 
-    if not data:
-        return {"status": "ignored"}
+    if not request.is_json:
+        return {"error": "Invalid JSON"}, 400
 
-    fields = [
+    data = request.get_json(silent=True) or {}
+
+    for field in [
         "symptoms", "diagnosis", "prescription", "advice",
-        "bp", "pulse", "spo2", "temperature", "weight",
-        "follow_up_date"
-    ]
-
-    for field in fields:
-        if field not in data:
-            continue
-
-        if field == "follow_up_date":
-            appt.follow_up_date = (
-                datetime.strptime(data[field], "%Y-%m-%d").date()
-                if data[field] else None
-            )
-        else:
+        "bp", "pulse", "spo2", "temperature", "weight"
+    ]:
+        if field in data:
             setattr(appt, field, data[field])
 
+    if data.get("follow_up_date"):
+        appt.follow_up_date = datetime.strptime(
+            data["follow_up_date"], "%Y-%m-%d"
+        ).date()
+
     db.session.commit()
-    return {"status": "saved"}
+    return {"status": "saved"}, 200
+
 
 # ------------------------------------------------
 # PRESCRIPTION PDF
 # ------------------------------------------------
 @appointments_bp.route("/prescription/<int:id>")
+@login_required
+@role_required("admin", "reception", "doctor")
 def prescription_pdf(id):
     appt = get_secure_appointment(id)
 
@@ -323,9 +309,10 @@ def prescription_pdf(id):
         flash("Finalize prescription before downloading", "warning")
         return redirect(url_for("appointments_bp.consult", id=id))
 
+    clinic_owner_id = get_clinic_owner_id()
     patient = Patient.query.filter_by(
         id=appt.patient_id,
-        user_id=session["user_id"]
+        user_id=clinic_owner_id
     ).first_or_404()
 
     buffer = BytesIO()
@@ -373,9 +360,24 @@ def prescription_pdf(id):
 # FINALIZE PRESCRIPTION
 # ------------------------------------------------
 @appointments_bp.route("/finalize_prescription/<int:id>", methods=["POST"])
+@login_required
+@role_required("doctor")
 def finalize_prescription(id):
     appt = get_secure_appointment(id)
+
+    if appt.prescription_locked:
+        flash("Prescription already finalized.", "warning")
+        return redirect(url_for("appointments_bp.consult", id=id))
+
+    prescription_text = request.form.get("prescription", "").strip()
+
+    if not prescription_text:
+        flash("Prescription is empty.", "danger")
+        return redirect(url_for("appointments_bp.consult", id=id))
+
+    appt.prescription = prescription_text
     appt.prescription_locked = True
     db.session.commit()
 
-    return redirect(url_for("appointments_bp.prescription_pdf", id=id))
+    # 👇 IMPORTANT CHANGE
+    return "", 204

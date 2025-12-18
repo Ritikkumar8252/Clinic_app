@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from clinic.extensions import db
 from clinic.models import User
-from clinic.routes.auth import login_required
+from clinic.routes.auth import login_required, role_required
 from werkzeug.utils import secure_filename
 import os
 
@@ -15,6 +15,7 @@ def allowed(filename):
 
 @settings_bp.route("/settings", methods=["GET", "POST"])
 @login_required
+@role_required("doctor")
 def settings():
 
     user = User.query.get_or_404(session["user_id"])

@@ -4,17 +4,34 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 # =========================
-# USER / DOCTOR
+# USER / DOCTOR / RECEPTION
 # =========================
 class User(db.Model):
+    __tablename__ = "user"
+
     id = db.Column(db.Integer, primary_key=True)
 
     fullname = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
 
-    role = db.Column(db.String(20), default="staff")
+    # admin | doctor | reception
+    role = db.Column(db.String(20), default="reception")
     phone = db.Column(db.String(20))
+
+    # 👇 LINK TO CLINIC OWNER (DOCTOR)
+    created_by = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=True
+    )
+
+    # Doctor → staff relationship
+    parent = db.relationship(
+        "User",
+        remote_side=[id],
+        backref=db.backref("staff", lazy=True)
+    )
 
     # Documents
     aadhar = db.Column(db.String(200))
@@ -22,7 +39,7 @@ class User(db.Model):
     clinic_license = db.Column(db.String(200))
     profile_photo = db.Column(db.String(200))
 
-    # Clinic details
+    # Clinic details (doctor only)
     clinic_name = db.Column(db.String(200))
     clinic_phone = db.Column(db.String(50))
     clinic_address = db.Column(db.String(300))
@@ -30,7 +47,8 @@ class User(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    patients = db.relationship("Patient", backref="user", lazy=True)
+    # Patients owned by doctor
+    patients = db.relationship("Patient", backref="clinic_owner", lazy=True)
 
     # ---------- PASSWORD METHODS ----------
     def set_password(self, password: str):
@@ -46,8 +64,9 @@ class User(db.Model):
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
-    patient_no = db.Column(db.Integer, nullable=False, index=True)
+    # 👇 ALWAYS DOCTOR ID
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    patient_no = db.Column(db.Integer, nullable=False, index=True)
 
     name = db.Column(db.String(100), nullable=False)
     age = db.Column(db.Integer)
@@ -81,20 +100,17 @@ class Appointment(db.Model):
 
     patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable=False)
 
-    type = db.Column(db.String(50))  # First / Follow-up / Walk-in
+    type = db.Column(db.String(50))
     date = db.Column(db.Date, nullable=False)
     time = db.Column(db.Time, nullable=False)
 
     status = db.Column(db.String(20), default="Queue")
-    # Queue | In Progress | Completed | Cancelled
 
-    # -------- Consultation --------
     symptoms = db.Column(db.Text, default="")
     diagnosis = db.Column(db.Text, default="")
     prescription = db.Column(db.Text, default="")
     advice = db.Column(db.Text, default="")
 
-    # -------- Vitals --------
     bp = db.Column(db.String(20))
     pulse = db.Column(db.String(20))
     spo2 = db.Column(db.String(20))
@@ -102,8 +118,6 @@ class Appointment(db.Model):
     weight = db.Column(db.String(20))
 
     follow_up_date = db.Column(db.Date)
-
-    # -------- Control --------
     prescription_locked = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -122,14 +136,6 @@ class MedicalRecord(db.Model):
 
 
 # =========================
-# INVOICE SEQUENCE (CRITICAL)
-# =========================
-class InvoiceSequence(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    last_number = db.Column(db.Integer, nullable=False, default=0)
-
-
-# =========================
 # INVOICE
 # =========================
 class Invoice(db.Model):
@@ -142,9 +148,8 @@ class Invoice(db.Model):
 
     total_amount = db.Column(db.Float, default=0.0)
     status = db.Column(db.String(20), default="Unpaid")
+    is_locked = db.Column(db.Boolean, default=False)
 
-    is_locked = db.Column(db.Boolean, default=False)  
-    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     due_date = db.Column(db.Date)
 
@@ -159,7 +164,6 @@ class InvoiceItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoice.id"), nullable=False)
-
     item_name = db.Column(db.String(200), nullable=False)
     amount = db.Column(db.Float, nullable=False)
 
@@ -176,15 +180,14 @@ class Payment(db.Model):
     method = db.Column(db.String(50), default="Cash")
     paid_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 # =========================
-# AUDIT LOG (SECURITY)
+# AUDIT LOG
 # =========================
 class AuditLog(db.Model):
     __tablename__ = "audit_log"
 
     id = db.Column(db.Integer, primary_key=True)
-
-    # ✅ THIS IS THE FIX
     user_id = db.Column(
         db.Integer,
         db.ForeignKey("user.id", ondelete="SET NULL"),
@@ -197,8 +200,20 @@ class AuditLog(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # ✅ Relationship now works
     user = db.relationship(
         "User",
         backref=db.backref("audit_logs", lazy="dynamic")
     )
+
+
+# =========================
+# PASSWORD RESET TOKEN
+# =========================
+class PasswordResetToken(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+
+    user = db.relationship("User", backref="reset_tokens")

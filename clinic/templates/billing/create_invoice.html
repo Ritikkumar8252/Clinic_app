@@ -7,6 +7,7 @@
 
 <div class="invoice-container">
 <form method="POST" class="invoice-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <!-- Invoice Header -->
     <div class="form-row">

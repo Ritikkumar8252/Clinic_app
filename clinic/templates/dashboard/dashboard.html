@@ -50,6 +50,17 @@ img {
     user-select: none;
     pointer-events: none;
 }
+.role-badge {
+    background: #e5e7eb;
+    color: #333;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+
 
 </style>
 <div class="dashboard-container">
@@ -59,7 +70,18 @@ img {
         <h1 class="page-title">Dashboard</h1>
 
         <div class="actions">
-            <span class="user-badge">{{ session['user'] }}</span>
+            <!-- Logged-in user email -->
+            <span class="user-badge">
+                {{ session['user_email'] }}
+            </span>
+
+            <!-- Role badge (small but powerful) -->
+            {% if session.get('role') %}
+            <span class="role-badge">
+                {{ ROLE_LABELS.get(session.get('role'), session.get('role')) }}
+            </span>
+            {% endif %}
+
 
             {% if session['role'] == "admin" %}
                 <a href="{{ url_for('admin_bp.admin_panel') }}" class="admin-btn">
@@ -69,8 +91,10 @@ img {
         </div>
     </div>
 
-    <!-- STATS -->
-    <div class="stats-section">
+        <!--  STATS -->
+        <div class="stats-section">
+
+        {% if session.get('role') in ["admin", "reception"] %}
         <div class="stat-card blue">
             <p class="label">Total Patients</p>
             <h2 class="value">{{ total_patients }}</h2>
@@ -80,7 +104,9 @@ img {
             <p class="label">Today's Appointments</p>
             <h2 class="value">{{ today_appointments }}</h2>
         </div>
+        {% endif %}
 
+        {% if session.get('role') in ["admin", "doctor"] %}
         <div class="stat-card yellow">
             <p class="label">Pending Bills</p>
             <h2 class="value">{{ pending_bills }}</h2>
@@ -90,7 +116,10 @@ img {
             <p class="label">Total Invoices</p>
             <h2 class="value">{{ total_invoices }}</h2>
         </div>
+        {% endif %}
+
     </div>
+
 
     <!-- CHART -->
     <div class="chart-wrapper">

@@ -14,11 +14,19 @@
 
     <div class="top-actions">
         <button class="btn-save" onclick="sendSaveRequest()">💾 Save</button>
+
         <a class="btn-complete" href="{{ url_for('appointments_bp.complete', id=appt.id) }}">✔ Finish</a>
+
         <form method="POST"
-      action="{{ url_for('appointments_bp.finalize_prescription', id=appt.id) }}">
-    <button class="btn-pres">✔ Finalize & Print</button>
-</form>
+            action="{{ url_for('appointments_bp.finalize_prescription', id=appt.id) }}"
+            onsubmit="return finalizeAndPrint(event)">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="prescription" id="finalPrescription">
+
+            <button class="btn-pres">✔ Finalize & Print</button>
+        </form>
+
 
     </div>
 </div>
@@ -92,6 +100,9 @@
 
         <!-- PRESCRIPTION -->
         <div class="box shadow-card">
+            <!-- AUTHORITATIVE FINAL PRESCRIPTION (HIDDEN) -->
+            <input type="hidden" name="prescription" id="final-prescription">
+
             <div class="header-row" style="display:flex; justify-content:space-between;">
                 <h3>Prescription</h3>
                 <button class="btn grey" onclick="toggleTemplates()">Templates ▼</button>
@@ -167,6 +178,7 @@
 <script src="{{ url_for('static', filename='js/appointments/consultation/autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/tags.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/prescription.js') }}"></script>
+
 
 
 {% endblock %}

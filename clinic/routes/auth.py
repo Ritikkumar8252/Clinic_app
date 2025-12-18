@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from clinic.extensions import db, mail
-from clinic.models import User
+from clinic.models import User, PasswordResetToken
 from clinic.utils import log_action
 from flask_mail import Message
 from functools import wraps
 import secrets
+from datetime import datetime, timedelta
 import time
 
 auth_bp = Blueprint("auth_bp", __name__)
@@ -18,6 +19,30 @@ def login_required(f):
             return redirect(url_for("auth_bp.login"))
         return f(*args, **kwargs)
     return wrapper
+
+# ---------------- ROLE REQUIRED ----------------
+from flask import session, redirect, url_for, flash
+from functools import wraps
+
+def role_required(*roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+
+            # 🚨 request ke bahar ho to allow (CLI / migrations)
+            if not session:
+                return f(*args, **kwargs)
+
+            user_role = session.get("role")
+
+            if user_role not in roles:
+                flash("Access denied.", "danger")
+                return redirect(url_for("dashboard_bp.dashboard"))
+
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+
 
 
 # ---------------- LOGIN ----------------
@@ -95,7 +120,7 @@ def signup():
             return redirect(url_for("auth_bp.signup"))
 
         try:
-            user = User(fullname=fullname, email=email, role="staff")
+            user = User(fullname=fullname, email=email, role="doctor")
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
@@ -130,86 +155,58 @@ def forgot_password():
             flash("Email not found.", "danger")
             return redirect(url_for("auth_bp.forgot_password"))
 
-        now = time.time()
+        # ---- CREATE RESET TOKEN ----
+        token = secrets.token_urlsafe(32)
 
-        # ---- OTP rate limit ----
-        if session.get("otp_send_locked_until") and now < session["otp_send_locked_until"]:
-            flash("Too many OTP requests. Try later.", "warning")
-            return redirect(url_for("auth_bp.forgot_password"))
+        reset = PasswordResetToken(
+            user_id=user.id,
+            token=token,
+            expires_at=datetime.utcnow() + timedelta(minutes=30)
+        )
 
-        session["otp_send_count"] = session.get("otp_send_count", 0) + 1
-        if session["otp_send_count"] >= 3:
-            session["otp_send_locked_until"] = now + 600
-            flash("OTP blocked for 10 minutes.", "warning")
-            return redirect(url_for("auth_bp.forgot_password"))
+        db.session.add(reset)
+        db.session.commit()
 
-        otp = str(secrets.randbelow(900000) + 100000)
-
-        session["reset_email"] = email
-        session["reset_otp"] = otp
-        session["otp_expiry"] = now + 300
-        session["otp_attempts"] = 0
+        reset_link = url_for(
+            "auth_bp.reset_password",
+            token=token,
+            _external=True
+        )
 
         msg = Message(
-            subject="Password Reset OTP",
+            subject="Reset your password",
             recipients=[email],
-            body=f"Your OTP is {otp}. Valid for 5 minutes."
+            body=(
+                "Click the link below to reset your password:\n\n"
+                f"{reset_link}\n\n"
+                "This link is valid for 30 minutes."
+            )
         )
 
         mail.send(msg)
 
-        log_action("OTP_SENT", user.id)
+        log_action("PASSWORD_RESET_LINK_SENT", user.id)
 
-        flash("OTP sent to your email.", "success")
-        return redirect(url_for("auth_bp.verify_otp"))
+        flash("Password reset link sent to your email.", "success")
+        return redirect(url_for("auth_bp.login"))
 
     return render_template("auth/forgot_password.html")
 
 
-# ---------------- VERIFY OTP ----------------
-@auth_bp.route("/verify-otp", methods=["GET", "POST"])
-def verify_otp():
-
-    if "reset_otp" not in session:
-        flash("Session expired. Try again.", "warning")
-        return redirect(url_for("auth_bp.forgot_password"))
-
-    if time.time() > session.get("otp_expiry", 0):
-        session.clear()
-        flash("OTP expired. Request a new one.", "danger")
-        return redirect(url_for("auth_bp.forgot_password"))
-
-    if request.method == "POST":
-        session["otp_attempts"] += 1
-
-        if session["otp_attempts"] > 5:
-            session.clear()
-            flash("Too many incorrect attempts.", "danger")
-            return redirect(url_for("auth_bp.forgot_password"))
-
-        if request.form.get("otp") == session.get("reset_otp"):
-            session.pop("reset_otp", None)
-
-            log_action("OTP_VERIFIED")
-
-            flash("OTP verified. Set a new password.", "success")
-            return redirect(url_for("auth_bp.reset_password"))
-
-        flash("Invalid OTP.", "danger")
-
-    return render_template("auth/verify_otp.html")
-
-
 # ---------------- RESET PASSWORD ----------------
-@auth_bp.route("/reset-password", methods=["GET", "POST"])
-def reset_password():
+@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
 
-    email = session.get("reset_email")
-    if not email:
-        flash("Session expired.", "warning")
+    reset = PasswordResetToken.query.filter_by(
+        token=token,
+        used=False
+    ).first()
+
+    if not reset or reset.expires_at < datetime.utcnow():
+        flash("Invalid or expired reset link.", "danger")
         return redirect(url_for("auth_bp.forgot_password"))
 
-    user = User.query.filter_by(email=email).first_or_404()
+    user = User.query.get_or_404(reset.user_id)
 
     if request.method == "POST":
         password = request.form.get("password")
@@ -217,12 +214,14 @@ def reset_password():
 
         if password != confirm or len(password) < 6:
             flash("Invalid password.", "danger")
-            return redirect(url_for("auth_bp.reset_password"))
+            return redirect(request.url)
 
         user.set_password(password)
+
+        reset.used = True
         db.session.commit()
 
-        log_action("PASSWORD_RESET", user.id)
+        log_action("PASSWORD_RESET_SUCCESS", user.id)
 
         session.clear()
         flash("Password reset successful. Please login.", "success")

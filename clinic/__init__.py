@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_migrate import Migrate
 import os
 from datetime import timedelta
 from .extensions import db, mail, csrf
@@ -11,38 +12,43 @@ from .routes.billing import billing_bp
 from .routes.admin import admin_bp
 from .routes.settings import settings_bp
 from .routes.home import home_bp
+from dotenv import load_dotenv
 
+load_dotenv()
+
+# $env:FLASK_APP="app.py"
+# Ye command har new terminal mein ek baar chalani hoti hai
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
 
-    # 🔐 SECRET KEY (move to env later)
-    app.secret_key = "secret123"
+    # 🔐 SECRET KEY (move to env )
+    app.secret_key = os.environ.get("SECRET_KEY")
+
 
     # ---------------- INSTANCE FOLDER ----------------
     os.makedirs(app.instance_path, exist_ok=True)
 
     # ---------------- DATABASE ----------------
-    db_path = os.path.join(app.instance_path, "site.db")
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    print(">>> USING DATABASE:", db_path)
 
     # ---------------- MAIL CONFIG ----------------
     app.config.update(
-        MAIL_SERVER="sandbox.smtp.mailtrap.io",
-        MAIL_PORT=587,
-        MAIL_USE_TLS=True,
-        MAIL_USERNAME="f01ffa9fd0ba38",      #  real gmail
-        MAIL_PASSWORD="b79474cd0e8dae",         #  gmail app password
-        MAIL_DEFAULT_SENDER="cliniccare.dev"
+    MAIL_SERVER=os.environ.get("MAIL_SERVER"),
+    MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
+    MAIL_USE_TLS=os.environ.get("MAIL_USE_TLS") == "true",
+    MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),  # real gmail
+    MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),  #  gmail app password
+    MAIL_DEFAULT_SENDER=os.environ.get("MAIL_DEFAULT_SENDER"),
     )
+
 
     # ---------------- SESSION + CSRF HARDENING ----------------
     app.config.update(
         SESSION_COOKIE_HTTPONLY=True,            # JS cannot access cookies
-        SESSION_COOKIE_SECURE=not app.debug,     # 🔥 Auto: True in prod, False locally
+        SESSION_COOKIE_SECURE=False,     # 🔥 Auto: True in prod, False locally
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_NAME="clinic_session",
         PERMANENT_SESSION_LIFETIME=timedelta(minutes=60),
@@ -65,10 +71,11 @@ def create_app():
     db.init_app(app)
     mail.init_app(app)
     csrf.init_app(app)
-
+    migrate = Migrate(app, db)
     # ---------------- CREATE TABLES ----------------
-    with app.app_context():
-        db.create_all()
+    # with app.app_context():
+    #     db.create_all()
+    # .....Production mein ye DB tod deta hai
 
     # ---------------- BLUEPRINTS ----------------
     app.register_blueprint(home_bp)
@@ -81,3 +88,4 @@ def create_app():
     app.register_blueprint(settings_bp)
 
     return app
+

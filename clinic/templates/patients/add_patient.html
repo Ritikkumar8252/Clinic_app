@@ -19,7 +19,7 @@
     <h2 class="section-heading">Patient Information</h2>
 
     <form method="POST" enctype="multipart/form-data" class="patient-form">
-
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         {% if from_page %}
             <input type="hidden" name="from_page" value="{{ from_page }}">
         {% endif %}

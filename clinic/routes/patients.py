@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash,current_app
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from ..extensions import db
-from ..models import Patient, Invoice, Appointment ,MedicalRecord
-
+from ..models import Patient, Invoice, Appointment, MedicalRecord
+from clinic.routes.auth import login_required, role_required
+from clinic.utils import get_clinic_owner_id
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -10,70 +11,71 @@ from werkzeug.utils import secure_filename
 patients_bp = Blueprint("patients_bp", __name__)
 
 
+# =====================================================
+# PATIENT LIST
+# =====================================================
 @patients_bp.route("/patients")
+@login_required
+@role_required("doctor", "reception")
 def patients():
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
     q = request.args.get("q", "")
     date_filter = request.args.get("date", "")
 
-    # ✅ FILTER BY LOGGED-IN USER
-    query = Patient.query.filter_by(user_id=session["user_id"])
+    clinic_owner_id = get_clinic_owner_id()
 
-    # Search by name or phone
+    query = Patient.query.filter_by(user_id=clinic_owner_id)
+
     if q:
         query = query.filter(
             (Patient.name.ilike(f"%{q}%")) |
             (Patient.phone.ilike(f"%{q}%"))
         )
 
-    # Filter by last visit date
     if date_filter:
         date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
         query = query.filter(Patient.last_visit == date_obj)
 
     patients = query.order_by(Patient.patient_no.desc()).all()
-
     return render_template("patients/patients.html", patients=patients)
 
 
-
+# =====================================================
+# ADD PATIENT
+# =====================================================
 @patients_bp.route("/add_patient", methods=["GET", "POST"])
+@login_required
+@role_required( "reception")
 def add_patient():
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
-
     from_page = request.args.get("from_page")
+    clinic_owner_id = get_clinic_owner_id()
 
     if request.method == "POST":
         name = request.form.get("name")
         age = int(request.form.get("age")) if request.form.get("age") else None
-
         gender = request.form.get("gender")
         phone = request.form.get("phone")
         disease = request.form.get("disease")
-        last_visit_str = request.form.get("last_visit")
-        last_visit = None
-        if last_visit_str:
-            last_visit = datetime.strptime(last_visit_str, "%Y-%m-%d").date()
-        status = request.form.get("status", "Active")
 
+        last_visit = (
+            datetime.strptime(request.form["last_visit"], "%Y-%m-%d").date()
+            if request.form.get("last_visit") else None
+        )
+
+        status = request.form.get("status", "Active")
         address = request.form.get("address")
         pincode = request.form.get("pincode")
         city = request.form.get("city")
         state = request.form.get("state")
 
-        # ---------- PATIENT NO LOGIC (NEW) ----------
+        # -------- PATIENT NUMBER (CLINIC WISE) --------
         last_patient = (
             Patient.query
-            .filter_by(user_id=session["user_id"])
+            .filter_by(user_id=clinic_owner_id)
             .order_by(Patient.patient_no.desc())
             .first()
         )
-
         patient_no = (last_patient.patient_no + 1) if last_patient else 1
-        # --------------------------------------------
+        # ---------------------------------------------
 
         # PHOTO UPLOAD
         image_file = request.files.get("image")
@@ -87,11 +89,9 @@ def add_patient():
             )
             image_file.save(save_path)
 
-        # Create patient entry
         new_patient = Patient(
-            user_id=session["user_id"],
-            patient_no=patient_no,   # 👈 IMPORTANT
-
+            user_id=clinic_owner_id,
+            patient_no=patient_no,
             name=name,
             age=age,
             gender=gender,
@@ -119,56 +119,74 @@ def add_patient():
     return render_template("patients/add_patient.html", from_page=from_page)
 
 
+# =====================================================
+# DELETE PATIENT
+# =====================================================
 @patients_bp.route("/delete_patient/<int:id>")
+@login_required
+@role_required( "reception")
 def delete_patient(id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
+    clinic_owner_id = get_clinic_owner_id()
 
     patient = Patient.query.filter_by(
         id=id,
-        user_id=session["user_id"]
+        user_id=clinic_owner_id
     ).first_or_404()
+
     db.session.delete(patient)
     db.session.commit()
     flash("Patient deleted!")
+
     return redirect(url_for("patients_bp.patients"))
 
 
+# =====================================================
+# EDIT PATIENT
+# =====================================================
 @patients_bp.route("/edit_patient/<int:id>", methods=["GET", "POST"])
+@login_required
+@role_required("admin", "reception")
 def edit_patient(id):
+    clinic_owner_id = get_clinic_owner_id()
+
     patient = Patient.query.filter_by(
         id=id,
-        user_id=session["user_id"]
+        user_id=clinic_owner_id
     ).first_or_404()
 
     if request.method == "POST":
         patient.name = request.form["name"]
         patient.disease = request.form["disease"]
-        last_visit_str = request.form.get("last_visit")
-        
         patient.status = request.form["status"]
+
+        last_visit_str = request.form.get("last_visit")
         patient.last_visit = (
             datetime.strptime(last_visit_str, "%Y-%m-%d").date()
             if last_visit_str else None
         )
+
         db.session.commit()
         flash("Patient updated successfully!")
-        return redirect(url_for("patients_bp.patient_profile",  id=patient.id))
+
+        return redirect(url_for("patients_bp.patient_profile", id=patient.id))
 
     return render_template("patients/edit_patient.html", patient=patient)
 
 
+# =====================================================
+# PATIENT PROFILE
+# =====================================================
 @patients_bp.route("/patient/<int:id>")
+@login_required
+@role_required("admin", "reception", "doctor")
 def patient_profile(id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
+    clinic_owner_id = get_clinic_owner_id()
 
     patient = Patient.query.filter_by(
         id=id,
-        user_id=session["user_id"]
+        user_id=clinic_owner_id
     ).first_or_404()
 
-    # FIX: fetch appointments via patient_id
     apps = Appointment.query.filter_by(patient_id=patient.id).all()
 
     return render_template(
@@ -179,17 +197,18 @@ def patient_profile(id):
     )
 
 
-from clinic.models import MedicalRecord
-
+# =====================================================
+# UPLOAD MEDICAL RECORD
+# =====================================================
 @patients_bp.route("/upload_record/<int:id>", methods=["GET", "POST"])
+@login_required
+@role_required("admin", "doctor")
 def upload_record(id):
-
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
+    clinic_owner_id = get_clinic_owner_id()
 
     patient = Patient.query.filter_by(
         id=id,
-        user_id=session["user_id"]
+        user_id=clinic_owner_id
     ).first_or_404()
 
     if request.method == "POST":
@@ -198,14 +217,12 @@ def upload_record(id):
         if file and file.filename:
             filename = secure_filename(file.filename)
 
-            # Upload folder
             upload_dir = current_app.config["RECORD_UPLOAD_FOLDER"]
             os.makedirs(upload_dir, exist_ok=True)
 
             filepath = os.path.join(upload_dir, filename)
             file.save(filepath)
 
-            # ✅ SAVE RECORD IN DB (THIS WAS MISSING)
             record = MedicalRecord(
                 patient_id=patient.id,
                 filename=filename
@@ -223,21 +240,23 @@ def upload_record(id):
         patient=patient
     )
 
-@patients_bp.route("/delete_record/<int:record_id>")
-def delete_record(record_id):
 
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
+# =====================================================
+# DELETE MEDICAL RECORD
+# =====================================================
+@patients_bp.route("/delete_record/<int:record_id>")
+@login_required
+@role_required("admin", "doctor")
+def delete_record(record_id):
+    clinic_owner_id = get_clinic_owner_id()
 
     record = MedicalRecord.query.get_or_404(record_id)
 
-    # Security check: record must belong to logged-in user's patient
     patient = Patient.query.filter_by(
         id=record.patient_id,
-        user_id=session["user_id"]
+        user_id=clinic_owner_id
     ).first_or_404()
 
-    # Delete file from disk
     file_path = os.path.join(
         current_app.config["RECORD_UPLOAD_FOLDER"],
         record.filename
@@ -246,7 +265,6 @@ def delete_record(record_id):
     if os.path.exists(file_path):
         os.remove(file_path)
 
-    # Delete DB record
     db.session.delete(record)
     db.session.commit()
 
@@ -256,24 +274,35 @@ def delete_record(record_id):
     )
 
 
+# =====================================================
+# GENERATE CERTIFICATE
+# =====================================================
 @patients_bp.route("/generate_certificate/<int:id>")
+@login_required
+@role_required("admin", "doctor")
 def generate_certificate(id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
+    clinic_owner_id = get_clinic_owner_id()
+
     patient = Patient.query.filter_by(
-    id=id,
-    user_id=session["user_id"]
+        id=id,
+        user_id=clinic_owner_id
     ).first_or_404()
+
     return f"Certificate generation is coming soon for: {patient.name}"
 
+
+# =====================================================
+# VISIT HISTORY
+# =====================================================
 @patients_bp.route("/<int:patient_id>/visits")
+@login_required
+@role_required("admin", "doctor")
 def patient_visits(patient_id):
-    if "user_id" not in session:
-        return redirect(url_for("auth_bp.login"))
+    clinic_owner_id = get_clinic_owner_id()
 
     patient = Patient.query.filter_by(
         id=patient_id,
-        user_id=session["user_id"]
+        user_id=clinic_owner_id
     ).first_or_404()
 
     visits = (

@@ -12,6 +12,7 @@
 <div class="form-container">
 
     <form method="POST" action="{{ url_for('billing_bp.add_payment', id=invoice.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <label>Invoice Number</label>
         <input type="text" value="{{ invoice.invoice_number }}" disabled>

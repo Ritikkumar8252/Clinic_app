@@ -3,10 +3,19 @@
 
 <h2 class="page-title">Admin Dashboard</h2>
 
-<div style="margin-bottom:16px;">
+<!-- TOP ACTIONS -->
+<div style="margin-bottom:16px; display:flex; gap:10px;">
     <a href="{{ url_for('admin_bp.audit_logs') }}" class="btn-primary">
         View Audit Logs
     </a>
+
+    <a href="{{ url_for('admin_bp.create_user') }}" class="btn-primary">
+        + Create Doctor / RECEPTIONIST
+    </a>
+    <a href="{{ url_for('admin_bp.create_user') }}" class="btn-primary">
+    + Create User
+</a>
+
 </div>
 
 <!-- STATS BOXES -->
@@ -54,8 +63,19 @@
             <td>{{ u.id }}</td>
             <td>{{ u.fullname }}</td>
             <td>{{ u.email }}</td>
-            <td>{{ u.role }}</td>
 
+            <!-- ROLE BADGE -->
+            <td>
+                {% if u.role == "admin" %}
+                    <span style="color:#991b1b;font-weight:600;">Admin</span>
+                {% elif u.role == "doctor" %}
+                    <span style="color:#065f46;font-weight:600;">Doctor</span>
+                {% else %}
+                    <span style="color:#374151;">reception</span>
+                {% endif %}
+            </td>
+
+            <!-- ACTIONS -->
             <td class="actions">
                 <a href="{{ url_for('admin_bp.edit_user', id=u.id) }}"
                    class="btn-edit">
