@@ -30,7 +30,7 @@ def get_secure_invoice(id):
 # ---------------- DASHBOARD ----------------
 @billing_bp.route("/", methods=["GET"])
 @login_required
-@role_required("admin", "reception", "doctor")
+@role_required( "reception", "doctor")
 def billing():
     clinic_owner_id = get_clinic_owner_id()
 
@@ -117,7 +117,7 @@ def create_invoice():
 # ---------------- VIEW ----------------
 @billing_bp.route("/view/<int:id>")
 @login_required
-@role_required("reception", "doctor", "admin")
+@role_required("reception", "doctor")
 def view_invoice(id):
     inv = get_secure_invoice(id)
     paid = sum(p.amount for p in inv.payments)

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, send_file,jsonify
 from ..extensions import db
 from ..models import Appointment, Patient
 from datetime import datetime
@@ -10,6 +10,7 @@ from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
+from clinic.extensions import csrf
 
 appointments_bp = Blueprint("appointments_bp", __name__)
 
@@ -34,7 +35,7 @@ def get_secure_appointment(id):
 # ------------------------------------------------
 @appointments_bp.route("/appointments")
 @login_required
-@role_required("admin", "reception", "doctor")
+@role_required( "reception", "doctor")
 def appointments():
     clinic_owner_id = get_clinic_owner_id()
 
@@ -260,40 +261,72 @@ def consult(id):
         flash("Consultation saved")
         return redirect(url_for("appointments_bp.consult", id=id))
 
+    
+    # BUILD MEDICINES FROM DB
+    
+    medicines = []
+
+    if appt.prescription:
+        for line in appt.prescription.split("\n"):
+            parts = [p.strip() for p in line.split("|")]
+
+            medicines.append({
+                "med": parts[0].replace("•", "").strip() if len(parts) > 0 else "",
+                "dose": parts[1] if len(parts) > 1 else "",
+                "days": parts[2].replace("days", "").strip() if len(parts) > 2 else "",
+                "notes": parts[3] if len(parts) > 3 else ""
+            })
+
     return render_template(
         "appointments/consultation.html",
         appt=appt,
         patient=patient,
-        medicines=[]
+        medicines=medicines
     )
+
 
 # ------------------------------------------------
 # AUTOSAVE (SAFE)
 # ------------------------------------------------
 @appointments_bp.route("/autosave/<int:id>", methods=["POST"])
 @login_required
+@csrf.exempt   # ✅ VERY IMPORTANT
 def autosave(id):
     appt = get_secure_appointment(id)
 
     if not request.is_json:
-        return {"error": "Invalid JSON"}, 400
+        return jsonify({"status": "ignored"}), 200
 
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"status": "ignored"}), 200
 
-    for field in [
+    allowed_fields = [
         "symptoms", "diagnosis", "prescription", "advice",
-        "bp", "pulse", "spo2", "temperature", "weight"
-    ]:
-        if field in data:
-            setattr(appt, field, data[field])
+        "bp", "pulse", "spo2", "temperature", "weight",
+        "follow_up_date"
+    ]
 
-    if data.get("follow_up_date"):
-        appt.follow_up_date = datetime.strptime(
-            data["follow_up_date"], "%Y-%m-%d"
-        ).date()
+    for field in allowed_fields:
+        if field not in data:
+            continue
+
+        value = data[field]
+
+        if field == "follow_up_date":
+            try:
+                appt.follow_up_date = (
+                    datetime.strptime(value, "%Y-%m-%d").date()
+                    if value else None
+                )
+            except Exception:
+                continue  # ❌ invalid date ignored
+        else:
+            setattr(appt, field, value)
 
     db.session.commit()
-    return {"status": "saved"}, 200
+    return jsonify({"status": "saved"}), 200
+
 
 
 # ------------------------------------------------
@@ -301,7 +334,7 @@ def autosave(id):
 # ------------------------------------------------
 @appointments_bp.route("/prescription/<int:id>")
 @login_required
-@role_required("admin", "reception", "doctor")
+@role_required( "reception", "doctor")
 def prescription_pdf(id):
     appt = get_secure_appointment(id)
 

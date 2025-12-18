@@ -4,7 +4,6 @@ from clinic.models import Invoice, Patient, AuditLog, User
 
 
 ROLE_LABELS = {
-    "admin": "Admin",
     "doctor": "Doctor",
     "reception": "Receptionist"
 }
@@ -24,7 +23,7 @@ def get_clinic_owner_id():
     if not user:
         return None
 
-    if role in ("doctor", "admin"):
+    if role in ("doctor"):
         return user.id
 
     if role == "reception":
@@ -70,5 +69,4 @@ def log_action(action, user_id=None):
         db.session.rollback()
 
 
-def admin_exists():
-    return db.session.query(User.id).filter_by(role="admin").first() is not None
+

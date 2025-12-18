@@ -93,3 +93,32 @@ def settings():
 
 
     return render_template("dashboard/settings.html", user=user)
+
+# ----------------resceptionist ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))

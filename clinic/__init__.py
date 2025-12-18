@@ -9,7 +9,6 @@ from .routes.dashboard import dashboard_bp
 from .routes.patients import patients_bp
 from .routes.appointments import appointments_bp
 from .routes.billing import billing_bp
-from .routes.admin import admin_bp
 from .routes.settings import settings_bp
 from .routes.home import home_bp
 from dotenv import load_dotenv
@@ -84,7 +83,6 @@ def create_app():
     app.register_blueprint(patients_bp)
     app.register_blueprint(appointments_bp)
     app.register_blueprint(billing_bp)
-    app.register_blueprint(admin_bp)
     app.register_blueprint(settings_bp)
 
     return app

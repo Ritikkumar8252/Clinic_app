@@ -145,7 +145,7 @@ def delete_patient(id):
 # =====================================================
 @patients_bp.route("/edit_patient/<int:id>", methods=["GET", "POST"])
 @login_required
-@role_required("admin", "reception")
+@role_required( "reception")
 def edit_patient(id):
     clinic_owner_id = get_clinic_owner_id()
 
@@ -178,7 +178,7 @@ def edit_patient(id):
 # =====================================================
 @patients_bp.route("/patient/<int:id>")
 @login_required
-@role_required("admin", "reception", "doctor")
+@role_required( "reception", "doctor")
 def patient_profile(id):
     clinic_owner_id = get_clinic_owner_id()
 
@@ -202,7 +202,7 @@ def patient_profile(id):
 # =====================================================
 @patients_bp.route("/upload_record/<int:id>", methods=["GET", "POST"])
 @login_required
-@role_required("admin", "doctor")
+@role_required( "doctor")
 def upload_record(id):
     clinic_owner_id = get_clinic_owner_id()
 
@@ -246,7 +246,7 @@ def upload_record(id):
 # =====================================================
 @patients_bp.route("/delete_record/<int:record_id>")
 @login_required
-@role_required("admin", "doctor")
+@role_required( "doctor")
 def delete_record(record_id):
     clinic_owner_id = get_clinic_owner_id()
 
@@ -279,7 +279,7 @@ def delete_record(record_id):
 # =====================================================
 @patients_bp.route("/generate_certificate/<int:id>")
 @login_required
-@role_required("admin", "doctor")
+@role_required( "doctor")
 def generate_certificate(id):
     clinic_owner_id = get_clinic_owner_id()
 
@@ -296,7 +296,7 @@ def generate_certificate(id):
 # =====================================================
 @patients_bp.route("/<int:patient_id>/visits")
 @login_required
-@role_required("admin", "doctor")
+@role_required( "doctor")
 def patient_visits(patient_id):
     clinic_owner_id = get_clinic_owner_id()
 

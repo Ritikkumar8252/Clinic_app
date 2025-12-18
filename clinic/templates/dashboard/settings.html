@@ -220,6 +220,29 @@
                 </div>
             </div>
 
+            <!-- add staff -->
+             {% if session["role"] == "doctor" %}
+            <div class="card">
+            <h2>Add Staff</h2>
+
+            <form method="POST" action="{{ url_for('settings_bp.add_staff') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <input name="fullname" placeholder="Name" required>
+                <input name="email" type="email" placeholder="Email" required>
+                <input name="password" type="password" placeholder="Password" required>
+
+                <select name="role">
+                <option value="reception">Receptionist</option>
+                <option value="pharmacy">Pharmacy</option>
+                <option value="lab">Lab</option>
+                </select>
+
+                <button class="btn-primary">Add Staff</button>
+            </form>
+            </div>
+            {% endif %}
+
         </div>
     </div>
 </div>

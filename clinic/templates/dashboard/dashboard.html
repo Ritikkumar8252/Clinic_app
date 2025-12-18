@@ -83,18 +83,13 @@ img {
             {% endif %}
 
 
-            {% if session['role'] == "admin" %}
-                <a href="{{ url_for('admin_bp.admin_panel') }}" class="admin-btn">
-                    Admin Panel
-                </a>
-            {% endif %}
         </div>
     </div>
 
         <!--  STATS -->
         <div class="stats-section">
 
-        {% if session.get('role') in ["admin", "reception"] %}
+        {% if session.get('role') in ["doctor", "reception"] %}
         <div class="stat-card blue">
             <p class="label">Total Patients</p>
             <h2 class="value">{{ total_patients }}</h2>
@@ -106,7 +101,7 @@ img {
         </div>
         {% endif %}
 
-        {% if session.get('role') in ["admin", "doctor"] %}
+        {% if session.get('role') in [ "doctor"] %}
         <div class="stat-card yellow">
             <p class="label">Pending Bills</p>
             <h2 class="value">{{ pending_bills }}</h2>

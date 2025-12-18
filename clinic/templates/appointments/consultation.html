@@ -119,14 +119,17 @@
                 </thead>
 
                 <tbody id="medBody">
+                    {% for m in medicines %}
                     <tr>
-                        <td><input name="medicine[]"></td>
-                        <td><input name="dose[]"></td>
-                        <td><input name="days[]"></td>
-                        <td><input name="notes[]"></td>
+                        <td><input value="{{ m.med }}" oninput="autoSave()"></td>
+                        <td><input value="{{ m.dose }}" oninput="autoSave()"></td>
+                        <td><input value="{{ m.days }}" oninput="autoSave()"></td>
+                        <td><input value="{{ m.notes }}" oninput="autoSave()"></td>
                         <td><button class="del-btn" onclick="removeRow(this)">x</button></td>
                     </tr>
+                    {% endfor %}
                 </tbody>
+
             </table>
 
             <button id="addRowBtn" class="btn grey" type="button">Add Medicine</button>

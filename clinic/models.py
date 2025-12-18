@@ -16,7 +16,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
 
     # admin | doctor | reception
-    role = db.Column(db.String(20), default="reception")
+    role = db.Column(db.String(20), default="doctor")
     phone = db.Column(db.String(20))
 
     # 👇 LINK TO CLINIC OWNER (DOCTOR)

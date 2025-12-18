@@ -1,36 +1,27 @@
 let saveTimeout = null;
 
-/* ===============================
-   AUTOSAVE TRIGGER
-================================ */
 function autoSave() {
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(sendSaveRequest, 800);
 }
 
-/* ===============================
-   SEND DATA TO BACKEND
-================================ */
 function sendSaveRequest() {
 
-    if (!window.autosaveUrl) {
-        console.error("Autosave URL not set");
-        return;
-    }
+    if (!window.autosaveUrl) return;
 
     const payload = {};
 
-    // Prescription (from prescription.js)
+    // Prescription text
     if (window.buildPrescriptionText) {
         const pres = buildPrescriptionText();
-        if (pres) payload.prescription = pres;
+        if (pres.trim()) payload.prescription = pres;
     }
 
-    // Hidden fields
+    // Hidden textareas
     ["symptoms", "diagnosis", "advice"].forEach(field => {
         const el = document.getElementById(field + "-hidden");
         if (el && el.value.trim()) {
-            payload[field] = el.value;
+            payload[field] = el.value.trim();
         }
     });
 
@@ -38,23 +29,25 @@ function sendSaveRequest() {
     ["bp", "pulse", "spo2", "temperature", "weight", "follow_up_date"]
         .forEach(id => {
             const el = document.getElementById(id);
-            if (el && el.value.trim()) payload[id] = el.value;
+            if (el && el.value.trim()) {
+                payload[id] = el.value.trim();
+            }
         });
 
+    // 🚫 Prevent empty autosave
     if (Object.keys(payload).length === 0) return;
 
     fetch(window.autosaveUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify(payload)
     })
     .then(() => showToast())
-    .catch(err => console.error("Autosave failed:", err));
+    .catch(() => {});
 }
 
-/* ===============================
-   SAVE TOAST
-================================ */
 function showToast() {
     const toast = document.getElementById("saveToast");
     if (!toast) return;

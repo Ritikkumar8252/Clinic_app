@@ -89,8 +89,6 @@ def login():
 
         log_action("LOGIN_SUCCESS", user.id)
 
-        if user.role == "admin":
-            return redirect(url_for("admin_bp.admin_panel"))
 
         return redirect(url_for("dashboard_bp.dashboard"))
 
