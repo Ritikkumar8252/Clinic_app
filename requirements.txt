@@ -7,4 +7,4 @@ reportlab
 gunicorn
 Flask-Mail
 Flask-WTF
-
+python-dotenv
