@@ -6,4 +6,5 @@ psycopg2-binary
 reportlab
 gunicorn
 Flask-Mail
+Flask-WTF
 
