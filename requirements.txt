@@ -8,3 +8,4 @@ gunicorn
 Flask-Mail
 Flask-WTF
 python-dotenv
+psycopg2-binary
