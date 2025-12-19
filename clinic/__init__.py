@@ -50,7 +50,7 @@ def create_app():
     # ---------------- SESSION + CSRF ----------------
     app.config.update(
         SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SECURE=False,
+        SESSION_COOKIE_SECURE=True,   # IN PRODUCTION = True
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_NAME="clinic_session",
         PERMANENT_SESSION_LIFETIME=timedelta(minutes=60),

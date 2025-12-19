@@ -25,18 +25,26 @@ def role_required(*allowed_roles):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            role = session.get("role")
 
-            if not role:
-                abort(401)  # not logged in
+            # -------- LOGIN CHECK --------
+            user_id = session.get("user_id")
+            if not user_id:
+                return redirect(url_for("auth_bp.login"))
 
-            if role not in allowed_roles:
-                abort(403)  # forbidden
+            user = db.session.get(User, user_id)
+            if not user:
+                session.clear()
+                return redirect(url_for("auth_bp.login"))
+
+            # -------- ROLE CHECK --------
+            if user.role not in allowed_roles:
+                flash("You are not authorized to access that page.", "warning")
+                return redirect(url_for("dashboard_bp.dashboard"))
 
             return f(*args, **kwargs)
+
         return wrapper
     return decorator
-
 
 # ---------------- LOGIN ----------------
 @auth_bp.route("/login", methods=["GET", "POST"])
