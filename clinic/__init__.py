@@ -21,40 +21,42 @@ load_dotenv()
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
 
-    # 🔐 SECRET KEY (move to env )
-    app.secret_key = os.environ.get("SECRET_KEY")
-
+    # ---------------- SECRET KEY ----------------
+    app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 
     # ---------------- INSTANCE FOLDER ----------------
     os.makedirs(app.instance_path, exist_ok=True)
 
-    # ---------------- DATABASE ----------------
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    # ---------------- DATABASE (SQLite → PostgreSQL auto) ----------------
+    DATABASE_URL = os.environ.get("DATABASE_URL")
 
+    if DATABASE_URL:
+        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///site.db"
+
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # ---------------- MAIL CONFIG ----------------
     app.config.update(
-    MAIL_SERVER=os.environ.get("MAIL_SERVER"),
-    MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
-    MAIL_USE_TLS=os.environ.get("MAIL_USE_TLS") == "true",
-    MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),  # real gmail
-    MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),  #  gmail app password
-    MAIL_DEFAULT_SENDER=os.environ.get("MAIL_DEFAULT_SENDER"),
+        MAIL_SERVER=os.environ.get("MAIL_SERVER"),
+        MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
+        MAIL_USE_TLS=os.environ.get("MAIL_USE_TLS") == "true",
+        MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
+        MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
+        MAIL_DEFAULT_SENDER=os.environ.get("MAIL_DEFAULT_SENDER"),
     )
 
-
-    # ---------------- SESSION + CSRF HARDENING ----------------
+    # ---------------- SESSION + CSRF ----------------
     app.config.update(
-        SESSION_COOKIE_HTTPONLY=True,            # JS cannot access cookies
-        SESSION_COOKIE_SECURE=False,     # 🔥 Auto: True in prod, False locally
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SECURE=False,
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_NAME="clinic_session",
         PERMANENT_SESSION_LIFETIME=timedelta(minutes=60),
         SESSION_REFRESH_EACH_REQUEST=True,
-        WTF_CSRF_TIME_LIMIT=None                 # Prevent CSRF expiry issues
+        WTF_CSRF_TIME_LIMIT=None
     )
-
 
     # ---------------- UPLOAD FOLDERS ----------------
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -70,11 +72,7 @@ def create_app():
     db.init_app(app)
     mail.init_app(app)
     csrf.init_app(app)
-    migrate = Migrate(app, db)
-    # ---------------- CREATE TABLES ----------------
-    # with app.app_context():
-    #     db.create_all()
-    # .....Production mein ye DB tod deta hai
+    Migrate(app, db)
 
     # ---------------- BLUEPRINTS ----------------
     app.register_blueprint(home_bp)
@@ -86,4 +84,3 @@ def create_app():
     app.register_blueprint(settings_bp)
 
     return app
-
