@@ -167,11 +167,60 @@ def walkin():
     if request.method == "POST":
         patient_id = request.form.get("patient_id")
 
-        patient = Patient.query.filter_by(
-            id=patient_id,
-            clinic_owner_id=clinic_owner_id
-        ).first_or_404()
+        # =====================
+        # NEW PATIENT FLOW
+        # =====================
+        if patient_id == "new":
+            name = request.form.get("name")
+            phone = request.form.get("phone")
+            age_raw = request.form.get("age")
+            gender = request.form.get("gender")
 
+            if not name:
+                flash("Patient name is required", "danger")
+                return redirect(url_for("appointments_bp.walkin"))
+
+            # safe age conversion
+            age = int(age_raw) if age_raw and age_raw.isdigit() else None
+
+            # generate patient number
+            last_patient = (
+                Patient.query
+                .filter_by(clinic_owner_id=clinic_owner_id)
+                .order_by(Patient.patient_no.desc())
+                .first()
+            )
+            patient_no = (last_patient.patient_no + 1) if last_patient else 1
+
+            patient = Patient(
+                clinic_owner_id=clinic_owner_id,
+                patient_no=patient_no,
+                name=name,
+                phone=phone,
+                age=age,
+                gender=gender,
+                disease="Walk-in",   # 🔴 VERY IMPORTANT
+                last_visit=datetime.now().date(),
+                status="Active"
+            )
+
+            db.session.add(patient)
+            db.session.flush()  # get patient.id safely
+
+        # =====================
+        # EXISTING PATIENT FLOW
+        # =====================
+        else:
+            patient = Patient.query.filter_by(
+                id=int(patient_id),
+                clinic_owner_id=clinic_owner_id
+            ).first_or_404()
+
+            patient.last_visit = datetime.now().date()
+
+        # =====================
+        # CREATE APPOINTMENT
+        # =====================
         now = datetime.now()
 
         appt = Appointment(
@@ -181,8 +230,6 @@ def walkin():
             time=now.time(),
             status="In Progress"
         )
-
-        patient.last_visit = now.date()
 
         db.session.add(appt)
         db.session.commit()
