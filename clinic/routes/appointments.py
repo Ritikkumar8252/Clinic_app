@@ -367,7 +367,7 @@ def autosave(id):
                     if value else None
                 )
             except Exception:
-                continue  # ❌ invalid date ignored
+                continue  #  invalid date ignored
         else:
             setattr(appt, field, value)
 
@@ -436,9 +436,9 @@ def prescription_pdf(id):
         mimetype="application/pdf"
     )
 
-# ------------------------------------------------
+# -----------------------------------------------
 # FINALIZE PRESCRIPTION
-# ------------------------------------------------
+# -----------------------------------------------
 @appointments_bp.route("/finalize_prescription/<int:id>", methods=["POST"])
 @login_required
 @role_required("doctor")
@@ -459,5 +459,5 @@ def finalize_prescription(id):
     appt.prescription_locked = True
     db.session.commit()
 
-    # 👇 IMPORTANT CHANGE
+    # IMPORTANT CHANGE
     return "", 204

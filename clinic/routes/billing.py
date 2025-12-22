@@ -165,7 +165,7 @@ def edit_invoice(id):
         flash("Invoice updated.", "success")
         return redirect(url_for("billing_bp.view_invoice", id=id))
 
-    patients = Patient.query.filter_by(user_id=clinic_owner_id).all()
+    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id).all()
     return render_template("billing/edit_invoice.html", inv=inv, patients=patients)
 
 
