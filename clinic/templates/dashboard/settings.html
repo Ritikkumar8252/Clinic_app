@@ -114,32 +114,66 @@
             </div>
 
 
-
             <!-- Account Security -->
             <div id="account" class="tab">
-                <div class="card">
-                    <h2>Account Security</h2>
 
-                    <form method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="account-grid">
 
-                        <input type="hidden" name="change_password">
+                    <!-- LEFT: Account Security -->
+                    <div class="card">
+                        <h2>Account Security</h2>
 
-                        <label>Old Password</label>
-                        <input type="password" name="old_password" required>
+                        <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="change_password">
 
-                        <label>New Password</label>
-                        <input type="password" name="new_password" required>
+                            <label>Old Password</label>
+                            <input type="password" name="old_password" required>
 
-                        <button class="btn-primary">Update Password</button>
-                    </form>
+                            <label>New Password</label>
+                            <input type="password" name="new_password" required>
 
-                    <hr>
+                            <button class="btn-primary">Update Password</button>
+                        </form>
 
-                    <h3>Danger Zone</h3>
-                    <button class="btn-danger">Delete Account</button>
+                        <hr>
+
+                        <h3>Danger Zone</h3>
+                        <button class="btn-danger">Delete Account</button>
+                    </div>
+
+                    <!-- RIGHT: Add Staff -->
+                    {% if session["role"] == "doctor" %}
+                    <div class="card">
+                        <h2>Add Staff</h2>
+
+                        <form method="POST" action="{{ url_for('settings_bp.add_staff') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <label>Full Name</label>
+                            <input name="fullname" required>
+
+                            <label>Email</label>
+                            <input name="email" type="email" required>
+
+                            <label>Password</label>
+                            <input name="password" type="password" required>
+
+                            <label>Role</label>
+                            <select name="role">
+                                <option value="reception">Receptionist</option>
+                                <option value="pharmacy">Pharmacy</option>
+                                <option value="lab">Lab</option>
+                            </select>
+
+                            <button class="btn-primary">Add Staff</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
+
 
 
 
@@ -219,30 +253,6 @@
                     </form>
                 </div>
             </div>
-
-            <!-- add staff -->
-             {% if session["role"] == "doctor" %}
-            <div class="card">
-            <h2>Add Staff</h2>
-
-            <form method="POST" action="{{ url_for('settings_bp.add_staff') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                <input name="fullname" placeholder="Name" required>
-                <input name="email" type="email" placeholder="Email" required>
-                <input name="password" type="password" placeholder="Password" required>
-
-                <select name="role">
-                <option value="reception">Receptionist</option>
-                <option value="pharmacy">Pharmacy</option>
-                <option value="lab">Lab</option>
-                </select>
-
-                <button class="btn-primary">Add Staff</button>
-            </form>
-            </div>
-            {% endif %}
-
         </div>
     </div>
 </div>
