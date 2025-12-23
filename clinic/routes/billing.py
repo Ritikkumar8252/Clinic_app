@@ -21,10 +21,13 @@ def get_secure_invoice(id):
         .join(Patient)
         .filter(
             Invoice.id == id,
+            Invoice.is_deleted == False,
+            Patient.is_deleted == False,
             Patient.clinic_owner_id == clinic_owner_id
         )
         .first_or_404()
     )
+
 
 
 # ---------------- DASHBOARD ----------------
@@ -38,10 +41,15 @@ def billing():
     status = request.args.get("status", "").strip()
 
     query = (
-        Invoice.query
-        .join(Patient)
-        .filter(Patient.clinic_owner_id == clinic_owner_id)
+    Invoice.query
+    .join(Patient)
+    .filter(
+        Patient.clinic_owner_id == clinic_owner_id,
+        Invoice.is_deleted == False,
+        Patient.is_deleted == False
+        )
     )
+
 
     if q:
         query = query.filter(
@@ -61,10 +69,13 @@ def billing():
         .join(Patient)
         .filter(
             Patient.clinic_owner_id == clinic_owner_id,
-            Invoice.status != "Paid"
+            Invoice.status != "Paid",
+            Invoice.is_deleted == False,
+            Patient.is_deleted == False
         )
         .count()
     )
+
 
     return render_template(
         "billing/billing.html",
@@ -79,7 +90,8 @@ def billing():
 @role_required("reception")
 def create_invoice():
     clinic_owner_id = get_current_clinic_owner_id()
-    patients = Patient.query.filter(Patient.clinic_owner_id == clinic_owner_id).all()
+    patients = Patient.query.filter_by(clinic_owner_id = clinic_owner_id,
+                                    is_deleted=False).all()
 
     if request.method == "POST":
         invoice = Invoice(
@@ -182,7 +194,7 @@ def delete_invoice(id):
 
     InvoiceItem.query.filter_by(invoice_id=inv.id).delete()
     Payment.query.filter_by(invoice_id=inv.id).delete()
-    db.session.delete(inv)
+    inv.is_deleted = True
     db.session.commit()
 
     flash("Invoice deleted.", "warning")

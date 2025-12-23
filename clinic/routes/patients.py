@@ -23,7 +23,11 @@ def patients():
 
     clinic_owner_id = get_current_clinic_owner_id()
 
-    query = Patient.query.filter_by(clinic_owner_id=clinic_owner_id)
+    query = Patient.query.filter_by(
+    clinic_owner_id=clinic_owner_id,
+    is_deleted=False
+    )
+
 
     if q:
         query = query.filter(
@@ -133,7 +137,7 @@ def delete_patient(id):
         clinic_owner_id=clinic_owner_id
     ).first_or_404()
 
-    db.session.delete(patient)
+    patient.is_deleted = True
     db.session.commit()
     flash("Patient deleted!")
 
@@ -184,10 +188,13 @@ def patient_profile(id):
 
     patient = Patient.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id
+        clinic_owner_id=clinic_owner_id,
+        is_deleted=False
+
     ).first_or_404()
 
-    apps = Appointment.query.filter_by(patient_id=patient.id).all()
+    apps = Appointment.query.filter_by(patient_id=patient.id,
+                                       is_deleted=False).all()
 
     return render_template(
         "patients/patient_profile.html",
@@ -307,10 +314,15 @@ def patient_visits(patient_id):
 
     visits = (
         Appointment.query
-        .filter_by(patient_id=patient.id, status="Completed")
+        .filter_by(
+            patient_id=patient.id,
+            status="Completed",
+            is_deleted=False
+        )
         .order_by(Appointment.date.desc())
         .all()
     )
+
 
     return render_template(
         "patients/visit_history.html",

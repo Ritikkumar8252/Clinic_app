@@ -71,7 +71,8 @@ class Patient(db.Model):
     age = db.Column(db.Integer)
     gender = db.Column(db.String(20))
     phone = db.Column(db.String(20), index=True)
-
+    # 🔴 SOFT DELETE
+    is_deleted = db.Column(db.Boolean, default=False, index=True)
     disease = db.Column(db.String(120), nullable=False)
 
     last_visit = db.Column(db.Date)
@@ -104,6 +105,8 @@ class Appointment(db.Model):
     type = db.Column(db.String(50))
     date = db.Column(db.Date, nullable=False)
     time = db.Column(db.Time, nullable=False)
+    # 🔴 SOFT DELETE
+    is_deleted = db.Column(db.Boolean, default=False, index=True)
 
     status = db.Column(db.String(20), default="Queue")
 
@@ -153,6 +156,8 @@ class Invoice(db.Model):
 
     invoice_number = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(255))
+    # 🔴 SOFT DELETE
+    is_deleted = db.Column(db.Boolean, default=False, index=True)
 
     total_amount = db.Column(db.Float, default=0.0)
     status = db.Column(db.String(20), default="Unpaid")

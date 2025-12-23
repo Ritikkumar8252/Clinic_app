@@ -4,7 +4,7 @@ from ..models import Appointment, Patient,Prescription, PrescriptionItem
 from datetime import datetime
 from io import BytesIO
 from clinic.routes.auth import login_required, role_required
-from clinic.utils import get_current_clinic_owner_id
+from clinic.utils import get_current_clinic_owner_id, log_action
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
@@ -25,10 +25,13 @@ def get_secure_appointment(id):
         .join(Patient)
         .filter(
             Appointment.id == id,
+            Appointment.is_deleted == False,
+            Patient.is_deleted == False,
             Patient.clinic_owner_id == clinic_owner_id
         )
         .first_or_404()
     )
+
 
 # ------------------------------------------------
 # APPOINTMENTS LIST
@@ -44,10 +47,15 @@ def appointments():
     date_filter = request.args.get("date", "").strip()
 
     base_query = (
-        Appointment.query
-        .join(Patient)
-        .filter(Patient.clinic_owner_id == clinic_owner_id)
+    Appointment.query
+    .join(Patient)
+    .filter(
+        Patient.clinic_owner_id == clinic_owner_id,
+        Appointment.is_deleted == False,
+        Patient.is_deleted == False
+        )
     )
+
 
     if search:
         base_query = base_query.filter(Patient.name.ilike(f"%{search}%"))
@@ -80,7 +88,8 @@ def appointments():
 @role_required("reception")
 def add_appointment():
     clinic_owner_id = get_current_clinic_owner_id()
-    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id).all()
+    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id,
+                                       is_deleted=False).all()
 
     if request.method == "POST":
         patient_id = request.form["patient_id"]
@@ -119,7 +128,7 @@ def add_appointment():
 @role_required("reception")
 def delete_appointment(id):
     appt = get_secure_appointment(id)
-    db.session.delete(appt)
+    appt.is_deleted = True
     db.session.commit()
 
     flash("Appointment deleted!")
@@ -162,7 +171,8 @@ def edit_appointment(id):
 @role_required("doctor")
 def walkin():
     clinic_owner_id = get_current_clinic_owner_id()
-    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id).all()
+    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id,
+                                       is_deleted=False).all()
 
     if request.method == "POST":
         patient_id = request.form.get("patient_id")
@@ -341,6 +351,9 @@ def consult(id):
 @csrf.exempt   # ✅ VERY IMPORTANT
 def autosave(id):
     appt = get_secure_appointment(id)
+    if appt.prescription_locked:
+        return jsonify({"status": "locked"}), 403
+
 
     if not request.is_json:
         return jsonify({"status": "ignored"}), 200
@@ -373,6 +386,7 @@ def autosave(id):
             setattr(appt, field, value)
 
     db.session.commit()
+    log_action("CONSULT_AUTOSAVE")  
     return jsonify({"status": "saved"}), 200
 
 
@@ -479,6 +493,7 @@ def finalize_prescription(id):
     prescription.finalized_at = datetime.utcnow()
 
     appt.prescription_locked = True
+    log_action("PRESCRIPTION_FINALIZED")
 
     db.session.commit()
 
@@ -486,40 +501,51 @@ def finalize_prescription(id):
     return redirect(url_for("appointments_bp.consult", id=id))
 
 # -----------------------------------------------
-# SAVE PRESCRIPTION
+# SAVE PRESCRIPTION (SAFE & FINAL)
 # -----------------------------------------------
 
 @appointments_bp.route("/save_prescription/<int:id>", methods=["POST"])
 @login_required
-@csrf.exempt
 @role_required("doctor")
+@csrf.exempt
 def save_prescription(id):
     appt = get_secure_appointment(id)
 
-    if appt.prescription_locked:
-        return jsonify({"error": "Locked"}), 403
-
-    data = request.get_json()
-
+    # 🔐 Always lock using prescription (source of truth)
     prescription = Prescription.query.filter_by(
         appointment_id=appt.id
     ).first()
 
+    if prescription and prescription.finalized:
+        log_action("PRESCRIPTION_EDIT_BLOCKED")
+        return jsonify({"error": "Prescription finalized"}), 403
+
+    # 🧾 Validate JSON
+    data = request.get_json(silent=True)
+    if not data or "items" not in data:
+        return jsonify({"error": "Invalid payload"}), 400
+
+    # 🆕 Create prescription if not exists
     if not prescription:
         prescription = Prescription(appointment_id=appt.id)
         db.session.add(prescription)
         db.session.flush()
 
-    # 🔥 remove old items
+    # 🔥 Remove old draft items
     PrescriptionItem.query.filter_by(
         prescription_id=prescription.id
     ).delete()
 
+    # ➕ Insert new items
     for item in data.get("items", []):
+        med = item.get("medicine", "").strip()
+        if not med:
+            continue
+
         db.session.add(
             PrescriptionItem(
                 prescription_id=prescription.id,
-                medicine_name=item["medicine"],
+                medicine_name=med,
                 dose=item.get("dose"),
                 duration_days=item.get("days"),
                 instructions=item.get("notes")
@@ -527,4 +553,6 @@ def save_prescription(id):
         )
 
     db.session.commit()
+    log_action("PRESCRIPTION_DRAFT_SAVE")
+
     return jsonify({"status": "saved"})
