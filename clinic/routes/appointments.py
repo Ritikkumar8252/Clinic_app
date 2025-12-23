@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, send_file,jsonify
 from ..extensions import db
-from ..models import Appointment, Patient
+from ..models import Appointment, Patient,Prescription, PrescriptionItem
 from datetime import datetime
 from io import BytesIO
 from clinic.routes.auth import login_required, role_required
@@ -290,7 +290,6 @@ def consult(id):
     if request.method == "POST":
         appt.symptoms = request.form.get("symptoms")
         appt.diagnosis = request.form.get("diagnosis")
-        appt.prescription = request.form.get("prescription")
         appt.advice = request.form.get("advice")
 
         appt.bp = request.form.get("bp")
@@ -310,18 +309,20 @@ def consult(id):
 
     
     # BUILD MEDICINES FROM DB
-    
+
+    prescription = Prescription.query.filter_by(
+        appointment_id=appt.id
+    ).first()
+
     medicines = []
 
-    if appt.prescription:
-        for line in appt.prescription.split("\n"):
-            parts = [p.strip() for p in line.split("|")]
-
+    if prescription:
+        for item in prescription.items:
             medicines.append({
-                "med": parts[0].replace("•", "").strip() if len(parts) > 0 else "",
-                "dose": parts[1] if len(parts) > 1 else "",
-                "days": parts[2].replace("days", "").strip() if len(parts) > 2 else "",
-                "notes": parts[3] if len(parts) > 3 else ""
+                "med": item.medicine_name,
+                "dose": item.dose,
+                "days": item.duration_days,
+                "notes": item.instructions
             })
 
     return render_template(
@@ -349,7 +350,7 @@ def autosave(id):
         return jsonify({"status": "ignored"}), 200
 
     allowed_fields = [
-        "symptoms", "diagnosis", "prescription", "advice",
+        "symptoms", "diagnosis", "advice",
         "bp", "pulse", "spo2", "temperature", "weight",
         "follow_up_date"
     ]
@@ -420,7 +421,12 @@ def prescription_pdf(id):
     y -= 80
 
     styles = getSampleStyleSheet()
-    text = appt.prescription or "No medicines prescribed"
+    prescription = Prescription.query.filter_by(
+        appointment_id=appt.id
+    ).first()
+
+    text = prescription.final_text if prescription and prescription.final_text else "No medicines prescribed"
+
     p = Paragraph(text.replace("\n", "<br/>"), styles["Normal"])
     w, h = p.wrap(width - 4 * cm, height)
     p.drawOn(pdf, 2 * cm, y - h)
@@ -449,15 +455,76 @@ def finalize_prescription(id):
         flash("Prescription already finalized.", "warning")
         return redirect(url_for("appointments_bp.consult", id=id))
 
-    prescription_text = request.form.get("prescription", "").strip()
+    prescription = Prescription.query.filter_by(
+        appointment_id=appt.id
+    ).first()
 
-    if not prescription_text:
-        flash("Prescription is empty.", "danger")
+    if not prescription or not prescription.items:
+        flash("No medicines added to prescription.", "danger")
         return redirect(url_for("appointments_bp.consult", id=id))
 
-    appt.prescription = prescription_text
+    # 🔹 BUILD FINAL SNAPSHOT TEXT (LEGAL RECORD)
+    lines = []
+    for item in prescription.items:
+        line = (
+            f"{item.medicine_name}"
+            f" | {item.dose or ''}"
+            f" | {item.duration_days or ''} days"
+            f" | {item.instructions or ''}"
+        )
+        lines.append(line)
+
+    prescription.final_text = "\n".join(lines)
+    prescription.finalized = True
+    prescription.finalized_at = datetime.utcnow()
+
     appt.prescription_locked = True
+
     db.session.commit()
 
-    # IMPORTANT CHANGE
-    return "", 204
+    flash("Prescription finalized successfully.", "success")
+    return redirect(url_for("appointments_bp.consult", id=id))
+
+# -----------------------------------------------
+# SAVE PRESCRIPTION
+# -----------------------------------------------
+
+@appointments_bp.route("/save_prescription/<int:id>", methods=["POST"])
+@login_required
+@csrf.exempt
+@role_required("doctor")
+def save_prescription(id):
+    appt = get_secure_appointment(id)
+
+    if appt.prescription_locked:
+        return jsonify({"error": "Locked"}), 403
+
+    data = request.get_json()
+
+    prescription = Prescription.query.filter_by(
+        appointment_id=appt.id
+    ).first()
+
+    if not prescription:
+        prescription = Prescription(appointment_id=appt.id)
+        db.session.add(prescription)
+        db.session.flush()
+
+    # 🔥 remove old items
+    PrescriptionItem.query.filter_by(
+        prescription_id=prescription.id
+    ).delete()
+
+    for item in data.get("items", []):
+        db.session.add(
+            PrescriptionItem(
+                prescription_id=prescription.id,
+                medicine_name=item["medicine"],
+                dose=item.get("dose"),
+                duration_days=item.get("days"),
+                instructions=item.get("notes")
+            )
+        )
+
+    db.session.commit()
+    return jsonify({"status": "saved"})
