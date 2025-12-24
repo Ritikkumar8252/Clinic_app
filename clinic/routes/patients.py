@@ -329,3 +329,24 @@ def patient_visits(patient_id):
         patient=patient,
         visits=visits
     )
+
+# =====================================================
+# RESTORE PATIENT
+# =====================================================
+@patients_bp.route("/restore_patient/<int:id>")
+@login_required
+@role_required("doctor")
+def restore_patient(id):
+    clinic_owner_id = get_current_clinic_owner_id()
+
+    patient = Patient.query.filter_by(
+        id=id,
+        clinic_owner_id=clinic_owner_id,
+        is_deleted=True
+    ).first_or_404()
+
+    patient.is_deleted = False
+    db.session.commit()
+
+    flash("Patient restored successfully", "success")
+    return redirect(url_for("patients_bp.patients"))

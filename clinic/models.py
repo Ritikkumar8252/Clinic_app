@@ -2,6 +2,13 @@ from .extensions import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
+"""
+RULE:
+Every table must contain clinic_owner_id
+OR be reachable through a table that contains it.
+
+Never bypass this rule.
+"""
 
 # =========================
 # USER / DOCTOR / RECEPTION

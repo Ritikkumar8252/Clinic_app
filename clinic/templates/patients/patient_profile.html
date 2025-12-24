@@ -48,10 +48,18 @@ select {
             Edit Patient
         </a>
 
-        <a href="{{ url_for('patients_bp.delete_patient', id=patient.id) }}"
-           onclick="return confirm('Delete this patient?')" class="btn btn-danger">
-            Delete
+        {% if patient.is_deleted and session.role == "doctor" %}
+        <a href="{{ url_for('patients_bp.restore_patient', id=patient.id) }}"
+           class="btn btn-success"
+           onclick="return confirm('Restore this patient?')">
+            Restore Patient
         </a>
+        {% else %}
+            <a href="{{ url_for('patients_bp.delete_patient', id=patient.id) }}"
+            onclick="return confirm('Delete this patient?')" class="btn btn-danger">
+                Delete
+            </a>
+        {% endif %}
     </div>
 </div>
 
