@@ -3,7 +3,12 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/consult.css') }}">
 
-<div class="consult-page">
+<div class="consult-page"
+     data-autosave-url="{{ url_for('appointments_bp.autosave', id=appt.id) }}"
+     data-save-prescription-url="{{ url_for('appointments_bp.save_prescription', id=appt.id) }}"
+     data-appt-id="{{ appt.id }}"
+     data-prescription-locked="{{ appt.prescription_locked }}">
+
 
 <!-- TOP BAR -->
 <div class="consult-topbar">
@@ -37,7 +42,8 @@
 
     <!-- LEFT PANEL -->
     <div class="patient-side">
-        <div class="patient-card shadow-card">
+        <div class="patient-card shadow-card print-prescription">
+
             <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}" class="patient-photo">
             <h3 class="patient-name">{{ patient.name }}</h3>
             <p class="pt-small">{{ patient.gender }}, {{ patient.age }} yrs</p>
@@ -48,7 +54,8 @@
             <p>{{ patient.last_visit or "—" }}</p>
         </div>
 
-        <div class="vitals-card shadow-card">
+        <div class="vitals-card shadow-card print-prescription">
+
             <h4>Vitals</h4>
 
             <div class="vital-row"><label>BP</label>
@@ -75,7 +82,8 @@
     <div class="consult-main">
 
         <!-- SYMPTOMS -->
-        <div class="box shadow-card">
+        <div class="box shadow-card print-prescription">
+
             <h3>Symptoms</h3>
 
             <div class="tags-wrapper" id="symptoms-wrapper">
@@ -87,7 +95,8 @@
         </div>
 
         <!-- DIAGNOSIS -->
-        <div class="box shadow-card">
+        <div class="box shadow-card print-prescription">
+
             <h3>Diagnosis</h3>
 
             <div class="tags-wrapper" id="diagnosis-wrapper">
@@ -99,7 +108,7 @@
         </div>
 
         <!-- PRESCRIPTION -->
-        <div class="box shadow-card">
+        <div class="box shadow-card print-prescription">
             <!-- AUTHORITATIVE FINAL PRESCRIPTION (HIDDEN) -->
             <input type="hidden" name="prescription" id="final-prescription">
 
@@ -135,9 +144,19 @@
             <button id="addRowBtn" class="btn grey" type="button">Add Medicine</button>
         </div>
 
+        <!-- LAB TESTS -->
+        <div class="box shadow-card print-prescription lab-section">
+            <h3>Lab Tests</h3>
+
+            <textarea
+                id="lab_tests"
+                placeholder="Write lab tests e.g. CBC, LFT, X-Ray Chest..."
+                rows="4"></textarea>
+        </div>
 
         <!-- ADVICE -->
-        <div class="box shadow-card">
+        <div class="box shadow-card print-prescription">
+
             <h3>Advice</h3>
 
             <div class="tags-wrapper" id="advice-wrapper">
@@ -151,7 +170,8 @@
 
 
         <!-- FOLLOW-UP -->
-        <div class="box shadow-card">
+        <div class="box shadow-card print-prescription">
+
             <h3>Follow Up Date</h3>
             <input id="follow_up_date" type="date" value="{{ appt.follow_up_date }}">
         </div>
@@ -167,13 +187,8 @@
 </div>
 
 
-<!-- =========================================
- PASS URL + APPOINTMENT ID TO EXTERNAL JS
-========================================= -->
-<script>
-    window.autosaveUrl = "{{ url_for('appointments_bp.autosave', id=appt.id) }}";
-    window.apptId = "{{ appt.id }}";
-</script>
+
+
 
 <!-- =========================================
         LOAD SEPARATED JS FILES

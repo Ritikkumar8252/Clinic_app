@@ -300,3 +300,64 @@
     color: #9ca3af;
     cursor: not-allowed;
 }
+
+
+/* =============================
+   LAB TEST SECTION
+   ============================= */
+
+.consult-page .lab-section textarea {
+    width: 100%;
+    resize: none;
+    padding: 8px 10px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-family: inherit;
+}
+
+.consult-page .lab-section textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
+}
+/* =============================
+   PRINT RULES
+   ============================= */
+
+@media print {
+
+    /* Hide everything */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Show only prescription + lab tests */
+    .print-prescription,
+    .print-prescription * {
+        visibility: visible;
+    }
+
+    /* Layout for printing */
+    .print-prescription {
+        position: relative;
+        width: 100%;
+        margin-bottom: 12px;
+        page-break-inside: avoid;
+    }
+
+    /* Remove UI elements */
+    .consult-topbar,
+    .patient-side,
+    .btn-save,
+    .btn-complete,
+    .btn-pres,
+    .save-toast {
+        display: none !important;
+    }
+
+    textarea {
+        border: none;
+    }
+}
