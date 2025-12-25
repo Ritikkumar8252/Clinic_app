@@ -1,3 +1,13 @@
+<style>
+    .patient-address {
+    font-size: 16px;
+    color: black;
+    margin-top: 4px;
+    max-width: 260px;
+    line-height: 1.3;
+}
+
+</style>
 <div class="appt-card">
 
     <!-- LEFT: Patient Info -->
@@ -6,10 +16,20 @@
 
         <div>
             <h3 class="name">{{ a.patient.name }}</h3>
-            <p class="minor">{{ a.patient.phone }}</p>
+            <!-- <p class="minor">{{ a.patient.phone }}</p> -->
+            
+            {% if a.patient.address %}
+            <p class="patient-address">
+                📍 {{ a.patient.address }}
+                {% if a.patient.city %}, {{ a.patient.city }}{% endif %}
+                {% if a.patient.state %}, {{ a.patient.state }}{% endif %}
+                {% if a.patient.pincode %} - {{ a.patient.pincode }}{% endif %}
+            </p>
+            {% endif %}
             <p class="minor">ID: {{ a.patient.patient_no }}</p>
         </div>
     </div>
+
 
     <!-- MIDDLE -->
     <div class="card-middle">
