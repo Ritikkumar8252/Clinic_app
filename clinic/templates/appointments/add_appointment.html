@@ -1,44 +1,208 @@
 {% extends "base.html" %}
 {% block body %}
 
-<!-- TOP HEADER (YELLOW BAR) -->
+<style>
+/* =================================================
+   TOP BANNER
+================================================= */
+.top-banner {
+    background: #fde68a;
+    padding: 18px 24px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.top-banner h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.top-banner p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* =================================================
+   FORM CARD
+================================================= */
+.form-card {
+    max-width: 520px;
+    margin: auto;
+    background: white;
+    padding: 26px;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.form-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 18px;
+}
+
+/* =================================================
+   INPUTS
+================================================= */
+.input-box {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.input-box:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+
+/* REMOVE BLINKING CURSOR */
+input,
+select,
+.select2-search__field {
+    caret-color: transparent;
+}
+
+/* =================================================
+   BUTTONS
+================================================= */
+.full-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    margin-top: 10px;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+}
+
+.btn-secondary {
+    background: #374151;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.btn-small {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.btn-green {
+    background: #16a34a;
+    color: white;
+}
+
+/* =================================================
+   ADD NEW PATIENT BOX
+================================================= */
+.add-new-patient-box {
+    background: #f0fdf4;
+    padding: 10px 14px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+/* =================================================
+   SELECT2 – CLINIC GRADE
+================================================= */
+.select2-container--default .select2-selection--single {
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+}
+
+.select2-selection__rendered {
+    font-size: 14px;
+}
+
+.select2-selection__arrow {
+    height: 100%;
+}
+
+.select2-search__field {
+    height: 42px !important;
+    font-size: 15px;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+}
+
+.select2-results__option {
+    padding: 10px 14px;
+    font-size: 14px;
+}
+
+.select2-results__option--highlighted {
+    background: #2563eb !important;
+    color: white !important;
+}
+</style>
+
+<!-- =================================================
+     TOP HEADER
+================================================= -->
 <div class="top-banner">
     <div>
         <h2>Dr. {{ session['user'] }}</h2>
         <p>Book a new appointment</p>
     </div>
 
-    <div class="right-buttons">
-        <a href="{{ url_for('appointments_bp.appointments') }}" class="btn-secondary">
-            Back to Appointments
+    <div>
+        <a href="{{ url_for('appointments_bp.appointments') }}"
+           class="btn-secondary">
+            ← Back to Appointments
         </a>
     </div>
 </div>
 
-<!-- FORM CARD -->
+<!-- =================================================
+     FORM
+================================================= -->
 <div class="form-card">
     <h2 class="form-title">Add Appointment</h2>
 
-    <form method="POST">
+    <form method="POST" id="apptForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
         <div class="add-new-patient-box">
-            <p>Can't find the patient?</p>
-            <a href="{{ url_for('patients_bp.add_patient', from_page='add_appointment') }}" 
-            class="btn-small btn-green">
+            <p>Can’t find the patient?</p>
+            <a href="{{ url_for('patients_bp.add_patient', from_page='add_appointment') }}"
+               class="btn-small btn-green">
                 + Add New Patient
             </a>
         </div>
 
         <label>Select Patient</label>
         <select id="patientSelect" name="patient_id" class="input-box" required>
-            <option value="">Search patient by name or phone…</option>
+            <option value=""></option>
             {% for p in patients %}
-            <option value="{{ p.id }}">{{ p.patient_no }} • {{ p.name }} - ({{ p.phone }})</option>
+            <option value="{{ p.id }}">
+                {{ p.patient_no }} • {{ p.name }} • {{ p.phone }}
+            </option>
             {% endfor %}
         </select>
 
         <label>Visit Type</label>
-        <select name="type" class="input-box">
+        <select name="type" class="input-box" required>
             <option value="First Visit">First Visit</option>
             <option value="Follow-up">Follow-up</option>
             <option value="Emergency">Emergency</option>
@@ -50,15 +214,110 @@
         <label>Time</label>
         <input type="time" name="time" class="input-box" required>
 
-        <button type="submit" class="btn-primary full-btn">Book Appointment</button>
-
+        <button type="submit" class="btn-primary full-btn">
+            Book Appointment (Enter)
+        </button>
     </form>
 </div>
+
+<!-- =================================================
+     JS
+================================================= -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
-<script src="{{ url_for('static', filename='js/appointments/add_appointment.js') }}"></script>
+<script>
+function matchCustom(params, data) {
+    if ($.trim(params.term) === "") return data;
+    if (!data.text) return null;
+    return data.text.toLowerCase().includes(params.term.toLowerCase())
+        ? data : null;
+}
 
+$(document).ready(function () {
 
+    const $patient = $("#patientSelect");
+    const $type = $("select[name='type']");
+    const $date = $("input[name='date']");
+    const $time = $("input[name='time']");
+    const $form = $("#apptForm");
+
+    /* ---------- SELECT2 ---------- */
+    $patient.select2({
+        placeholder: "Search patient by name or phone",
+        allowClear: true,
+        width: "100%",
+        matcher: matchCustom
+    });
+
+    /* 🔑 CLICK → OPEN SEARCH (FIX) */
+    $(document).on("click", ".select2-selection", function () {
+        $patient.select2("open");
+    });
+
+    /* Ensure typing cursor works inside search */
+    $patient.on("select2:open", function () {
+        const searchBox = document.querySelector(".select2-search__field");
+        if (searchBox) {
+            searchBox.focus();
+            searchBox.style.caretColor = "auto"; // allow typing
+        }
+    });
+
+    setTimeout(() => $patient.select2("open"), 200);
+
+    /* ---------- AUTO DATE ---------- */
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
+    $date.val(today).attr("min", today);
+
+    /* ---------- AUTO TIME (+5 min) ---------- */
+    now.setMinutes(now.getMinutes() + 5);
+    $time.val(now.toTimeString().slice(0,5));
+
+    /* ---------- ENTER-ONLY FLOW ---------- */
+    $patient.on("select2:select", () => $type.focus());
+
+    $type.on("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            $date.focus();
+        }
+    });
+
+    $date.on("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            $time.focus();
+        }
+    });
+
+    $time.on("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            $form.submit();
+        }
+    });
+
+    /* ---------- SAFETY ---------- */
+    $form.on("submit", e => {
+        if (!$patient.val()) {
+            e.preventDefault();
+            alert("Please select a patient");
+            $patient.select2("open");
+        }
+    });
+
+    /* 🚫 DO NOT BLOCK SELECT2 INPUT */
+    document.addEventListener("mousedown", e => {
+        if (
+            e.target.tagName === "INPUT" &&
+            !e.target.classList.contains("select2-search__field")
+        ) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
 
 {% endblock %}

@@ -6,21 +6,17 @@
 /* Disable text selection on patient UI */
 .top-banner,
 .top-banner *,
-
 .controls-bar,
 .controls-bar *,
-
 .table-container,
 .table-container *,
-
 .patients-table,
 .patients-table * {
     user-select: none;
     cursor: default;
 }
 
-
-/* Patient row hover (nice polish) */
+/* Patient row hover */
 .patients-table tbody tr:hover {
     background: #f9fafb;
 }
@@ -35,7 +31,7 @@ a,
     user-select: none;
 }
 
-/* Keep search & date inputs usable */
+/* Inputs usable */
 .search-box,
 .date-box,
 input {
@@ -43,12 +39,11 @@ input {
     cursor: text;
 }
 
-/* Images should not be selectable */
+/* Images not selectable */
 .patient-mini {
     user-select: none;
     pointer-events: none;
 }
-
 
 .filter-bar {
     background: white;
@@ -65,18 +60,11 @@ input {
     border: 1px solid #ddd;
 }
 
-.filter-select {
-    padding: 9px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-left: 8px;
-}
-
 /* Reset button */
 .btn-reset {
     padding: 9px 14px;
     border-radius: 8px;
-    background:  #2563eb;
+    background: #ae5b5b;
     color: white;
     text-decoration: none;
     border: 2px solid black;
@@ -84,11 +72,30 @@ input {
     margin-left: 6px;
 }
 
-.btn-reset:hover {
-    background: #2563eb;
+/* ===============================
+   SCROLL FIX (CSS)
+   =============================== */
+
+/* Stop full page scroll */
+html, body {
+    height: 100%;
+    overflow: hidden;
 }
 
+/* Only patient list scrolls */
+.table-container {
+    overflow-y: auto;
+}
+
+/* Sticky table header */
+.patients-table thead th {
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    z-index: 2;
+}
 </style>
+
 <h1 class="page-title">Patients</h1>
 
 <!-- TOP DOCTOR HEADER -->
@@ -107,7 +114,6 @@ input {
 
 <!-- FILTER BAR -->
 <form method="GET" class="controls-bar">
-
     <input type="text"
            name="q"
            class="search-box"
@@ -119,14 +125,13 @@ input {
            class="date-box"
            value="{{ request.args.get('date','') }}"
            onchange="this.form.submit()">
+
     <button class="btn btn-primary" type="submit">Filter</button>
 
-        <!-- RESET -->
-        <a href="{{ url_for('patients_bp.patients') }}"
-           class="btn btn-reset">
-            Reset
-        </a>
-
+    <a href="{{ url_for('patients_bp.patients') }}"
+       class="btn btn-reset">
+        Reset
+    </a>
 </form>
 
 <!-- PATIENT TABLE -->
@@ -148,9 +153,11 @@ input {
             {% for p in patients %}
             <tr>
                 <td>{{ p.patient_no }}</td>
+
                 <td>
                     <div class="patient-info">
-                        <img src="{{ url_for('static', filename='patient_images/' + p.image) }}" class="patient-mini">
+                        <img src="{{ url_for('static', filename='patient_images/' + p.image) }}"
+                             class="patient-mini">
                         <div>
                             <strong>{{ p.name }}</strong>
                             <p class="subtext">{{ p.gender }}, {{ p.age }} yrs</p>
@@ -164,12 +171,8 @@ input {
 
                 <td class="action-buttons">
                     <a href="{{ url_for('patients_bp.patient_profile', id=p.id) }}" class="btn-view">View</a>
-
-                    <a href="{{ url_for('patients_bp.upload_record', id=p.id) }}" 
-                       class="btn-upload">Record</a>
-
-                    <a href="{{ url_for('patients_bp.generate_certificate', id=p.id) }}" 
-                       class="btn-cert">Certificate</a>
+                    <a href="{{ url_for('patients_bp.upload_record', id=p.id) }}" class="btn-upload">Record</a>
+                    <a href="{{ url_for('patients_bp.generate_certificate', id=p.id) }}" class="btn-cert">Certificate</a>
                 </td>
             </tr>
             {% endfor %}
@@ -186,5 +189,33 @@ input {
 </div>
 
 <script src="{{ url_for('static', filename='js/patients/patient_search.js') }}"></script>
+
+<!-- ===============================
+     AUTO HEIGHT CALCULATION (JS)
+     =============================== -->
+<script>
+function adjustPatientTableHeight() {
+    const table = document.querySelector(".table-container");
+    const topBanner = document.querySelector(".top-banner");
+    const controlsBar = document.querySelector(".controls-bar");
+
+    if (!table || !topBanner || !controlsBar) return;
+
+    const usedHeight =
+        topBanner.offsetHeight +
+        controlsBar.offsetHeight +
+        80; // padding + margins buffer
+
+    const availableHeight = window.innerHeight - usedHeight;
+
+    table.style.maxHeight = availableHeight + "px";
+}
+
+// Initial run
+adjustPatientTableHeight();
+
+// Recalculate on resize
+window.addEventListener("resize", adjustPatientTableHeight);
+</script>
 
 {% endblock %}

@@ -1,174 +1,454 @@
 {% extends "base.html" %}
 {% block body %}
+
 <style>
-    /* ===== Appointments page: remove text cursor ===== */
+/* ===============================
+   STOP PAGE SCROLL
+================================ */
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
 
-/* Disable text selection on appointment UI */
+/* ===============================
+   PAGE LAYOUT
+================================ */
+.appt-page {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f4f7fb;
+    padding: 16px 20px;
+    box-sizing: border-box;
+}
+
+/* ===============================
+   STATIC SECTIONS
+================================ */
 .appt-header,
-.appt-header *,
-
 .filter-bar,
-.filter-bar *,
-
-.appt-tabs,
-.appt-tabs *,
-
-.appt-list,
-.appt-list * {
-    user-select: none;
-    cursor: default;
+.appt-tabs {
+    flex-shrink: 0;
 }
 
-/* Appointment cards (important) */
-.appointment-card,
-.appointment-card * {
-    user-select: none;
-    cursor: default;
+/* ===============================
+   HEADER
+================================ */
+.appt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 12px;
 }
 
-/* Enable pointer for clickable items */
-a,
-button,
-.btn,
-.tab {
+.appt-header h2 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* ===============================
+   BUTTONS
+================================ */
+.btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-decoration: none;
     cursor: pointer;
-    user-select: none;
+    display: inline-flex;
+    align-items: center;
 }
 
-/* Keep form inputs usable */
-.search-box,
-.date-box,
-input,
-select {
-    cursor: text;
-    user-select: text;
-}
-/* Reset button */
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-green { background: #16a34a; color: #fff; }
 .btn-reset {
-    padding: 7px 14px;
-    border-radius: 7px;
-    background: #2563eb;
+    background: #ae5b5b;
+    border: 2px solid #0f1217;
+    color: white;
+}
+
+/* ===============================
+   FILTER
+================================ */
+.filter-bar {
+    background: #fff;
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin: 14px 0;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+.filter-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.search-box,
+.date-box {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+}
+
+/* ===============================
+   TABS
+================================ */
+.appt-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.tab {
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #e5e7eb;
     color: #374151;
     text-decoration: none;
-    border: 2px solid black;
+}
+
+.tab.active {
+    background: #2563eb;
+    color: #fff;
+}
+
+/* ===============================
+   SCROLL AREA (ONLY LIST)
+================================ */
+.table-scroll {
+    flex: 1;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+    overflow-y: auto;
+}
+
+/* ===============================
+   TABLE
+================================ */
+.appointments-table {
+    width: 100%;
+    border-collapse: collapse;
+    user-select: none;
+}
+
+/* sticky header */
+.appointments-table thead th {
+    position: sticky;
+    top: 0;
+    background: #f9fafb;
+    z-index: 5;
+    padding: 12px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+/* table cells */
+.appointments-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+/* ===============================
+   KEYBOARD ACTIVE ROW
+================================ */
+.appointments-table tbody tr {
+    outline: none;
+}
+
+.appointments-table tbody tr.kb-active {
+    background: #eef3ff;
+    box-shadow: inset 4px 0 0 #2563eb;
+}
+
+.appointments-table tbody tr.kb-active td {
     font-weight: 500;
 }
 
-.btn-reset:hover {
-    background: #2563eb;
+/* ===============================
+   PATIENT CELL
+================================ */
+.patient-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
+.patient-mini {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+}
 
+.subtext {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* ===============================
+   ADDRESS
+================================ */
+.address-cell {
+    font-size: 13px;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===============================
+   VISIT BADGE
+================================ */
+.visit-badge {
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.visit-new { background: #ecfeff; color: #0369a1; }
+.visit-followup { background: #fef3c7; color: #92400e; }
+.visit-walkin { background: #ecfdf5; color: #047857; }
+
+/* ===============================
+   DROPDOWN
+================================ */
+.dropdown {
+    position: relative;
+}
+
+.menu-btn {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 26px;
+    background: #fff;
+    border-radius: 10px;
+    min-width: 180px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    z-index: 10;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 10px 14px;
+    font-size: 14px;
+    text-decoration: none;
+    color: #111827;
+}
+
+.dropdown-menu a:hover {
+    background: #f1f5f9;
+}
+
+.dropdown-menu .danger {
+    color: #b91c1c;
+}
+
+/* ===============================
+   EMPTY
+================================ */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+}
 </style>
-<!-- HEADER -->
-<div class="appt-header">
-    <div class="left">
-        <h2>Appointments</h2>
-        <p class="subtitle">Welcome Dr. {{ session['user_email'] }} — manage your schedule</p>
+
+<div class="appt-page">
+
+    <!-- HEADER -->
+    <div class="appt-header">
+        <div>
+            <h2>Appointments</h2>
+            <p class="subtitle">Welcome Dr. {{ session['user_email'] }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('appointments_bp.add_appointment') }}" class="btn btn-primary">
+                + Add Appointment
+            </a>
+            <a href="{{ url_for('appointments_bp.walkin') }}" class="btn btn-green">
+                Walk-In Consultation
+            </a>
+        </div>
     </div>
 
-    <div class="right">
-        <a href="{{ url_for('appointments_bp.add_appointment') }}" class="btn btn-primary">
-            + Add Appointment
-        </a>
+    <!-- FILTER -->
+    <div class="filter-bar">
+        <form method="GET" class="filter-form">
+            <input type="hidden" name="tab" value="{{ tab }}">
+            <input type="text" name="search" value="{{ search }}" class="search-box" placeholder="Search patient">
+            <input type="date" name="date" value="{{ date_filter }}" class="date-box">
+            <button class="btn btn-primary">Filter</button>
+            <a href="{{ url_for('appointments_bp.appointments') }}" class="btn btn-reset">Reset</a>
+        </form>
+    </div>
 
-        <a href="{{ url_for('appointments_bp.walkin') }}" class="btn btn-green">
-            Start Walk-In Consultation
-        </a>
+    <!-- TABS -->
+    <div class="appt-tabs">
+        <a class="tab {{ 'active' if tab=='queue' else '' }}" href="?tab=queue">Queue</a>
+        <a class="tab {{ 'active' if tab=='inprogress' else '' }}" href="?tab=inprogress">In Progress</a>
+        <a class="tab {{ 'active' if tab=='completed' else '' }}" href="?tab=completed">Completed</a>
+        <a class="tab {{ 'active' if tab=='cancelled' else '' }}" href="?tab=cancelled">Cancelled</a>
+    </div>
+
+    <!-- SCROLLABLE LIST -->
+    <div class="table-scroll">
+        <table class="appointments-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Address</th>
+                    <th>Date & Time</th>
+                    <th>Visit</th>
+                    <th style="text-align:center;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            {% for a in (queue if tab=='queue' else inprogress if tab=='inprogress' else completed if tab=='completed' else cancelled) %}
+                <tr
+                    tabindex="0"
+                    data-start="{{ url_for('appointments_bp.start', id=a.id) }}"
+                    data-view="{{ url_for('patients_bp.patient_profile', id=a.patient.id) }}"
+                    data-cancel="{{ url_for('appointments_bp.cancel', id=a.id) }}"
+                >
+                    <td>{{ a.patient.patient_no }}</td>
+                    <td>
+                        <div class="patient-info">
+                            <img src="{{ url_for('static', filename='patient_images/' + a.patient.image) }}" class="patient-mini">
+                            <div>
+                                <strong>{{ a.patient.name }}</strong>
+                                <p class="subtext">{{ a.patient.gender }}, {{ a.patient.age }} yrs</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="address-cell">
+                        {{ a.patient.city }}{% if a.patient.state %}, {{ a.patient.state }}{% endif %}
+                    </td>
+                    <td>
+                        {{ a.date }}<br>{{ a.time.strftime("%I:%M %p") }}
+                    </td>
+                    <td>
+                        <span class="visit-badge
+                            {% if a.type=='New' %}visit-new
+                            {% elif a.type=='Follow-up' %}visit-followup
+                            {% elif a.type=='Walk-in' %}visit-walkin
+                            {% endif %}">
+                            {{ a.type }}
+                        </span>
+                    </td>
+                    <td style="text-align:center;">
+                        <div class="dropdown">
+                            <button class="menu-btn">⋮</button>
+                            <div class="dropdown-menu">
+                                <a href="{{ url_for('patients_bp.patient_profile', id=a.patient.id) }}">View Patient</a>
+                                <a href="{{ url_for('appointments_bp.start', id=a.id) }}">Start Consultation</a>
+                                <a href="{{ url_for('appointments_bp.cancel', id=a.id) }}" class="danger">Cancel Appointment</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" class="empty-state">No appointments found</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const rows = Array.from(document.querySelectorAll(".appointments-table tbody tr"));
+    if (!rows.length) return;
 
-<!-- FILTER BAR -->
-<div class="filter-bar">
+    let index = 0;
 
-    <form method="GET" class="filter-form" action="{{ url_for('appointments_bp.appointments') }}">
+    function activate(i) {
+        rows.forEach(r => r.classList.remove("kb-active"));
+        const row = rows[i];
+        row.classList.add("kb-active");
 
-        <input type="hidden" name="tab" value="{{ tab }}">
+        const container = document.querySelector(".table-scroll");
 
-        <input type="text" 
-               name="search" 
-               value="{{ search }}" 
-               class="search-box"
-               placeholder="Search by patient name…">
+        const rowTop = row.offsetTop;
+        const rowBottom = rowTop + row.offsetHeight;
 
-        <input type="date" 
-               name="date" 
-               value="{{ date_filter }}"
-               class="date-box">
+        const viewTop = container.scrollTop;
+        const viewBottom = viewTop + container.clientHeight;
 
-        <button class="btn btn-primary" type="submit">Filter</button>
-
-        <!-- RESET -->
-        <a href="{{ url_for('appointments_bp.appointments') }}" 
-           class="btn btn-reset">
-            Reset
-        </a>
-
-    </form>
-
-</div>
+        if (rowTop < viewTop) {
+            container.scrollTop = rowTop;
+        } 
+        else if (rowBottom > viewBottom) {
+            container.scrollTop = rowBottom - container.clientHeight;
+        }
+    }
 
 
+    activate(index);
 
+    document.addEventListener("keydown", e => {
+        const tag = document.activeElement.tagName.toLowerCase();
+        if (["input", "select", "textarea"].includes(tag)) return;
 
-<!-- TABS -->
-<div class="appt-tabs">
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (index < rows.length - 1) index++;
+            activate(index);
+        }
 
-    <a href="?tab=queue&search={{ search }}&date={{ date_filter }}" 
-       class="tab {{ 'active' if tab=='queue' else '' }}">Queue</a>
+        if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (index > 0) index--;
+            activate(index);
+        }
 
-    <a href="?tab=inprogress&search={{ search }}&date={{ date_filter }}" 
-       class="tab {{ 'active' if tab=='inprogress' else '' }}">In Progress</a>
+        if (e.key === "Enter") window.location.href = rows[index].dataset.start;
+        if (e.key.toLowerCase() === "v") window.location.href = rows[index].dataset.view;
+        if (e.key.toLowerCase() === "c" && confirm("Cancel this appointment?"))
+            window.location.href = rows[index].dataset.cancel;
 
-    <a href="?tab=completed&search={{ search }}&date={{ date_filter }}" 
-       class="tab {{ 'active' if tab=='completed' else '' }}">Completed</a>
+        if (e.key === "Escape") rows.forEach(r => r.classList.remove("kb-active"));
+    });
+});
+</script>
 
-    <a href="?tab=cancelled&search={{ search }}&date={{ date_filter }}" 
-       class="tab {{ 'active' if tab=='cancelled' else '' }}">Cancelled</a>
-
-</div>
-
-
-
-
-<!-- APPOINTMENT LIST -->
-<div class="appt-list">
-{% if tab == 'queue' %}
-    {% for a in queue %}
-        {% include 'components/appointment_card.html' %}
-    {% else %}
-        <p class="empty-state">No appointments in queue</p>
-    {% endfor %}
-{% endif %}
-
-{% if tab == 'inprogress' %}
-    {% for a in inprogress %}
-        {% include 'components/appointment_card.html' %}
-    {% else %}
-        <p class="empty-state">No consultations in progress</p>
-    {% endfor %}
-{% endif %}
-
-{% if tab == 'completed' %}
-    {% for a in completed %}
-        {% include 'components/appointment_card.html' %}
-    {% else %}
-        <p class="empty-state">No completed appointments</p>
-    {% endfor %}
-{% endif %}
-
-{% if tab == 'cancelled' %}
-    {% for a in cancelled %}
-        {% include 'components/appointment_card.html' %}
-    {% else %}
-        <p class="empty-state">No cancelled appointments</p>
-    {% endfor %}
-{% endif %}
-
-</div>
-<script src="{{ url_for('static', filename='js/appointments/date_filter.js') }}"></script>
-<script src="{{ url_for('static', filename='js/appointments/appointment_search.js') }}"></script>
-<script src="{{ url_for('static', filename='js/appointments/appointments.js') }}"></script>
-<script src="{{ url_for('static', filename='js/appointments/add_appointment.js') }}"></script>
 {% endblock %}
+
+
+<!-- 
+
+↑ / ↓  → Navigate appointments
+Enter → Start consultation
+V     → View patient
+C     → Cancel appointment
+Esc   → Clear selection
+
+-->
