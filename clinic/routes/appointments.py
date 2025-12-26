@@ -11,6 +11,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 from clinic.extensions import csrf
+from sqlalchemy import or_
 
 appointments_bp = Blueprint("appointments_bp", __name__)
 
@@ -44,7 +45,12 @@ def appointments():
 
     tab = request.args.get("tab", "queue")
     search = request.args.get("search", "").strip()
-    date_filter = request.args.get("date", "").strip()
+    today = datetime.now().date()
+    date_filter = request.args.get("date")
+
+    # default = today
+    if not date_filter:
+        date_filter = today.strftime("%Y-%m-%d")
 
     base_query = (
     Appointment.query
@@ -58,7 +64,13 @@ def appointments():
 
 
     if search:
-        base_query = base_query.filter(Patient.name.ilike(f"%{search}%"))
+        base_query = base_query.filter(
+            or_(
+                Patient.name.ilike(f"%{search}%"),
+                Patient.phone.ilike(f"%{search}%")
+            )
+        )
+
 
     if date_filter:
         date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()

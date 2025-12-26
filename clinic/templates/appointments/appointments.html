@@ -322,7 +322,7 @@ html, body {
         <table class="appointments-table">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>#</th>
                     <th>Patient</th>
                     <th>Address</th>
                     <th>Date & Time</th>
@@ -339,7 +339,7 @@ html, body {
                     data-view="{{ url_for('patients_bp.patient_profile', id=a.patient.id) }}"
                     data-cancel="{{ url_for('appointments_bp.cancel', id=a.id) }}"
                 >
-                    <td>{{ a.patient.patient_no }}</td>
+                    <td>{{ loop.index }}</td>
                     <td>
                         <div class="patient-info">
                             <img src="{{ url_for('static', filename='patient_images/' + a.patient.image) }}" class="patient-mini">
@@ -385,60 +385,146 @@ html, body {
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const rows = Array.from(document.querySelectorAll(".appointments-table tbody tr"));
-    if (!rows.length) return;
 
-    let index = 0;
+    /* ===============================
+       ELEMENTS
+    =============================== */
+    const searchInput = document.querySelector(".search-box");
+    const dateInput   = document.querySelector(".date-box");
+    const form        = document.querySelector(".filter-form");
+    const container   = document.querySelector(".table-scroll");
+    const tableBody   = document.querySelector(".appointments-table tbody");
 
+    if (!tableBody || !container) return;
+
+    let allRows = Array.from(tableBody.querySelectorAll("tr"));
+    let rows = [...allRows];
+    let index = -1;
+    let tableFocused = false;
+
+    /* ===============================
+       TABLE FOCUS CONTROL
+    =============================== */
+    container.addEventListener("click", () => {
+        tableFocused = true;
+        if (index === -1 && rows.length) {
+            activate(0);
+        }
+    });
+
+    document.addEventListener("click", e => {
+        if (!container.contains(e.target)) {
+            tableFocused = false;
+            clearActive();
+        }
+    });
+
+    /* ===============================
+       ROW HIGHLIGHT + SCROLL
+    =============================== */
     function activate(i) {
-        rows.forEach(r => r.classList.remove("kb-active"));
-        const row = rows[i];
-        row.classList.add("kb-active");
+        clearActive();
+        if (!rows.length) return;
 
-        const container = document.querySelector(".table-scroll");
+        index = Math.max(0, Math.min(i, rows.length - 1));
+        const row = rows[index];
+        row.classList.add("kb-active");
 
         const rowTop = row.offsetTop;
         const rowBottom = rowTop + row.offsetHeight;
-
         const viewTop = container.scrollTop;
         const viewBottom = viewTop + container.clientHeight;
 
         if (rowTop < viewTop) {
             container.scrollTop = rowTop;
-        } 
-        else if (rowBottom > viewBottom) {
+        } else if (rowBottom > viewBottom) {
             container.scrollTop = rowBottom - container.clientHeight;
         }
     }
 
+    function clearActive() {
+        rows.forEach(r => r.classList.remove("kb-active"));
+        index = -1;
+    }
 
-    activate(index);
+    /* ===============================
+       SEARCH FILTER (FRONTEND ONLY)
+    =============================== */
+    function applyFilter() {
+        const query = searchInput.value.toLowerCase().trim();
+        rows = [];
 
+        allRows.forEach(row => {
+            const show = row.innerText.toLowerCase().includes(query);
+            row.style.display = show ? "" : "none";
+            if (show) rows.push(row);
+        });
+
+        clearActive();
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener("input", applyFilter);
+    }
+
+    /* ===============================
+       DATE CHANGE (BACKEND RELOAD)
+    =============================== */
+    if (dateInput && form) {
+        dateInput.addEventListener("change", () => {
+            form.submit();
+        });
+    }
+
+    /* ===============================
+       KEYBOARD NAVIGATION (SAFE)
+    =============================== */
     document.addEventListener("keydown", e => {
-        const tag = document.activeElement.tagName.toLowerCase();
-        if (["input", "select", "textarea"].includes(tag)) return;
+
+        // do nothing if user is typing
+        if (document.activeElement !== document.body) return;
+
+        if (!tableFocused || !rows.length) return;
 
         if (e.key === "ArrowDown") {
             e.preventDefault();
-            if (index < rows.length - 1) index++;
-            activate(index);
+            activate(index === -1 ? 0 : index + 1);
         }
 
         if (e.key === "ArrowUp") {
             e.preventDefault();
-            if (index > 0) index--;
-            activate(index);
+            activate(index === -1 ? 0 : index - 1);
         }
 
-        if (e.key === "Enter") window.location.href = rows[index].dataset.start;
-        if (e.key.toLowerCase() === "v") window.location.href = rows[index].dataset.view;
-        if (e.key.toLowerCase() === "c" && confirm("Cancel this appointment?"))
-            window.location.href = rows[index].dataset.cancel;
+        if (e.key === "Escape") {
+            clearActive();
+        }
 
-        if (e.key === "Escape") rows.forEach(r => r.classList.remove("kb-active"));
+        if (index === -1) return;
+
+        const current = rows[index];
+
+        if (e.key === "Enter" && current.dataset.start) {
+            window.location.href = current.dataset.start;
+        }
+
+        if (e.key.toLowerCase() === "v" && current.dataset.view) {
+            window.location.href = current.dataset.view;
+        }
+
+        if (
+            e.key.toLowerCase() === "c" &&
+            current.dataset.cancel &&
+            confirm("Cancel this appointment?")
+        ) {
+            window.location.href = current.dataset.cancel;
+        }
     });
+
 });
 </script>
+
+
 
 {% endblock %}
 
