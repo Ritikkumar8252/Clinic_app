@@ -76,24 +76,79 @@ input {
    SCROLL FIX (CSS)
    =============================== */
 
-/* Stop full page scroll */
-html, body {
-    height: 100%;
-    overflow: hidden;
+/* ===============================
+   FIXED HEADER (NO OVERLAP)
+   =============================== */
+
+.patients-fixed-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #f4f6f9;
+    padding-bottom: 14px;
+    margin-bottom: 8px;
 }
+
 
 /* Only patient list scrolls */
 .table-container {
+    background: white;
+    border-radius: 12px;
     overflow-y: auto;
+    max-height: calc(100vh - 320px);
+    padding: 8px 0 12px 0;
 }
 
+
+
 /* Sticky table header */
+
+
+
+
+.table-container {
+    scroll-behavior: smooth;
+}
+.patients-table {
+    margin-bottom: 12px;
+}
+
+.patients-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+/* ===============================
+   KEYBOARD NAVIGATION
+   =============================== */
+
+.patients-table tbody tr.kb-active {
+    background: #eaf2ff !important;
+    outline: 2px solid #2563eb;
+    outline-offset: -2px;
+}
+
+.patients-table tbody tr.kb-active td {
+    background: transparent;
+}
+
+/* ===============================
+   STICKY TABLE HEADER (NO OVERLAP)
+================================ */
+
 .patients-table thead th {
     position: sticky;
     top: 0;
+    z-index: 10;
     background: #ffffff;
-    z-index: 2;
+
+    height: 56px;          /* IMPORTANT */
+    padding: 12px 14px;
+    box-sizing: border-box;
 }
+.table-container.scrolled thead th {
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
 </style>
 
 <h1 class="page-title">Patients</h1>
@@ -190,32 +245,106 @@ html, body {
 
 <script src="{{ url_for('static', filename='js/patients/patient_search.js') }}"></script>
 
-<!-- ===============================
-     AUTO HEIGHT CALCULATION (JS)
-     =============================== -->
 <script>
-function adjustPatientTableHeight() {
-    const table = document.querySelector(".table-container");
-    const topBanner = document.querySelector(".top-banner");
-    const controlsBar = document.querySelector(".controls-bar");
+document.addEventListener("DOMContentLoaded", () => {
 
-    if (!table || !topBanner || !controlsBar) return;
+    const tableContainer = document.querySelector(".table-container");
+    const tbody = document.querySelector("#patientTable");
 
-    const usedHeight =
-        topBanner.offsetHeight +
-        controlsBar.offsetHeight +
-        80; // padding + margins buffer
+    if (!tableContainer || !tbody) return;
 
-    const availableHeight = window.innerHeight - usedHeight;
+    let rows = Array.from(tbody.querySelectorAll("tr"));
+    let index = -1;
+    let keyboardActive = false;
 
-    table.style.maxHeight = availableHeight + "px";
-}
+    // ---------- HELPERS ----------
+    function clearActive() {
+        rows.forEach(r => r.classList.remove("kb-active"));
+    }
 
-// Initial run
-adjustPatientTableHeight();
+    function activate(i) {
+        if (!rows.length) return;
 
-// Recalculate on resize
-window.addEventListener("resize", adjustPatientTableHeight);
+        index = Math.max(0, Math.min(i, rows.length - 1));
+        clearActive();
+
+        const row = rows[index];
+        row.classList.add("kb-active");
+
+        // ensure row visible
+        row.scrollIntoView({
+            block: "nearest",
+            behavior: "smooth"
+        });
+    }
+
+    // ---------- MOUSE SUPPORT ----------
+    rows.forEach((row, i) => {
+        row.addEventListener("click", () => {
+            keyboardActive = true;
+            activate(i);
+        });
+    });
+
+    // ---------- KEYBOARD NAV ----------
+    document.addEventListener("keydown", e => {
+
+        // ignore typing inside inputs
+        if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+            return;
+        }
+
+        if (!rows.length) return;
+
+        if (!keyboardActive) {
+            keyboardActive = true;
+            activate(0);
+            return;
+        }
+
+        switch (e.key) {
+
+            case "ArrowDown":
+                e.preventDefault();
+                activate(index + 1);
+                break;
+
+            case "ArrowUp":
+                e.preventDefault();
+                activate(index - 1);
+                break;
+
+            case "Enter":
+                e.preventDefault();
+                const link = rows[index].querySelector(".btn-view");
+                if (link) {
+                    window.location.href = link.href;
+                }
+                break;
+        }
+    });
+
+    // ---------- UPDATE ROWS AFTER SEARCH ----------
+    const observer = new MutationObserver(() => {
+        rows = Array.from(tbody.querySelectorAll("tr"));
+        index = -1;
+        keyboardActive = false;
+        clearActive();
+    });
+
+    observer.observe(tbody, { childList: true });
+});
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const c = document.querySelector(".table-container");
+    if (!c) return;
+
+    c.addEventListener("scroll", () => {
+        c.classList.toggle("scrolled", c.scrollTop > 0);
+    });
+});
+</script>
+
 
 {% endblock %}

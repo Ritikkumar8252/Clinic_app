@@ -421,13 +421,12 @@ select {
 (() => {
 
     /* ===============================
-       AUTO SECTION LIST (SCROLL)
+       COLLECT SECTIONS (CONTENT ONLY)
     ============================== */
     const sections = Array.from(
         document.querySelectorAll(".profile-card, .section-box")
     );
 
-    let index = 0;
     let lastKeyTime = 0;
 
     function isTyping() {
@@ -438,18 +437,43 @@ select {
              el.isContentEditable);
     }
 
+    /* ===============================
+       GET CURRENT SECTION INDEX
+    ============================== */
+    function getCurrentIndex() {
+        let closestIndex = -1;
+        let closestOffset = Infinity;
+
+        sections.forEach((section, i) => {
+            const rect = section.getBoundingClientRect();
+            const offset = Math.abs(rect.top);
+
+            if (offset < closestOffset) {
+                closestOffset = offset;
+                closestIndex = i;
+            }
+        });
+
+        return closestIndex;
+    }
+
     function scrollToSection(i) {
         if (!sections[i]) return;
-        index = i;
         sections[i].scrollIntoView({
             behavior: "smooth",
             block: "start"
         });
     }
 
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    }
+
     /* ===============================
-       FIND ADD APPOINTMENT BUTTON
-       (NO HTML CHANGE REQUIRED)
+       ADD APPOINTMENT
     ============================== */
     function goToAddAppointment() {
         const btn = document.querySelector(
@@ -460,6 +484,9 @@ select {
         }
     }
 
+    /* ===============================
+       KEYBOARD HANDLER
+    ============================== */
     document.addEventListener("keydown", (e) => {
 
         const now = Date.now();
@@ -469,40 +496,45 @@ select {
         if (isTyping()) return;
 
         const key = e.key.toLowerCase();
+        const currentIndex = getCurrentIndex();
 
-        /* ===============================
-           N → NEW APPOINTMENT
-        ============================== */
+        /* N → New Appointment */
         if (!e.ctrlKey && !e.metaKey && key === "n") {
             e.preventDefault();
             goToAddAppointment();
             return;
         }
 
-        /* ===============================
-           P → PRINT (NO CTRL)
-        ============================== */
+        /* P → Print */
         if (!e.ctrlKey && !e.metaKey && key === "p") {
             e.preventDefault();
             window.print();
             return;
         }
 
-        /* ===============================
-           ↓ NEXT SECTION
-        ============================== */
+        /* ↓ Next Section */
         if (e.key === "ArrowDown") {
             e.preventDefault();
-            scrollToSection(Math.min(index + 1, sections.length - 1));
+
+            if (window.scrollY === 0) {
+                scrollToSection(0);
+            } else {
+                scrollToSection(
+                    Math.min(currentIndex + 1, sections.length - 1)
+                );
+            }
             return;
         }
 
-        /* ===============================
-           ↑ PREVIOUS SECTION
-        ============================== */
+        /* ↑ Previous Section OR FULL TOP */
         if (e.key === "ArrowUp") {
             e.preventDefault();
-            scrollToSection(Math.max(index - 1, 0));
+
+            if (currentIndex <= 0) {
+                scrollToTop(); // 🔥 THIS FIXES YOUR ISSUE
+            } else {
+                scrollToSection(currentIndex - 1);
+            }
             return;
         }
     });

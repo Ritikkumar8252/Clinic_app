@@ -3,32 +3,33 @@
 
 <style>
 /* ===============================
-   STOP PAGE SCROLL
+   APPOINTMENTS – PATIENT STYLE
 ================================ */
-html, body {
-    height: 100%;
-    overflow: hidden;
-}
 
-/* ===============================
-   PAGE LAYOUT
-================================ */
-.appt-page {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #f4f7fb;
-    padding: 16px 20px;
-    box-sizing: border-box;
-}
-
-/* ===============================
-   STATIC SECTIONS
-================================ */
+/* Disable text selection */
 .appt-header,
+.appt-header *,
 .filter-bar,
-.appt-tabs {
-    flex-shrink: 0;
+.filter-bar *,
+.appt-tabs,
+.appt-tabs *,
+.table-scroll,
+.table-scroll *,
+.appointments-table,
+.appointments-table * {
+    user-select: none;
+    cursor: default;
+}
+
+/* ===============================
+   FIXED HEADER (STICKY)
+================================ */
+.appt-fixed-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #f4f7fb;
+    padding-bottom: 14px;
 }
 
 /* ===============================
@@ -61,8 +62,6 @@ html, body {
     font-size: 14px;
     text-decoration: none;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
 }
 
 .btn-primary { background: #2563eb; color: #fff; }
@@ -95,6 +94,8 @@ html, body {
     padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
+    user-select: text;
+    cursor: text;
 }
 
 /* ===============================
@@ -120,14 +121,14 @@ html, body {
 }
 
 /* ===============================
-   SCROLL AREA (ONLY LIST)
+   SCROLLING TABLE (KEY FIX)
 ================================ */
 .table-scroll {
-    flex: 1;
     background: #fff;
     border-radius: 14px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.05);
     overflow-y: auto;
+    max-height: calc(100vh - 360px); /* SAME IDEA AS PATIENTS */
 }
 
 /* ===============================
@@ -136,10 +137,9 @@ html, body {
 .appointments-table {
     width: 100%;
     border-collapse: collapse;
-    user-select: none;
 }
 
-/* sticky header */
+/* sticky table header */
 .appointments-table thead th {
     position: sticky;
     top: 0;
@@ -158,116 +158,14 @@ html, body {
     padding: 12px 14px;
     border-bottom: 1px solid #f1f5f9;
     font-size: 14px;
-    vertical-align: middle;
 }
 
 /* ===============================
-   KEYBOARD ACTIVE ROW
+   ACTIVE ROW
 ================================ */
-.appointments-table tbody tr {
-    outline: none;
-}
-
 .appointments-table tbody tr.kb-active {
     background: #eef3ff;
     box-shadow: inset 4px 0 0 #2563eb;
-}
-
-.appointments-table tbody tr.kb-active td {
-    font-weight: 500;
-}
-
-/* ===============================
-   PATIENT CELL
-================================ */
-.patient-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.patient-mini {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid #e5e7eb;
-}
-
-.subtext {
-    font-size: 12px;
-    color: #6b7280;
-}
-
-/* ===============================
-   ADDRESS
-================================ */
-.address-cell {
-    font-size: 13px;
-    color: #6b7280;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ===============================
-   VISIT BADGE
-================================ */
-.visit-badge {
-    padding: 5px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.visit-new { background: #ecfeff; color: #0369a1; }
-.visit-followup { background: #fef3c7; color: #92400e; }
-.visit-walkin { background: #ecfdf5; color: #047857; }
-
-/* ===============================
-   DROPDOWN
-================================ */
-.dropdown {
-    position: relative;
-}
-
-.menu-btn {
-    background: transparent;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 26px;
-    background: #fff;
-    border-radius: 10px;
-    min-width: 180px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-    z-index: 10;
-}
-
-.dropdown:hover .dropdown-menu {
-    display: block;
-}
-
-.dropdown-menu a {
-    display: block;
-    padding: 10px 14px;
-    font-size: 14px;
-    text-decoration: none;
-    color: #111827;
-}
-
-.dropdown-menu a:hover {
-    background: #f1f5f9;
-}
-
-.dropdown-menu .danger {
-    color: #b91c1c;
 }
 
 /* ===============================
@@ -386,9 +284,6 @@ html, body {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* ===============================
-       ELEMENTS
-    =============================== */
     const searchInput = document.querySelector(".search-box");
     const dateInput   = document.querySelector(".date-box");
     const form        = document.querySelector(".filter-form");
@@ -403,35 +298,44 @@ document.addEventListener("DOMContentLoaded", () => {
     let tableFocused = false;
 
     /* ===============================
-       TABLE FOCUS CONTROL
+       RESET VISIBILITY
     =============================== */
-    container.addEventListener("click", () => {
+    function resetTableVisibility() {
+        allRows.forEach(r => r.style.display = "");
+        rows = [...allRows];
+        clearActive();
+    }
+
+    resetTableVisibility();
+
+    /* ===============================
+       FOCUS HANDLING (IMPORTANT)
+    =============================== */
+    container.addEventListener("mouseenter", () => {
         tableFocused = true;
-        if (index === -1 && rows.length) {
-            activate(0);
-        }
     });
 
-    document.addEventListener("click", e => {
-        if (!container.contains(e.target)) {
-            tableFocused = false;
-            clearActive();
-        }
+    container.addEventListener("mouseleave", () => {
+        tableFocused = false;
+        clearActive();
     });
 
     /* ===============================
-       ROW HIGHLIGHT + SCROLL
+       ROW SELECTION + SMOOTH SCROLL
     =============================== */
     function activate(i) {
-        clearActive();
         if (!rows.length) return;
 
+        clearActive();
         index = Math.max(0, Math.min(i, rows.length - 1));
+
         const row = rows[index];
         row.classList.add("kb-active");
 
+        // ----- FIX: scroll INSIDE container only -----
         const rowTop = row.offsetTop;
         const rowBottom = rowTop + row.offsetHeight;
+
         const viewTop = container.scrollTop;
         const viewBottom = viewTop + container.clientHeight;
 
@@ -442,87 +346,84 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+
     function clearActive() {
         rows.forEach(r => r.classList.remove("kb-active"));
         index = -1;
     }
 
     /* ===============================
-       SEARCH FILTER (FRONTEND ONLY)
+       SEARCH FILTER
     =============================== */
     function applyFilter() {
-        const query = searchInput.value.toLowerCase().trim();
+        resetTableVisibility();
+
+        const q = searchInput.value.toLowerCase().trim();
         rows = [];
 
         allRows.forEach(row => {
-            const show = row.innerText.toLowerCase().includes(query);
+            const show = row.innerText.toLowerCase().includes(q);
             row.style.display = show ? "" : "none";
             if (show) rows.push(row);
         });
-
-        clearActive();
     }
 
-    if (searchInput) {
-        searchInput.addEventListener("input", applyFilter);
-    }
+    searchInput?.addEventListener("input", applyFilter);
 
     /* ===============================
-       DATE CHANGE (BACKEND RELOAD)
+       DATE CHANGE (BACKEND)
     =============================== */
-    if (dateInput && form) {
-        dateInput.addEventListener("change", () => {
-            form.submit();
-        });
-    }
+    dateInput?.addEventListener("change", () => {
+        resetTableVisibility();
+        form.submit();
+    });
 
     /* ===============================
-       KEYBOARD NAVIGATION (SAFE)
+       TAB CLICK FIX
+    =============================== */
+    document.addEventListener("click", e => {
+        if (e.target.closest(".tab")) {
+            resetTableVisibility();
+        }
+    });
+
+    /* ===============================
+       KEYBOARD CONTROLS (PERFECT)
     =============================== */
     document.addEventListener("keydown", e => {
 
-        // do nothing if user is typing
-        if (document.activeElement !== document.body) return;
+        // Don't interfere with typing
+        if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+        if (!rows.length) return;
 
-        if (!tableFocused || !rows.length) return;
+        switch (e.key) {
 
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            activate(index === -1 ? 0 : index + 1);
-        }
+            case "ArrowDown":
+                e.preventDefault();
+                activate(index === -1 ? 0 : index + 1);
+                break;
 
-        if (e.key === "ArrowUp") {
-            e.preventDefault();
-            activate(index === -1 ? 0 : index - 1);
-        }
+            case "ArrowUp":
+                e.preventDefault();
+                activate(index === -1 ? 0 : index - 1);
+                break;
 
-        if (e.key === "Escape") {
-            clearActive();
-        }
+            case "Enter":
+                if (index !== -1 && rows[index].dataset.start) {
+                    window.location.href = rows[index].dataset.start;
+                }
+                break;
 
-        if (index === -1) return;
-
-        const current = rows[index];
-
-        if (e.key === "Enter" && current.dataset.start) {
-            window.location.href = current.dataset.start;
-        }
-
-        if (e.key.toLowerCase() === "v" && current.dataset.view) {
-            window.location.href = current.dataset.view;
-        }
-
-        if (
-            e.key.toLowerCase() === "c" &&
-            current.dataset.cancel &&
-            confirm("Cancel this appointment?")
-        ) {
-            window.location.href = current.dataset.cancel;
+            case "Escape":
+                clearActive();
+                break;
         }
     });
 
 });
 </script>
+
+
 
 
 
