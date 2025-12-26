@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 {% block body %}
-<style>/* Disable text selection on patient profile content */
+
+<style>
+/* ===============================
+   GLOBAL SAFETY
+================================ */
 .profile-card,
 .profile-card *,
-
 .section-box,
 .section-box *,
-
 .record-item,
 .record-item *,
-
 .styled-table,
 .styled-table * {
     user-select: none;
     cursor: default;
 }
 
-/* Re-enable pointer cursor for clickable elements */
 a,
 button,
 .btn,
@@ -25,18 +25,189 @@ button,
     user-select: none;
 }
 
-/* Keep inputs normal (future safe) */
 input,
 textarea,
 select {
     user-select: text;
     cursor: text;
-}</style>
-<!-- TOP YELLOW BAR -->
+}
+
+/* ===============================
+   MAIN LAYOUT
+================================ */
+.patient-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 26px;
+}
+
+/* ===============================
+   HORIZONTAL PROFILE CARD (FINAL)
+================================ */
+.profile-card {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 32px;
+    align-items: flex-start;
+
+    width: 100%;
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 32px 36px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+}
+
+/* Profile image */
+.profile-photo {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #e0e7ff;
+}
+
+/* Right column */
+.profile-card > div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+/* Patient name */
+.profile-card h2 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.2;
+}
+
+/* Status badge */
+.tag {
+    align-self: flex-start;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Details grid */
+.profile-details {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+    gap: 12px 28px;
+    font-size: 15px;
+}
+
+.profile-details p {
+    margin: 0;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.profile-details strong {
+    color: #111827;
+    font-weight: 600;
+}
+
+/* Address section */
+.profile-card > .profile-details {
+    grid-column: 2;
+    margin-top: 18px;
+}
+
+.profile-card > .profile-details p:first-child {
+    padding-top: 14px;
+    border-top: 1px dashed #e5e7eb;
+}
+
+/* ===============================
+   SECTION BOXES
+================================ */
+.section-box {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 22px 26px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+}
+
+.section-title {
+    font-size: 17px;
+    margin-bottom: 16px;
+}
+
+/* ===============================
+   PRESCRIPTION HISTORY
+================================ */
+.section-box:has(.prescription-list),
+.section-box:has(.empty-state) {
+    padding: 32px 36px;
+    min-height: 240px;
+}
+
+.prescription-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.prescription-item {
+    background: #fafafa;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    border-radius: 10px;
+}
+
+.prescription-date {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.prescription-text {
+    font-size: 15px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+/* ===============================
+   MEDICAL RECORDS
+================================ */
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.record-info {
+    max-width: 75%;
+}
+
+/* ===============================
+   EMPTY STATE
+================================ */
+.empty-state {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 14px;
+}
+</style>
+
+<!-- TOP BAR -->
 <div class="top-banner">
     <div class="banner-info">
         <h2>{{ patient.name }}</h2>
-        <p>MRN: {{ patient.patient_no }} &nbsp;&bull;&nbsp; Last Visit: {{ patient.last_visit }}</p>
+        <p>
+            MRN: {{ patient.patient_no }}
+            &nbsp;&bull;&nbsp;
+            Last Visit: {{ patient.last_visit or "—" }}
+        </p>
     </div>
 
     <div class="right-buttons">
@@ -55,48 +226,66 @@ select {
             Restore Patient
         </a>
         {% else %}
-            <a href="{{ url_for('patients_bp.delete_patient', id=patient.id) }}"
-            onclick="return confirm('Delete this patient?')" class="btn btn-danger">
-                Delete
-            </a>
+        <a href="{{ url_for('patients_bp.delete_patient', id=patient.id) }}"
+           onclick="return confirm('Delete this patient?')"
+           class="btn btn-danger">
+            Delete
+        </a>
         {% endif %}
     </div>
 </div>
 
-
-<!-- PATIENT SECTION LAYOUT -->
+<!-- MAIN LAYOUT -->
 <div class="patient-layout">
 
-    <!-- LEFT: PROFILE CARD -->
+    <!-- LEFT PROFILE -->
     <div class="profile-card">
-        <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}" class="profile-photo">
+        <div>
+            <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}"
+                 class="profile-photo">
 
-        <h2>{{ patient.name }}</h2>
+            <h2>{{ patient.name }}</h2>
 
-        <p class="tag status-{{ patient.status|lower }}">{{ patient.status }}</p>
+            <p class="tag status-{{ patient.status|lower }}">
+                {{ patient.status }}
+            </p>
 
+            <div class="profile-details">
+                <p><strong>Age:</strong> {{ patient.age or "—" }}</p>
+                <p><strong>Gender:</strong> {{ patient.gender or "—" }}</p>
+                <p><strong>Phone:</strong> {{ patient.phone or "—" }}</p>
+                <p><strong>Disease:</strong> {{ patient.disease }}</p>
+            </div>
+        </div>
+
+        <!-- ADDRESS -->
         <div class="profile-details">
-            <p><strong>Age:</strong> {{ patient.age }}</p>
-            <p><strong>Gender:</strong> {{ patient.gender }}</p>
-            <p><strong>Phone:</strong> {{ patient.phone }}</p>
-            <p><strong>Disease:</strong> {{ patient.disease }}</p>
+            <p><strong>Address:</strong></p>
+            <p>
+                {% if patient.address or patient.city or patient.state %}
+                    {{ patient.address or "" }}<br>
+                    {{ patient.city or "" }} {{ patient.pincode or "" }}<br>
+                    {{ patient.state or "" }}
+                {% else %}
+                    <span class="empty-safe">Not available</span>
+                {% endif %}
+            </p>
         </div>
     </div>
-
 
     <!-- RIGHT SIDE -->
     <div class="right-side">
 
-        <!-- Patient Info -->
+        <!-- PATIENT DETAILS -->
         <div class="section-box">
             <h3 class="section-title">Patient Details</h3>
+
             <div class="quick-actions">
                 <a href="{{ url_for('patients_bp.patient_visits', patient_id=patient.id) }}"
-                class="btn btn-primary">
+                   class="btn btn-primary">
                     Visit History ({{ visits|length }})
                 </a>
             </div>
-
 
             <div class="info-grid">
                 <div>
@@ -106,7 +295,7 @@ select {
 
                 <div>
                     <label>Mobile</label>
-                    <p>{{ patient.phone }}</p>
+                    <p>{{ patient.phone or "—" }}</p>
                 </div>
 
                 <div>
@@ -116,13 +305,12 @@ select {
 
                 <div>
                     <label>Last Visit</label>
-                    <p>{{ patient.last_visit }}</p>
+                    <p>{{ patient.last_visit or "—" }}</p>
                 </div>
             </div>
         </div>
 
-
-        <!-- APPOINTMENTS SECTION -->
+        <!-- PAST APPOINTMENTS -->
         <div class="section-box">
             <h3 class="section-title">Past Appointments</h3>
 
@@ -136,41 +324,58 @@ select {
                         <th>Status</th>
                     </tr>
                 </thead>
-
                 <tbody>
-                    {% if apps %}
-                        {% for a in apps %}
-                        <tr>
-                            <td>{{ loop.index }}</td>
-                            <td>{{ a.type }}</td>
-                            <td>{{ a.date }}</td>
-                            <td>{{ a.time }}</td>
-                            <td>
-                                <span class="badge badge-{{ a.status | lower }}">
-                                    {{ a.status }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="5" class="empty-state">
-                                No appointments found.
-                            </td>
-                        </tr>
-                    {% endif %}
+                {% if apps %}
+                    {% for a in apps %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ a.type }}</td>
+                        <td>{{ a.date }}</td>
+                        <td>{{ a.time }}</td>
+                        <td>
+                            <span class="badge badge-{{ a.status|lower }}">
+                                {{ a.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-state">No appointments found.</td>
+                    </tr>
+                {% endif %}
                 </tbody>
             </table>
         </div>
 
+        <!-- ALL PRESCRIPTIONS -->
+        <div class="section-box">
+            <h3 class="section-title">Prescription History</h3>
 
-        <!-- MEDICAL RECORD -->
-                
+            {% if prescriptions %}
+                <ul class="prescription-list">
+                    {% for p in prescriptions %}
+                    <li class="prescription-item">
+                        <div class="prescription-date">
+                            {{ p.appointment.date }} • {{ p.appointment.type }}
+                        </div>
+                        <div class="prescription-text">
+                            {{ p.final_text }}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty-state">No prescriptions found.</p>
+            {% endif %}
+        </div>
+
+        <!-- MEDICAL RECORDS -->
         <div class="section-box">
             <div class="section-header">
                 <h3 class="section-title">Medical Records</h3>
                 <a href="{{ url_for('patients_bp.upload_record', id=patient.id) }}"
-                class="btn btn-primary">
+                   class="btn btn-primary">
                     Upload Record
                 </a>
             </div>
@@ -179,7 +384,6 @@ select {
                 <ul class="record-list">
                     {% for r in patient.records %}
                     <li class="record-item">
-
                         <div class="record-info">
                             <strong>{{ r.filename }}</strong>
                             <span class="record-date">
@@ -188,14 +392,12 @@ select {
                         </div>
 
                         <div class="record-actions">
-                            <a href="{{ url_for('static',
-                                filename='records/' ~ r.filename) }}"
-                            target="_blank"
-                            class="btn btn-small btn-secondary">
+                            <a href="{{ url_for('static', filename='records/' ~ r.filename) }}"
+                               target="_blank"
+                               class="btn btn-small btn-secondary">
                                 View
                             </a>
                         </div>
-
                     </li>
                     {% endfor %}
                 </ul>
@@ -204,17 +406,109 @@ select {
             {% endif %}
         </div>
 
-
-
         <!-- CERTIFICATES -->
         <div class="section-box">
             <h3 class="section-title">Certificates</h3>
-            <a href="{{ url_for('patients_bp.generate_certificate', id=patient.id) }}" class="btn btn-primary">
+            <a href="{{ url_for('patients_bp.generate_certificate', id=patient.id) }}"
+               class="btn btn-primary">
                 Generate Certificate
             </a>
         </div>
 
     </div>
 </div>
+<script>
+(() => {
+
+    /* ===============================
+       AUTO SECTION LIST (SCROLL)
+    ============================== */
+    const sections = Array.from(
+        document.querySelectorAll(".profile-card, .section-box")
+    );
+
+    let index = 0;
+    let lastKeyTime = 0;
+
+    function isTyping() {
+        const el = document.activeElement;
+        return el &&
+            (el.tagName === "INPUT" ||
+             el.tagName === "TEXTAREA" ||
+             el.isContentEditable);
+    }
+
+    function scrollToSection(i) {
+        if (!sections[i]) return;
+        index = i;
+        sections[i].scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+
+    /* ===============================
+       FIND ADD APPOINTMENT BUTTON
+       (NO HTML CHANGE REQUIRED)
+    ============================== */
+    function goToAddAppointment() {
+        const btn = document.querySelector(
+            'a[href*="add_appointment"]'
+        );
+        if (btn && btn.href) {
+            window.location.href = btn.href;
+        }
+    }
+
+    document.addEventListener("keydown", (e) => {
+
+        const now = Date.now();
+        if (now - lastKeyTime < 120) return;
+        lastKeyTime = now;
+
+        if (isTyping()) return;
+
+        const key = e.key.toLowerCase();
+
+        /* ===============================
+           N → NEW APPOINTMENT
+        ============================== */
+        if (!e.ctrlKey && !e.metaKey && key === "n") {
+            e.preventDefault();
+            goToAddAppointment();
+            return;
+        }
+
+        /* ===============================
+           P → PRINT (NO CTRL)
+        ============================== */
+        if (!e.ctrlKey && !e.metaKey && key === "p") {
+            e.preventDefault();
+            window.print();
+            return;
+        }
+
+        /* ===============================
+           ↓ NEXT SECTION
+        ============================== */
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            scrollToSection(Math.min(index + 1, sections.length - 1));
+            return;
+        }
+
+        /* ===============================
+           ↑ PREVIOUS SECTION
+        ============================== */
+        if (e.key === "ArrowUp") {
+            e.preventDefault();
+            scrollToSection(Math.max(index - 1, 0));
+            return;
+        }
+    });
+
+})();
+</script>
+
 
 {% endblock %}
