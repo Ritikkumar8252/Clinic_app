@@ -1,13 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const searchInput = document.getElementById("patientSearch");
-    const rows = document.querySelectorAll("#patientTable tr");
+    const searchInput = document.querySelector(".search-box");
+    const tableBody = document.getElementById("patientTable");
 
-    searchInput.addEventListener("keyup", function () {
-        const value = this.value.toLowerCase();
+    if (!searchInput || !tableBody) return;
+
+    const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.toLowerCase().trim();
 
         rows.forEach(row => {
-            const rowText = row.innerText.toLowerCase();
-            row.style.display = rowText.includes(value) ? "" : "none";
+            // 2nd column = Patient Name column
+            const nameCell = row.querySelector("td:nth-child(2)");
+            if (!nameCell) return;
+
+            const nameText = nameCell.innerText.toLowerCase();
+            row.style.display = nameText.includes(query) ? "" : "none";
         });
     });
 });
