@@ -11,13 +11,7 @@ function sendSaveRequest() {
 
     const payload = {};
 
-    // Prescription text
-    if (window.buildPrescriptionText) {
-        const pres = buildPrescriptionText();
-        if (pres.trim()) payload.prescription = pres;
-    }
-
-    // Hidden textareas
+    // Tags (hidden inputs)
     ["symptoms", "diagnosis", "advice"].forEach(field => {
         const el = document.getElementById(field + "-hidden");
         if (el && el.value.trim()) {
@@ -34,6 +28,12 @@ function sendSaveRequest() {
             }
         });
 
+    // ✅ LAB TESTS (OUTSIDE LOOP)
+    const lab = document.getElementById("lab_tests");
+    if (lab && lab.value.trim()) {
+        payload.lab_tests = lab.value.trim();
+    }
+
     // 🚫 Prevent empty autosave
     if (Object.keys(payload).length === 0) return;
 
@@ -46,11 +46,4 @@ function sendSaveRequest() {
     })
     .then(() => showToast())
     .catch(() => {});
-}
-
-function showToast() {
-    const toast = document.getElementById("saveToast");
-    if (!toast) return;
-    toast.style.opacity = "1";
-    setTimeout(() => toast.style.opacity = "0", 1200);
 }

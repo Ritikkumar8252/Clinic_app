@@ -119,8 +119,9 @@ class Appointment(db.Model):
 
     symptoms = db.Column(db.Text, default="")
     diagnosis = db.Column(db.Text, default="")
-    prescription_locked = db.Column(db.Boolean, default=False)
+    
     advice = db.Column(db.Text, default="")
+    lab_tests = db.Column(db.Text, default="")
 
     bp = db.Column(db.String(20))
     pulse = db.Column(db.String(20))

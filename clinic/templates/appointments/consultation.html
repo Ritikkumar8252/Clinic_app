@@ -107,6 +107,19 @@
             <input type="hidden" id="diagnosis-hidden" value="{{ appt.diagnosis or '' }}">
         </div>
 
+        <!-- LAB TESTS -->
+        <div class="box shadow-card print-prescription lab-section">
+            <h3>Lab Tests</h3>
+
+            <textarea
+                id="lab_tests"
+                name="lab_tests"
+                rows="4"
+                placeholder="Write lab tests e.g. CBC, LFT, X-Ray Chest..."
+                oninput="autoSave()">{{ appt.lab_tests or '' }}</textarea>
+
+        </div>
+        
         <!-- PRESCRIPTION -->
         <div class="box shadow-card print-prescription">
             <!-- AUTHORITATIVE FINAL PRESCRIPTION (HIDDEN) -->
@@ -144,15 +157,6 @@
             <button id="addRowBtn" class="btn grey" type="button">Add Medicine</button>
         </div>
 
-        <!-- LAB TESTS -->
-        <div class="box shadow-card print-prescription lab-section">
-            <h3>Lab Tests</h3>
-
-            <textarea
-                id="lab_tests"
-                placeholder="Write lab tests e.g. CBC, LFT, X-Ray Chest..."
-                rows="4"></textarea>
-        </div>
 
         <!-- ADVICE -->
         <div class="box shadow-card print-prescription">
@@ -188,11 +192,20 @@
 
 
 
-
+<div id="consultMeta"
+     data-appt-id="{{ appt.id }}"
+     data-autosave-url="{{ url_for('appointments_bp.autosave', id=appt.id) }}">
+</div>
 
 <!-- =========================================
         LOAD SEPARATED JS FILES
 ========================================= -->
+<script>
+  const meta = document.getElementById("consultMeta");
+  window.apptId = meta.dataset.apptId;
+  window.autosaveUrl = meta.dataset.autosaveUrl;
+</script>
+
 <script src="{{ url_for('static', filename='js/appointments/consultation/autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/tags.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/prescription.js') }}"></script>
