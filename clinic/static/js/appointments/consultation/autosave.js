@@ -6,7 +6,7 @@ function autoSave() {
 }
 
 function sendSaveRequest() {
-
+     if (window.prescriptionLocked === "true") return;
     if (!window.autosaveUrl) return;
 
     const payload = {};

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block body %}
+
+<style>
+/* ===============================
+   TEMPLATE MANAGER – TATVA STYLE
+=============================== */
+
+.template-page {
+    max-width: 720px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.template-page h2 {
+    font-size: 22px;
+    margin-bottom: 14px;
+}
+
+/* Search bar */
+#templateSearch {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+
+/* Template card */
+.template-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.template-info h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.template-info p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* Actions */
+.template-actions button {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: none;
+    background: #fee2e2;
+    color: #991b1b;
+    cursor: pointer;
+    font-size: 13px;
+}
+</style>
+
+<div class="template-page">
+
+    <h2>Prescription Templates</h2>
+
+    <!-- SEARCH -->
+    <input
+        type="text"
+        id="templateSearch"
+        placeholder="Search by template name or symptoms"
+        oninput="filterTemplates()"
+    >
+
+    <!-- TEMPLATE LIST -->
+    <div id="templateList">
+        {% for t in templates %}
+        <div class="template-card"
+             data-name="{{ t.name | lower }}"
+             data-symptoms="{{ t.symptoms | lower }}">
+
+            <div class="template-info">
+                <h4>{{ t.name }}</h4>
+                <p>{{ t.symptoms }}</p>
+            </div>
+
+            <div class="template-actions">
+                <button onclick="deleteTemplate('{{ t.id }}')">
+                    Delete
+                </button>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<script>
+/* ===============================
+   SEARCH FILTER
+=============================== */
+function filterTemplates() {
+    const q = document.getElementById("templateSearch").value.toLowerCase();
+    const cards = document.querySelectorAll(".template-card");
+
+    cards.forEach(card => {
+        const name = card.dataset.name;
+        const symptoms = card.dataset.symptoms;
+
+        card.style.display =
+            (name.includes(q) || symptoms.includes(q))
+            ? "flex"
+            : "none";
+    });
+}
+
+/* ===============================
+   DELETE TEMPLATE
+=============================== */
+function deleteTemplate(id) {
+    if (!confirm("Delete this template?")) return;
+
+    fetch(`/templates/delete/${id}`, { method: "POST" })
+        .then(() => location.reload());
+}
+</script>
+
+{% endblock %}

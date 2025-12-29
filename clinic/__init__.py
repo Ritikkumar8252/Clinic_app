@@ -13,6 +13,7 @@ from .routes.settings import settings_bp
 from .routes.home import home_bp
 from dotenv import load_dotenv
 from clinic.commands.debug import clinic_debug
+from clinic.routes.templates import templates_bp
 
 load_dotenv()
 
@@ -84,5 +85,5 @@ def create_app():
     app.register_blueprint(billing_bp)
     app.register_blueprint(settings_bp)
     app.cli.add_command(clinic_debug)
-
+    app.register_blueprint(templates_bp)
     return app

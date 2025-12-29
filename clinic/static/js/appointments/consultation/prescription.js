@@ -73,33 +73,13 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ======================================
    TEMPLATES
 ====================================== */
-const templates = {
-    "Fever Standard": [
-        { med: "Paracetamol 650mg", dose: "1-0-1", days: "5", notes: "After food" }
-    ],
-    "Viral Infection": [
-        { med: "Dolo 650", dose: "1-1-1", days: "3", notes: "" }
-    ]
-};
+document.addEventListener("click", e => {
+    const box = document.getElementById("templateBox");
+    if (!box.contains(e.target) && !e.target.closest(".btn-grey")) {
+        box.style.display = "none";
+    }
+});
 
-function applyTemplate(name) {
-    const body = document.getElementById("medBody");
-    body.innerHTML = "";
-
-    templates[name].forEach(item => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><input value="${item.med}"></td>
-            <td><input value="${item.dose}"></td>
-            <td><input value="${item.days}"></td>
-            <td><input value="${item.notes}"></td>
-            <td><button class="del-btn" onclick="removeRow(this)">x</button></td>
-        `;
-        body.appendChild(tr);
-    });
-
-    addRow();
-}
 
 /* ======================================
    FINALIZE + SAVE + DOWNLOAD (FIXED FLOW)
@@ -148,4 +128,75 @@ async function finalizeAndPrint(e) {
     window.open(`/prescription/${window.apptId}`, "_blank");
     return false;
 }
+// templates
+function openTemplateBox() {
+    const q = document.getElementById("symptoms-hidden").value;
+    fetch(`/templates/search?q=${q}`)
+        .then(r => r.json())
+        .then(data => {
+            const box = document.getElementById("templateBox");
+            box.innerHTML = "";
+            data.forEach(t => {
+                box.innerHTML += `
+                    <div onclick="applyTemplateFromServer(${t.id})">
+                        ${t.name}
+                    </div>`;
+            });
+            box.style.display = "block";
+        });
+}
+function applyTemplateFromServer(id) {
+    fetch(`/templates/${id}`)
+        .then(r => r.json())
+        .then(data => {
+            const body = document.getElementById("medBody");
+            body.innerHTML = "";
+
+            data.items.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><input value="${item.medicine}"></td>
+                    <td><input value="${item.dose || ""}"></td>
+                    <td><input value="${item.days || ""}"></td>
+                    <td><input value="${item.notes || ""}"></td>
+                    <td><button onclick="removeRow(this)">x</button></td>
+                `;
+                body.appendChild(tr);
+            });
+        });
+}
+function saveAsTemplate() {
+
+    if (window.prescriptionLocked === "true") {
+        alert("Finalize ke baad template save nahi hota");
+        return;
+    }
+
+    const items = collectPrescriptionItems();
+    if (items.length === 0) {
+        alert("Template ke liye kam se kam 1 medicine zaroori hai");
+        return;
+    }
+
+    const symptoms = document.getElementById("symptoms-hidden").value;
+    if (!symptoms.trim()) {
+        alert("Symptoms likhe bina template save nahi hoga");
+        return;
+    }
+
+    const name = prompt("Template name?");
+    if (!name) return;
+
+    fetch("/templates/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            name,
+            symptoms,
+            diagnosis: document.getElementById("diagnosis-hidden").value,
+            items
+        })
+    });
+}
+
 

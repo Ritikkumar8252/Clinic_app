@@ -361,3 +361,114 @@
         border: none;
     }
 }
+
+/* =========================
+   TEMPLATE DROPDOWN
+========================= */
+
+#templateBox {
+    position: absolute;
+    top: 42px;
+    right: 0;
+    width: 260px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+    padding: 6px 0;
+    display: none;
+    z-index: 100;
+}
+
+/* Single template row */
+#templateBox div {
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: #1f2937;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+/* Hover */
+#templateBox div:hover {
+    background: #f3f4f6;
+}
+
+/* Empty state */
+#templateBox:empty::after {
+    content: "No templates found";
+    display: block;
+    padding: 12px;
+    font-size: 12.5px;
+    color: #9ca3af;
+    text-align: center;
+}
+/* =========================
+   PRESCRIPTION HEADER
+========================= */
+
+.prescription-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.prescription-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Grey outline button */
+.btn-grey {
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-grey:hover {
+    background: #f3f4f6;
+}
+/* =========================
+   MEDICINE TABLE POLISH
+========================= */
+
+.med-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+}
+
+.med-table th {
+    font-size: 12px;
+    color: #6b7280;
+    text-align: left;
+    padding-bottom: 6px;
+}
+
+.med-table td input {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+}
+
+.med-table td input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
+}
+
+/* Delete button */
+.del-btn {
+    background: #fee2e2;
+    color: #991b1b;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}

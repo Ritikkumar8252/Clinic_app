@@ -288,7 +288,9 @@ class Prescription(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     finalized_at = db.Column(db.DateTime)
-
+# =========================
+# PRESCRIPTION ITEMS
+# =========================
 
 class PrescriptionItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -296,6 +298,51 @@ class PrescriptionItem(db.Model):
     prescription_id = db.Column(
         db.Integer,
         db.ForeignKey("prescription.id"),
+        nullable=False
+    )
+
+    medicine_name = db.Column(db.String(200), nullable=False)
+    dose = db.Column(db.String(100))
+    duration_days = db.Column(db.Integer)
+    instructions = db.Column(db.String(200))
+# =========================
+# PRESCRIPTION TEMPLATES
+# =========================
+class PrescriptionTemplate(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint("clinic_owner_id", "name"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    clinic_owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        index=True
+    )
+
+    name = db.Column(db.String(200), nullable=False)
+    symptoms = db.Column(db.Text)     # "fever,cold,cough"
+    diagnosis = db.Column(db.Text)    # optional
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    items = db.relationship(
+        "PrescriptionTemplateItem",
+        backref="template",
+        cascade="all, delete-orphan",
+        lazy=True
+    )
+# =========================
+# PRESCRIPTION TEMPLATE
+# =========================
+class PrescriptionTemplateItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    template_id = db.Column(
+        db.Integer,
+        db.ForeignKey("prescription_template.id"),
         nullable=False
     )
 

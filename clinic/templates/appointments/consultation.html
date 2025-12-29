@@ -4,13 +4,10 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/consult.css') }}">
 
 <div class="consult-page"
-     data-autosave-url="{{ url_for('appointments_bp.autosave', id=appt.id) }}"
-     data-save-prescription-url="{{ url_for('appointments_bp.save_prescription', id=appt.id) }}"
      data-appt-id="{{ appt.id }}"
      data-prescription-locked="{{ appt.prescription_locked }}">
 
-
-<!-- TOP BAR -->
+<!-- ================= TOP BAR ================= -->
 <div class="consult-topbar">
     <div class="top-info">
         <h2>Consultation</h2>
@@ -20,31 +17,30 @@
     <div class="top-actions">
         <button class="btn-save" onclick="sendSaveRequest()">💾 Save</button>
 
-        <a class="btn-complete" href="{{ url_for('appointments_bp.complete', id=appt.id) }}">✔ Finish</a>
+        <a class="btn-complete" href="{{ url_for('appointments_bp.complete', id=appt.id) }}">
+            ✔ Finish
+        </a>
 
         <form method="POST"
-            action="{{ url_for('appointments_bp.finalize_prescription', id=appt.id) }}"
-            onsubmit="return finalizeAndPrint(event)">
-
+              action="{{ url_for('appointments_bp.finalize_prescription', id=appt.id) }}"
+              onsubmit="return finalizeAndPrint(event)">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="prescription" id="finalPrescription">
-
             <button class="btn-pres">✔ Finalize & Print</button>
         </form>
-
-
     </div>
 </div>
 
-
-<!-- MAIN GRID -->
+<!-- ================= MAIN GRID ================= -->
 <div class="consult-container">
 
-    <!-- LEFT PANEL -->
+    <!-- ========== LEFT PANEL ========= -->
     <div class="patient-side">
-        <div class="patient-card shadow-card print-prescription">
 
-            <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}" class="patient-photo">
+        <div class="patient-card shadow-card print-prescription">
+            <img src="{{ url_for('static', filename='patient_images/' + patient.image) }}"
+                 class="patient-photo">
+
             <h3 class="patient-name">{{ patient.name }}</h3>
             <p class="pt-small">{{ patient.gender }}, {{ patient.age }} yrs</p>
             <p class="pt-small">Phone: {{ patient.phone }}</p>
@@ -55,161 +51,158 @@
         </div>
 
         <div class="vitals-card shadow-card print-prescription">
-
             <h4>Vitals</h4>
 
             <div class="vital-row"><label>BP</label>
-                <input id="bp" value="{{ appt.bp or '' }}">
+                <input id="bp" value="{{ appt.bp or '' }}" oninput="autoSave()">
             </div>
             <div class="vital-row"><label>Pulse</label>
-                <input id="pulse" value="{{ appt.pulse or '' }}">
+                <input id="pulse" value="{{ appt.pulse or '' }}" oninput="autoSave()">
             </div>
             <div class="vital-row"><label>SPO2</label>
-                <input id="spo2" value="{{ appt.spo2 or '' }}">
+                <input id="spo2" value="{{ appt.spo2 or '' }}" oninput="autoSave()">
             </div>
             <div class="vital-row"><label>Temp</label>
-                <input id="temperature" value="{{ appt.temperature or '' }}">
+                <input id="temperature" value="{{ appt.temperature or '' }}" oninput="autoSave()">
             </div>
             <div class="vital-row"><label>Weight</label>
-                <input id="weight" value="{{ appt.weight or '' }}">
+                <input id="weight" value="{{ appt.weight or '' }}" oninput="autoSave()">
             </div>
         </div>
     </div>
 
-
-
-    <!-- MAIN CONSULT AREA -->
+    <!-- ========== MAIN CONSULT AREA ========= -->
     <div class="consult-main">
 
-        <!-- SYMPTOMS -->
+        <!-- Symptoms -->
         <div class="box shadow-card print-prescription">
-
             <h3>Symptoms</h3>
 
-            <div class="tags-wrapper" id="symptoms-wrapper">
-                <div id="symptoms-suggestions" class="suggestions-box"></div>
+            <div class="tags-wrapper">
                 <div class="tags" id="symptoms-tags"></div>
-                <input id="symptoms-input" class="tags-input" placeholder="Type symptom + Enter">
+                <input id="symptoms-input" class="tags-input"
+                       placeholder="Type symptom + Enter">
             </div>
-            <input type="hidden" id="symptoms-hidden" value="{{ appt.symptoms or '' }}">
+
+            <input type="hidden" id="symptoms-hidden"
+                   value="{{ appt.symptoms or '' }}">
         </div>
 
-        <!-- DIAGNOSIS -->
+        <!-- Diagnosis -->
         <div class="box shadow-card print-prescription">
-
             <h3>Diagnosis</h3>
 
-            <div class="tags-wrapper" id="diagnosis-wrapper">
-                <div id="diagnosis-suggestions" class="suggestions-box"></div>
+            <div class="tags-wrapper">
                 <div class="tags" id="diagnosis-tags"></div>
-                <input id="diagnosis-input" class="tags-input" placeholder="Type diagnosis + Enter">
+                <input id="diagnosis-input" class="tags-input"
+                       placeholder="Type diagnosis + Enter">
             </div>
-            <input type="hidden" id="diagnosis-hidden" value="{{ appt.diagnosis or '' }}">
+
+            <input type="hidden" id="diagnosis-hidden"
+                   value="{{ appt.diagnosis or '' }}">
         </div>
 
-        <!-- LAB TESTS -->
+        <!-- Lab Tests -->
         <div class="box shadow-card print-prescription lab-section">
             <h3>Lab Tests</h3>
-
-            <textarea
-                id="lab_tests"
-                name="lab_tests"
-                rows="4"
-                placeholder="Write lab tests e.g. CBC, LFT, X-Ray Chest..."
-                oninput="autoSave()">{{ appt.lab_tests or '' }}</textarea>
-
+            <textarea id="lab_tests"
+                      rows="4"
+                      placeholder="CBC, LFT, X-Ray Chest..."
+                      oninput="autoSave()">{{ appt.lab_tests or '' }}</textarea>
         </div>
-        
-        <!-- PRESCRIPTION -->
+
+        <!-- ========== PRESCRIPTION ========= -->
         <div class="box shadow-card print-prescription">
-            <!-- AUTHORITATIVE FINAL PRESCRIPTION (HIDDEN) -->
-            <input type="hidden" name="prescription" id="final-prescription">
 
-            <div class="header-row" style="display:flex; justify-content:space-between;">
+            <div class="prescription-header">
                 <h3>Prescription</h3>
-                <button class="btn grey" onclick="toggleTemplates()">Templates ▼</button>
-            </div>
 
-            <div id="templateBox" class="template-box">
-                <div class="template-item" onclick="applyTemplate('Fever Standard')">Fever Standard</div>
-                <div class="template-item" onclick="applyTemplate('Viral Infection')">Viral Infection</div>
+                <div class="prescription-actions">
+                    <button class="btn-grey" type="button" onclick="openTemplateBox()">
+                        Templates
+                    </button>
+
+                    <button class="btn-grey" type="button" onclick="saveAsTemplate()">
+                        Save as Template
+                    </button>
+                </div>
+
+                <div id="templateBox"></div>
             </div>
 
             <table class="med-table">
                 <thead>
-                    <tr><th>Medicine</th><th>Dose</th><th>Days</th><th>Notes</th><th></th></tr>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Dose</th>
+                        <th>Days</th>
+                        <th>Notes</th>
+                        <th></th>
+                    </tr>
                 </thead>
 
                 <tbody id="medBody">
                     {% for m in medicines %}
                     <tr>
-                        <td><input value="{{ m.med }}" oninput="autoSave()"></td>
-                        <td><input value="{{ m.dose }}" oninput="autoSave()"></td>
-                        <td><input value="{{ m.days }}" oninput="autoSave()"></td>
-                        <td><input value="{{ m.notes }}" oninput="autoSave()"></td>
-                        <td><button class="del-btn" onclick="removeRow(this)">x</button></td>
+                        <td><input value="{{ m.med }}"></td>
+                        <td><input value="{{ m.dose }}"></td>
+                        <td><input value="{{ m.days }}"></td>
+                        <td><input value="{{ m.notes }}"></td>
+                        <td>
+                            <button class="del-btn" onclick="removeRow(this)">x</button>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
-
             </table>
 
-            <button id="addRowBtn" class="btn grey" type="button">Add Medicine</button>
+            <button id="addRowBtn" class="btn-grey" type="button">
+                + Add Medicine
+            </button>
         </div>
 
-
-        <!-- ADVICE -->
+        <!-- Advice -->
         <div class="box shadow-card print-prescription">
-
             <h3>Advice</h3>
 
-            <div class="tags-wrapper" id="advice-wrapper">
-                <div id="advice-suggestions" class="suggestions-box"></div>
+            <div class="tags-wrapper">
                 <div class="tags" id="advice-tags"></div>
-                <input id="advice-input" class="tags-input" placeholder="Type advice + Enter">
+                <input id="advice-input" class="tags-input"
+                       placeholder="Type advice + Enter">
             </div>
 
-            <input type="hidden" id="advice-hidden" value="{{ appt.advice or '' }}">
+            <input type="hidden" id="advice-hidden"
+                   value="{{ appt.advice or '' }}">
         </div>
 
-
-        <!-- FOLLOW-UP -->
+        <!-- Follow Up -->
         <div class="box shadow-card print-prescription">
-
             <h3>Follow Up Date</h3>
-            <input id="follow_up_date" type="date" value="{{ appt.follow_up_date }}">
+            <input id="follow_up_date" type="date"
+                   value="{{ appt.follow_up_date }}" oninput="autoSave()">
         </div>
 
     </div>
-
 </div>
 
-
-<!-- SAVE TOAST -->
+<!-- Toast -->
 <div id="saveToast" class="save-toast">Saved</div>
 
-</div>
-
-
-
+<!-- ================= META + JS ================= -->
 <div id="consultMeta"
      data-appt-id="{{ appt.id }}"
      data-autosave-url="{{ url_for('appointments_bp.autosave', id=appt.id) }}">
 </div>
 
-<!-- =========================================
-        LOAD SEPARATED JS FILES
-========================================= -->
 <script>
   const meta = document.getElementById("consultMeta");
   window.apptId = meta.dataset.apptId;
   window.autosaveUrl = meta.dataset.autosaveUrl;
+  window.prescriptionLocked = "{{ appt.prescription_locked | lower }}";
 </script>
 
 <script src="{{ url_for('static', filename='js/appointments/consultation/autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/tags.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/prescription.js') }}"></script>
-
-
 
 {% endblock %}

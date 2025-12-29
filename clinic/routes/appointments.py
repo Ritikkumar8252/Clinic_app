@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, send_file,jsonify
 from ..extensions import db
-from ..models import Appointment, Patient,Prescription, PrescriptionItem
+from ..models import Appointment, Patient,Prescription, PrescriptionItem,PrescriptionTemplateItem,PrescriptionTemplate
 from datetime import datetime
 from io import BytesIO
 from clinic.routes.auth import login_required, role_required
