@@ -1,28 +1,37 @@
 /* =====================================================
-   CONSULT PAGE – REAL CLINIC UI (PRODUCTION READY)
-   LOGIC / JS / HTML NOT TOUCHED
+   CONSULT PAGE – REAL CLINIC UI (FINAL)
+   SAFE FOR DAILY DOCTOR USE
 ===================================================== */
 
 :root {
-    --bg: #f4f7fb;
+    --bg: #f6f9ff;
     --card: #ffffff;
+
     --primary: #2563eb;
     --primary-soft: #eef2ff;
+
     --success: #16a34a;
+    --success-soft: #f0fdf4;
+
     --warning: #f59e0b;
-    --danger: #dc2626;
+
     --border: #e5e7eb;
     --text: #111827;
     --muted: #6b7280;
+
+    --font-sm: 12.5px;
+    --font-md: 13.5px;
+    --font-lg: 15px;
+    --font-xl: 18px;
 }
 
 /* ================= PAGE ================= */
 
 .consult-page {
-    background: linear-gradient(180deg, #f4f7fb, #eef2ff);
+    background: linear-gradient(180deg, #f6f9ff, #eef3ff);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: var(--text);
-    padding: 20px 28px;
+    padding: 22px 30px;
     max-width: 1440px;
     margin: 0 auto;
 }
@@ -32,52 +41,82 @@
 .consult-topbar {
     background: linear-gradient(180deg, #ffffff, #f9fafb);
     padding: 14px 22px;
-    border-radius: 14px;
+    border-radius: 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border: 1px solid var(--border);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-    margin-bottom: 20px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+    margin-bottom: 22px;
 }
 
 .top-info h2 {
-    font-size: 18px;
+    font-size: var(--font-xl);
     font-weight: 600;
     margin: 0;
 }
 
 .top-info p {
-    font-size: 12.5px;
+    font-size: var(--font-sm);
     color: var(--muted);
-    margin-top: 2px;
 }
+
+/* ================= ACTION BUTTONS ================= */
 
 .top-actions {
     display: flex;
     gap: 10px;
 }
 
-.top-actions button,
-.top-actions a {
-    border: none;
+.btn-save,
+.btn-complete,
+.btn-pres,
+.btn-grey {
+    min-height: 36px;
     padding: 8px 16px;
     border-radius: 10px;
-    font-size: 13px;
+    font-size: var(--font-md);
     cursor: pointer;
-    font-weight: 500;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.btn-save { background: var(--primary); color: #fff; }
-.btn-complete { background: var(--success); color: #fff; }
-.btn-pres { background: var(--warning); color: #fff; font-weight: 600; }
+.btn-save {
+    background: linear-gradient(180deg, #2563eb, #1d4ed8);
+    color: white;
+}
+
+.btn-complete {
+    background: linear-gradient(180deg, #16a34a, #15803d);
+    color: white;
+}
+
+.btn-pres {
+    background: linear-gradient(180deg, #f59e0b, #d97706);
+    color: white;
+    font-weight: 600;
+}
+
+.btn-grey {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+}
+
+.btn-grey:hover,
+.btn-save:hover,
+.btn-complete:hover,
+.btn-pres:hover {
+    filter: brightness(1.05);
+}
 
 /* ================= LAYOUT ================= */
 
 .consult-container {
     display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);
-    gap: 24px;
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 26px;
 }
 
 /* ================= LEFT PANEL ================= */
@@ -91,7 +130,7 @@
 }
 
 .shadow-card {
-    background: var(--card);
+    background: linear-gradient(180deg, #ffffff, #f9fbff);
     border-radius: 16px;
     padding: 14px;
     border: 1px solid var(--border);
@@ -106,13 +145,13 @@
 }
 
 .patient-name {
-    font-size: 15px;
+    font-size: var(--font-lg);
     font-weight: 600;
     margin-top: 8px;
 }
 
 .pt-small {
-    font-size: 12.5px;
+    font-size: var(--font-sm);
     color: var(--muted);
 }
 
@@ -122,8 +161,15 @@
     margin: 10px 0;
 }
 
+/* ================= VITALS ================= */
+
+.vitals-card {
+    border-left: 4px solid var(--primary);
+    background: linear-gradient(180deg, #ffffff, #f0f6ff);
+}
+
 .vitals-card h4 {
-    font-size: 14px;
+    font-size: var(--font-md);
     margin-bottom: 8px;
 }
 
@@ -135,16 +181,24 @@
 }
 
 .vital-row label {
-    font-size: 12px;
+    font-size: var(--font-sm);
     color: var(--muted);
 }
 
 .vital-row input {
-    width: 82px;
-    padding: 6px 8px;
-    font-size: 12.5px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
+    width: 84px;
+}
+
+/* ================= FOLLOW UP ================= */
+
+.followup-card {
+    border-left: 4px solid var(--success);
+    background: linear-gradient(180deg, #ffffff, var(--success-soft));
+}
+
+.followup-card h4 {
+    font-size: var(--font-md);
+    color: #166534;
 }
 
 /* ================= MAIN CONTENT ================= */
@@ -156,17 +210,30 @@
 }
 
 .box {
-    background: var(--card);
-    padding: 14px;
+    background: linear-gradient(180deg, #ffffff, #fafcff);
     border-radius: 16px;
+    padding: 14px;
     border: 1px solid var(--border);
     box-shadow: 0 4px 14px rgba(0,0,0,0.05);
 }
 
 .box h3 {
-    font-size: 14.5px;
+    font-size: var(--font-lg);
     font-weight: 600;
     margin-bottom: 8px;
+    position: relative;
+    padding-left: 10px;
+}
+
+.box h3::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    height: 16px;
+    width: 3px;
+    background: var(--primary);
+    border-radius: 2px;
 }
 
 /* ================= INPUTS ================= */
@@ -176,15 +243,14 @@ input {
     width: 100%;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: #ffffff;
     padding: 8px 10px;
-    font-size: 13px;
-    font-family: inherit;
+    font-size: var(--font-md);
+    background: white;
 }
 
 textarea {
     resize: none;
-    min-height: 64px;
+    min-height: 70px;
 }
 
 textarea:focus,
@@ -194,78 +260,39 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
 }
 
-/* ================= PRESCRIPTION ================= */
-
-.prescription-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+textarea::placeholder,
+input::placeholder {
+    color: #9ca3af;
 }
 
-.prescription-actions,
-.symptom-actions {
+/* ================= TEMPLATE POPUP ================= */
+
+.symptom-actions,
+.prescription-actions {
     display: inline-flex;
+    align-items: center;
     gap: 8px;
     position: relative;
 }
 
-.btn-grey {
-    background: #f9fafb;
-    border: 1px solid var(--border);
-    padding: 6px 12px;
-    font-size: 12.5px;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-.btn-grey:hover {
-    background: var(--primary-soft);
-}
-
-/* ================= MED TABLE ================= */
-
-.med-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 8px;
-    margin-top: 8px;
-}
-
-.med-table th {
-    font-size: 12px;
-    color: var(--muted);
-}
-
-.med-table td input {
-    height: 36px;
-}
-
-.del-btn {
-    background: #fee2e2;
-    color: #991b1b;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-/* ================= TEMPLATE POPUP (BOTH) ================= */
-
 .template-popup {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 6px);
     left: 0;
+
     width: 240px;
-    background: #ffffff;
-    border-radius: 16px;
+    max-height: 260px;
+
+    background: white;
+    border-radius: 14px;
     border: 1px solid var(--border);
+
     box-shadow:
         0 18px 40px rgba(0,0,0,0.18),
-        0 6px 16px rgba(0,0,0,0.08);
+        0 6px 18px rgba(0,0,0,0.08);
+
     display: none;
-    z-index: 1000;
-    overflow: hidden;
-    max-height: 260px;
+    z-index: 2000;
     overflow-y: auto;
 }
 
@@ -273,7 +300,7 @@ input:focus {
     content: "Select Template";
     display: block;
     padding: 10px 14px;
-    font-size: 12.5px;
+    font-size: var(--font-sm);
     font-weight: 600;
     background: #f9fafb;
     border-bottom: 1px solid var(--border);
@@ -281,12 +308,11 @@ input:focus {
 
 .template-item {
     padding: 10px 14px;
-    font-size: 13px;
+    font-size: var(--font-md);
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .template-item::before {
@@ -295,21 +321,39 @@ input:focus {
 }
 
 .template-item:hover {
-    background: var(--primary-soft);
+    background: linear-gradient(90deg, #eef2ff, #f8fafc);
     color: var(--primary);
 }
 
-.template-item:active {
-    transform: scale(0.97);
+/* ================= VOICE ================= */
+
+.voice-field {
+    position: relative;
 }
 
-.template-popup:empty::after {
-    content: "No templates saved";
-    display: block;
-    padding: 14px;
-    font-size: 12.5px;
-    color: var(--muted);
-    text-align: center;
+.voice-field textarea {
+    padding-right: 44px;
+}
+
+.mic-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: #f3f4f6;
+    cursor: pointer;
+}
+
+.mic-btn:hover {
+    background: var(--primary-soft);
+}
+
+.mic-active {
+    background: var(--primary);
+    color: white;
 }
 
 /* ================= TOAST ================= */
@@ -322,8 +366,7 @@ input:focus {
     color: white;
     padding: 10px 16px;
     border-radius: 10px;
-    font-size: 13px;
-    opacity: 0;
+    font-size: var(--font-md);
 }
 
 /* ================= PRINT ================= */
@@ -337,74 +380,4 @@ input:focus {
     .save-toast {
         display: none !important;
     }
-}
-
-
-.vitals-card {
-    border-left: 4px solid #2563eb;
-    background: linear-gradient(180deg, #ffffff, #f0f6ff);
-}
-.followup-card {
-    border-left: 4px solid #16a34a;
-    background: linear-gradient(180deg, #ffffff, #f0fdf4);
-}
-
-.followup-card h4 {
-    font-size: 14px;
-    font-weight: 600;
-    color: #166534;
-    margin-bottom: 8px;
-}
-
-.followup-card input {
-    border: 1px solid #bbf7d0;
-    background: #ffffff;
-}
-.box {
-    background: linear-gradient(180deg, #ffffff, #fafcff);
-}
-.btn-save {
-    background: linear-gradient(180deg, #2563eb, #1d4ed8);
-}
-
-.btn-complete {
-    background: linear-gradient(180deg, #16a34a, #15803d);
-}
-
-.btn-pres {
-    background: linear-gradient(180deg, #f59e0b, #d97706);
-}
-
-.btn-grey {
-    background: #f8fafc;
-}
-textarea,
-input {
-    background: #ffffff;
-}
-
-textarea::placeholder,
-input::placeholder {
-    color: #9ca3af;
-}
-/* Sticky prescription for doctors */
-.prescription-sticky {
-    position: sticky;
-    top: 16px;
-}
-/* Section hint colors */
-.box h3 {
-    position: relative;
-    padding-left: 10px;
-}
-
-.box h3::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 4px;
-    height: 16px;
-    width: 3px;
-    background: #2563eb;
-    border-radius: 2px;
 }

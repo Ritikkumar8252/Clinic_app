@@ -89,28 +89,39 @@
         <div class="box shadow-card print-prescription">
             <h3>Symptoms</h3>
             <div class="symptom-actions">
-                <button class="btn-grey" type="button" onclick="openSymptomTemplateBox()">
+                <button class="btn-grey" type="button" onclick="openSymptomTemplateBox(event)">
                     Templates
                 </button>
-                <div id="symptomTemplateBox" class="template-popup"></div>
                 
+                <button
+                    type="button"
+                    class="btn-grey"
+                    style="margin-bottom: 8px"
+                    onclick="saveTemplate()">
+                    Save as Template
+                </button>
+                <div id="symptomTemplateBox" class="template-popup"></div>
             </div>
 
-            <button
-                type="button"
-                class="btn-grey"
-                style="margin-bottom: 8px"
-                onclick="saveTemplate()">
-                Save Symptoms as Template
-            </button>
+            
 
 
-            <textarea
-                id="symptoms"
-                rows="4"
-                placeholder="Patient symptoms..."
-                oninput="autoSave()"
-            >{{ appt.symptoms or '' }}</textarea>
+            <div class="voice-field">
+                <textarea
+                    id="symptoms"
+                    rows="4"
+                    placeholder="Patient symptoms..."
+                    oninput="autoSave()"
+                >{{ appt.symptoms or '' }}</textarea>
+
+                <button
+                    type="button"
+                    class="mic-btn"
+                    onclick="startVoice('symptoms', this)">
+                    🎤
+                </button>
+            </div>
+
 
         </div>
 
@@ -118,22 +129,44 @@
         <div class="box shadow-card print-prescription">
             <h3>Diagnosis</h3>
 
-            <textarea
-                id="Diagnosis"
-                rows="4"
-                placeholder="Patient Diagnosis..."
-                oninput="autoSave()"
-            >{{ appt.Diagnosis or '' }}</textarea>
+            <div class="voice-field">
+                <textarea
+                    id="Diagnosis"
+                    rows="4"
+                    placeholder="Patient Diagnosis..."
+                    oninput="autoSave()"
+                >{{ appt.Diagnosis or '' }}</textarea>
+
+                <button
+                    type="button"
+                    class="mic-btn"
+                    onclick="startVoice('Diagnosis', this)">
+                    🎤
+                </button>
+            </div>
+
 
         </div>
 
         <!-- Lab Tests -->
         <div class="box shadow-card print-prescription lab-section">
             <h3>Lab Tests</h3>
-            <textarea id="lab_tests"
-                      rows="4"
-                      placeholder="CBC, LFT, X-Ray Chest..."
-                      oninput="autoSave()">{{ appt.lab_tests or '' }}</textarea>
+            <div class="voice-field">
+                <textarea
+                    id="lab_tests"
+                    rows="4"
+                    placeholder="CBC, LFT, X-Ray Chest..."
+                    oninput="autoSave()"
+                >{{ appt.lab_tests or '' }}</textarea>
+
+                <button
+                    type="button"
+                    class="mic-btn"
+                    onclick="startVoice('lab_tests', this)">
+                    🎤
+                </button>
+            </div>
+
         </div>
 
         <!-- ========== PRESCRIPTION ========= -->
@@ -153,7 +186,7 @@
                     </button>
                 </div>
 
-                <div id="templateBox"></div>
+                
             </div>
 
             <table class="med-table">
@@ -191,12 +224,22 @@
         <div class="box shadow-card print-prescription">
             <h3>Advice</h3>
 
-            <textarea
-                id="Advice"
-                rows="4"
-                placeholder="Patient Advice..."
-                oninput="autoSave()"
-            >{{ appt.Advice or '' }}</textarea>
+            <div class="voice-field">
+                <textarea
+                    id="Advice"
+                    rows="4"
+                    placeholder="Patient Advice..."
+                    oninput="autoSave()"
+                >{{ appt.Advice or '' }}</textarea>
+
+                <button
+                    type="button"
+                    class="mic-btn"
+                    onclick="startVoice('Advice', this)">
+                    🎤
+                </button>
+            </div>
+
         </div>
 
         
@@ -223,23 +266,30 @@
 <script src="{{ url_for('static', filename='js/appointments/consultation/autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/prescription.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/keyboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/appointments/consultation/voice.js') }}"></script>
 
 <script>
+function closeAllTemplatePopups() {
+    document
+        .querySelectorAll(".template-popup")
+        .forEach(popup => popup.style.display = "none");
+}
+
 function applySymptomTemplate(text) {
     const textarea = document.getElementById("symptoms");
     textarea.value = text;
     autoSave();
 }
 
-</script>
-<script>
-function openSymptomTemplateBox() {
+function openSymptomTemplateBox(event) {
+    event.stopPropagation(); // 🔥 VERY IMPORTANT
+
+    const box = document.getElementById("symptomTemplateBox");
 
     fetch("/symptom-templates/search")
         .then(r => r.json())
         .then(data => {
 
-            const box = document.getElementById("symptomTemplateBox");
             box.innerHTML = "";
 
             if (data.length === 0) {
@@ -251,10 +301,11 @@ function openSymptomTemplateBox() {
                 div.className = "template-item";
                 div.innerText = t.name;
 
-                div.onclick = () => {
+                div.addEventListener("click", function (e) {
+                    e.stopPropagation(); // 🔥 CRITICAL
                     applySymptomTemplate(t.content);
-                    box.style.display = "none";
-                };
+                    closeAllTemplatePopups();
+                });
 
                 box.appendChild(div);
             });
@@ -263,17 +314,12 @@ function openSymptomTemplateBox() {
         });
 }
 
-// click outside close (same as prescription)
-document.addEventListener("click", e => {
-    const box = document.getElementById("symptomTemplateBox");
-    if (!box) return;
-
-    if (!box.contains(e.target) &&
-        !e.target.closest(".symptom-actions")) {
-        box.style.display = "none";
-    }
+// click outside → close popup
+document.addEventListener("click", () => {
+    closeAllTemplatePopups();
 });
 </script>
+
 
 <script>
 function saveTemplate() {
