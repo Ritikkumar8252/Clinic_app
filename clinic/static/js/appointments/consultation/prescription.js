@@ -130,21 +130,30 @@ async function finalizeAndPrint(e) {
 }
 // templates
 function openTemplateBox() {
-    const q = document.getElementById("symptoms-hidden").value;
-    fetch(`/templates/search?q=${q}`)
+    fetch(`/templates/search`)
         .then(r => r.json())
         .then(data => {
             const box = document.getElementById("templateBox");
             box.innerHTML = "";
+
+            if (data.length === 0) {
+                box.innerHTML = "<div class='template-item'>No templates</div>";
+                box.style.display = "block";
+                return;
+            }
+
             data.forEach(t => {
-                box.innerHTML += `
-                    <div onclick="applyTemplateFromServer(${t.id})">
-                        ${t.name}
-                    </div>`;
+                const div = document.createElement("div");
+                div.className = "template-item";
+                div.innerText = t.name;
+                div.onclick = () => applyTemplateFromServer(t.id);
+                box.appendChild(div);
             });
+
             box.style.display = "block";
         });
 }
+
 function applyTemplateFromServer(id) {
     fetch(`/templates/${id}`)
         .then(r => r.json())
@@ -183,7 +192,8 @@ function saveAsTemplate() {
         return;
     }
 
-    const symptoms = document.getElementById("symptoms-hidden").value;
+    const symptoms = document.getElementById("symptoms").value;
+
     if (!symptoms.trim()) {
         alert("Symptoms likhe bina template save nahi hoga");
         return;
@@ -198,7 +208,8 @@ function saveAsTemplate() {
         body: JSON.stringify({
             name,
             symptoms,
-            diagnosis: document.getElementById("diagnosis-hidden").value,
+            diagnosis: document.getElementById("Diagnosis").value,
+
             items
         })
     });

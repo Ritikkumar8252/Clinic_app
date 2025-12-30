@@ -1,353 +1,334 @@
-/* =============================
-   CONSULTATION PAGE ONLY
-   ============================= */
+/* =====================================================
+   CONSULT PAGE – REAL CLINIC UI (PRODUCTION READY)
+   LOGIC / JS / HTML NOT TOUCHED
+===================================================== */
 
-.consult-page {
-    font-family: 'Inter', sans-serif;
-    background: #f5f7fb;
-    color: #1f2937;
+:root {
+    --bg: #f4f7fb;
+    --card: #ffffff;
+    --primary: #2563eb;
+    --primary-soft: #eef2ff;
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #dc2626;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
 }
 
-/* =============================
-   TOP BAR
-   ============================= */
+/* ================= PAGE ================= */
 
-.consult-page .consult-topbar {
-    background: #ffffff;
-    padding: 14px 20px;
-    margin-bottom: 18px;
+.consult-page {
+    background: linear-gradient(180deg, #f4f7fb, #eef2ff);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text);
+    padding: 20px 28px;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+/* ================= TOP BAR ================= */
+
+.consult-topbar {
+    background: linear-gradient(180deg, #ffffff, #f9fafb);
+    padding: 14px 22px;
+    border-radius: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
 }
 
-.consult-page .top-info h2 {
-    margin: 0;
-    font-size: 19px;
+.top-info h2 {
+    font-size: 18px;
     font-weight: 600;
-    line-height: 1.3;
+    margin: 0;
 }
 
-.consult-page .top-info p {
-    margin-top: 2px;
+.top-info p {
     font-size: 12.5px;
-    color: #6b7280;
+    color: var(--muted);
+    margin-top: 2px;
 }
 
-.consult-page .top-actions {
+.top-actions {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
-.consult-page .top-actions a,
-.consult-page .top-actions button {
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-weight: 500;
+.top-actions button,
+.top-actions a {
     border: none;
-    cursor: pointer;
-}
-
-.consult-page .btn-save { background: #2563eb; color: #fff; }
-.consult-page .btn-complete { background: #059669; color: #fff; }
-.consult-page .btn-pres { background: #f59e0b; color: #fff; }
-
-/* =============================
-   MAIN LAYOUT
-   ============================= */
-
-.consult-page .consult-container {
-    display: grid;
-    grid-template-columns: 270px 1fr;
-    gap: 18px;
-}
-
-/* =============================
-   CARDS
-   ============================= */
-
-.consult-page .shadow-card {
-    background: #ffffff;
-    padding: 16px;
+    padding: 8px 16px;
     border-radius: 10px;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
 }
 
-/* =============================
-   LEFT PANEL
-   ============================= */
+.btn-save { background: var(--primary); color: #fff; }
+.btn-complete { background: var(--success); color: #fff; }
+.btn-pres { background: var(--warning); color: #fff; font-weight: 600; }
 
-.consult-page .patient-photo {
+/* ================= LAYOUT ================= */
+
+.consult-container {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 24px;
+}
+
+/* ================= LEFT PANEL ================= */
+
+.patient-side {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: sticky;
+    top: 18px;
+}
+
+.shadow-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+
+.patient-card img {
     width: 100%;
-    height: 150px;
+    height: 140px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
-.consult-page .divider {
+.patient-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.pt-small {
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.divider {
     height: 1px;
-    background: #e5e7eb;
+    background: var(--border);
     margin: 10px 0;
 }
 
-.consult-page .vital-row {
+.vitals-card h4 {
+    font-size: 14px;
     margin-bottom: 8px;
 }
 
-.consult-page .vital-row input {
-    width: 100%;
-    padding: 6px 10px;
-    font-size: 13.5px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
+.vital-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
 }
 
-/* =============================
-   MAIN CONTENT
-   ============================= */
+.vital-row label {
+    font-size: 12px;
+    color: var(--muted);
+}
 
-.consult-page .consult-main {
+.vital-row input {
+    width: 82px;
+    padding: 6px 8px;
+    font-size: 12.5px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+/* ================= MAIN CONTENT ================= */
+
+.consult-main {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.consult-page .box h3 {
-    font-size: 15px;
+.box {
+    background: var(--card);
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+}
+
+.box h3 {
+    font-size: 14.5px;
     font-weight: 600;
     margin-bottom: 8px;
 }
 
-/* =============================
-   TAG INPUT SYSTEM (CURSOR FIX)
-   ============================= */
+/* ================= INPUTS ================= */
 
-.consult-page .tags-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 6px 8px;
-    min-height: 42px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+textarea,
+input {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--border);
     background: #ffffff;
-    cursor: text; /* IMPORTANT */
-}
-
-.consult-page .tags-wrapper:focus-within {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
-}
-
-.consult-page .tags {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.consult-page .tag {
-    background: #e8f0fe;
-    padding: 4px 10px;
-    border-radius: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12.5px;
-    line-height: 1.4;
-    cursor: default;
-}
-
-.consult-page .tag .remove {
-    cursor: pointer;
-    font-size: 12px;
-    color: #dc2626;
-}
-
-.consult-page .tags-input {
-    border: none;
-    outline: none;
-    flex: 1;
-    padding: 6px;
-    font-size: 13.5px;
-    min-width: 120px;
-    background: transparent;
-}
-
-/* Prevent cursor jump */
-.consult-page .tags-input::placeholder {
-    color: #9ca3af;
-}
-
-/* =============================
-   SUGGESTIONS (CLICK SAFE)
-   ============================= */
-
-.suggestions-box {
-    background: #ffffff;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    margin-top: 4px;
-    display: none;
-    max-height: 160px;
-    overflow-y: auto;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-    z-index: 50;
-}
-
-.suggestions-box .item {
-    padding: 8px 12px;
-    cursor: pointer;
+    padding: 8px 10px;
     font-size: 13px;
+    font-family: inherit;
 }
 
-.suggestions-box .item:hover {
-    background: #f3f4f6;
+textarea {
+    resize: none;
+    min-height: 64px;
 }
 
-/* =============================
-   PRESCRIPTION TABLE (CURSOR SAFE)
-   ============================= */
+textarea:focus,
+input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
 
-.consult-page .med-table {
+/* ================= PRESCRIPTION ================= */
+
+.prescription-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.prescription-actions,
+.symptom-actions {
+    display: inline-flex;
+    gap: 8px;
+    position: relative;
+}
+
+.btn-grey {
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 12.5px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-grey:hover {
+    background: var(--primary-soft);
+}
+
+/* ================= MED TABLE ================= */
+
+.med-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    margin-top: 8px;
 }
 
-.consult-page .med-table th {
-    text-align: left;
+.med-table th {
     font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    padding-bottom: 6px;
+    color: var(--muted);
 }
 
-.consult-page .med-table td {
-    padding: 4px;
+.med-table td input {
+    height: 36px;
 }
 
-.consult-page .med-table input {
-    width: 100%;
-    padding: 6px 8px;
-    font-size: 13.5px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-}
-
-.consult-page .med-table input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
-}
-
-/* Delete button */
-.consult-page .del-btn {
+.del-btn {
     background: #fee2e2;
     color: #991b1b;
     border: none;
     padding: 6px 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
-/* =============================
-   TEMPLATE BOX
-   ============================= */
+/* ================= TEMPLATE POPUP (BOTH) ================= */
 
-.consult-page .template-box {
-    display: none;
+.template-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 240px;
     background: #ffffff;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    width: 260px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-    padding: 4px 0;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow:
+        0 18px 40px rgba(0,0,0,0.18),
+        0 6px 16px rgba(0,0,0,0.08);
+    display: none;
+    z-index: 1000;
+    overflow: hidden;
+    max-height: 260px;
+    overflow-y: auto;
 }
 
-/* =============================
-   TOAST
-   ============================= */
+.template-popup::before {
+    content: "Select Template";
+    display: block;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    background: #f9fafb;
+    border-bottom: 1px solid var(--border);
+}
 
-.consult-page .save-toast {
+.template-item {
+    padding: 10px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.template-item::before {
+    content: "📄";
+    opacity: 0.6;
+}
+
+.template-item:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.template-item:active {
+    transform: scale(0.97);
+}
+
+.template-popup:empty::after {
+    content: "No templates saved";
+    display: block;
+    padding: 14px;
+    font-size: 12.5px;
+    color: var(--muted);
+    text-align: center;
+}
+
+/* ================= TOAST ================= */
+
+.save-toast {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #059669;
+    bottom: 22px;
+    right: 22px;
+    background: var(--success);
     color: white;
     padding: 10px 16px;
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 13px;
-    pointer-events: none;
     opacity: 0;
 }
 
-/* =============================
-   PRIMARY CTA
-   ============================= */
-
-.consult-page .btn-pres {
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.consult-page .btn-pres:disabled {
-    background: #fde68a;
-    color: #9ca3af;
-    cursor: not-allowed;
-}
-
-
-/* =============================
-   LAB TEST SECTION
-   ============================= */
-
-.consult-page .lab-section textarea {
-    width: 100%;
-    resize: none;
-    padding: 8px 10px;
-    font-size: 13.5px;
-    line-height: 1.5;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-    font-family: inherit;
-}
-
-.consult-page .lab-section textarea:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
-}
-/* =============================
-   PRINT RULES
-   ============================= */
+/* ================= PRINT ================= */
 
 @media print {
-
-    /* Hide everything */
-    body * {
-        visibility: hidden;
-    }
-
-    /* Show only prescription + lab tests */
-    .print-prescription,
-    .print-prescription * {
-        visibility: visible;
-    }
-
-    /* Layout for printing */
-    .print-prescription {
-        position: relative;
-        width: 100%;
-        margin-bottom: 12px;
-        page-break-inside: avoid;
-    }
-
-    /* Remove UI elements */
     .consult-topbar,
     .patient-side,
     .btn-save,
@@ -356,186 +337,74 @@
     .save-toast {
         display: none !important;
     }
-
-    textarea {
-        border: none;
-    }
 }
 
-/* =========================
-   TEMPLATE DROPDOWN
-========================= */
 
-#templateBox {
-    position: absolute;
-    top: 42px;
-    right: 0;
-    width: 260px;
+.vitals-card {
+    border-left: 4px solid #2563eb;
+    background: linear-gradient(180deg, #ffffff, #f0f6ff);
+}
+.followup-card {
+    border-left: 4px solid #16a34a;
+    background: linear-gradient(180deg, #ffffff, #f0fdf4);
+}
+
+.followup-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #166534;
+    margin-bottom: 8px;
+}
+
+.followup-card input {
+    border: 1px solid #bbf7d0;
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
-    padding: 6px 0;
-    display: none;
-    z-index: 100;
+}
+.box {
+    background: linear-gradient(180deg, #ffffff, #fafcff);
+}
+.btn-save {
+    background: linear-gradient(180deg, #2563eb, #1d4ed8);
 }
 
-/* Single template row */
-#templateBox div {
-    padding: 10px 14px;
-    font-size: 13.5px;
-    color: #1f2937;
-    cursor: pointer;
-    transition: background 0.2s ease;
+.btn-complete {
+    background: linear-gradient(180deg, #16a34a, #15803d);
 }
 
-/* Hover */
-#templateBox div:hover {
-    background: #f3f4f6;
+.btn-pres {
+    background: linear-gradient(180deg, #f59e0b, #d97706);
 }
 
-/* Empty state */
-#templateBox:empty::after {
-    content: "No templates found";
-    display: block;
-    padding: 12px;
-    font-size: 12.5px;
-    color: #9ca3af;
-    text-align: center;
-}
-/* =========================
-   PRESCRIPTION HEADER
-========================= */
-
-.prescription-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.prescription-actions {
-    display: flex;
-    gap: 8px;
-}
-
-/* Grey outline button */
 .btn-grey {
-    background: #f9fafb;
-    border: 1px solid #d1d5db;
-    color: #374151;
-    font-size: 13px;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
+    background: #f8fafc;
 }
-
-.btn-grey:hover {
-    background: #f3f4f6;
-}
-/* =========================
-   MEDICINE TABLE POLISH
-========================= */
-
-.med-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 6px;
-}
-
-.med-table th {
-    font-size: 12px;
-    color: #6b7280;
-    text-align: left;
-    padding-bottom: 6px;
-}
-
-.med-table td input {
-    width: 100%;
-    padding: 7px 10px;
-    font-size: 13px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-}
-
-.med-table td input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
-}
-
-/* Delete button */
-.del-btn {
-    background: #fee2e2;
-    color: #991b1b;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-.template-box {
-    position: absolute;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 10px 20px rgba(0,0,0,.08);
-    width: 240px;
-    z-index: 50;
-}
-
-.template-item {
-    padding: 10px 12px;
-    cursor: pointer;
-}
-
-.template-item:hover {
-    background: #f4f7fb;
-}
-.template-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 12px;
-    cursor: pointer;
-}
-
-.tpl-actions span {
-    margin-left: 6px;
-    cursor: pointer;
-}
-
-.tpl-actions span:hover {
-    opacity: 0.7;
-}
-/* =========================
-   SYMPTOM TEMPLATE DROPDOWN
-========================= */
-
-.symptom-template-box {
-    position: absolute;
-    top: 42px;
-    left: 0;
-    width: 260px;
+textarea,
+input {
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.15);
-    padding: 6px 0;
-    z-index: 9999;
-    display: none;
-    pointer-events: auto;
 }
 
-.symptom-template-box .template-item {
-    padding: 10px 14px;
-    font-size: 13.5px;
-    cursor: pointer;
+textarea::placeholder,
+input::placeholder {
+    color: #9ca3af;
 }
-
-.symptom-template-box .template-item:hover {
-    background: #f3f4f6;
+/* Sticky prescription for doctors */
+.prescription-sticky {
+    position: sticky;
+    top: 16px;
 }
-
-/* Search box should NOT block clicks */
-.symptom-search-box {
+/* Section hint colors */
+.box h3 {
     position: relative;
-    z-index: 1;
+    padding-left: 10px;
+}
+
+.box h3::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    height: 16px;
+    width: 3px;
+    background: #2563eb;
+    border-radius: 2px;
 }

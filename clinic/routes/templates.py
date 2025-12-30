@@ -61,10 +61,12 @@ def search_templates():
     q = request.args.get("q", "").lower()
     clinic_owner_id = get_current_clinic_owner_id()
 
-    templates = PrescriptionTemplate.query.filter(
-        PrescriptionTemplate.clinic_owner_id == clinic_owner_id,
-        PrescriptionTemplate.symptoms.ilike(f"%{q}%")
-    ).all()
+    templates = (
+            PrescriptionTemplate.query
+            .filter_by(clinic_owner_id=clinic_owner_id)
+            .order_by(PrescriptionTemplate.created_at.desc())
+            .all()
+        )
 
     return jsonify([
         {"id": t.id, "name": t.name}

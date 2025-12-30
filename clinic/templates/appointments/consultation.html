@@ -70,6 +70,16 @@
                 <input id="weight" value="{{ appt.weight or '' }}" oninput="autoSave()">
             </div>
         </div>
+
+        <div class="followup-card shadow-card print-prescription">
+            <h4>Follow Up</h4>
+
+            <input id="follow_up_date"
+                type="date"
+                value="{{ appt.follow_up_date }}"
+                oninput="autoSave()">
+        </div>
+
     </div>
 
     <!-- ========== MAIN CONSULT AREA ========= -->
@@ -82,9 +92,9 @@
                 <button class="btn-grey" type="button" onclick="openSymptomTemplateBox()">
                     Templates
                 </button>
+                <div id="symptomTemplateBox" class="template-popup"></div>
+                
             </div>
-
-            <div id="symptomTemplateBox" class="symptom-template-box"></div>
 
             <button
                 type="button"
@@ -95,28 +105,26 @@
             </button>
 
 
-            <div class="tags-wrapper">
-                <div class="tags" id="symptoms-tags"></div>
-                <input id="symptoms-input" class="tags-input"
-                    placeholder="Type symptom + Enter">
-            </div>
+            <textarea
+                id="symptoms"
+                rows="4"
+                placeholder="Patient symptoms..."
+                oninput="autoSave()"
+            >{{ appt.symptoms or '' }}</textarea>
 
-            <input type="hidden" id="symptoms-hidden"
-                value="{{ appt.symptoms or '' }}">
         </div>
 
         <!-- Diagnosis -->
         <div class="box shadow-card print-prescription">
             <h3>Diagnosis</h3>
 
-            <div class="tags-wrapper">
-                <div class="tags" id="diagnosis-tags"></div>
-                <input id="diagnosis-input" class="tags-input"
-                       placeholder="Type diagnosis + Enter">
-            </div>
+            <textarea
+                id="Diagnosis"
+                rows="4"
+                placeholder="Patient Diagnosis..."
+                oninput="autoSave()"
+            >{{ appt.Diagnosis or '' }}</textarea>
 
-            <input type="hidden" id="diagnosis-hidden"
-                   value="{{ appt.diagnosis or '' }}">
         </div>
 
         <!-- Lab Tests -->
@@ -138,6 +146,7 @@
                     <button class="btn-grey" type="button" onclick="openTemplateBox()">
                         Templates
                     </button>
+                    <div id="templateBox" class="template-popup"></div>
 
                     <button class="btn-grey" type="button" onclick="saveAsTemplate()">
                         Save as Template
@@ -182,22 +191,15 @@
         <div class="box shadow-card print-prescription">
             <h3>Advice</h3>
 
-            <div class="tags-wrapper">
-                <div class="tags" id="advice-tags"></div>
-                <input id="advice-input" class="tags-input"
-                       placeholder="Type advice + Enter">
-            </div>
-
-            <input type="hidden" id="advice-hidden"
-                   value="{{ appt.advice or '' }}">
+            <textarea
+                id="Advice"
+                rows="4"
+                placeholder="Patient Advice..."
+                oninput="autoSave()"
+            >{{ appt.Advice or '' }}</textarea>
         </div>
 
-        <!-- Follow Up -->
-        <div class="box shadow-card print-prescription">
-            <h3>Follow Up Date</h3>
-            <input id="follow_up_date" type="date"
-                   value="{{ appt.follow_up_date }}" oninput="autoSave()">
-        </div>
+        
 
     </div>
 </div>
@@ -219,29 +221,13 @@
 </script>
 
 <script src="{{ url_for('static', filename='js/appointments/consultation/autosave.js') }}"></script>
-<script src="{{ url_for('static', filename='js/appointments/consultation/tags.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/prescription.js') }}"></script>
-<!-- <script src="{{ url_for('static', filename='js/consult_symptoms.js') }}"></script> -->
+<script src="{{ url_for('static', filename='js/appointments/consultation/keyboard.js') }}"></script>
 
 <script>
 function applySymptomTemplate(text) {
-
-    // 1️⃣ Normalize text → comma separated
-    // supports newline, bullet, dot
-    const normalized = text
-        .split(/\n|,|•|-/)
-        .map(s => s.trim())
-        .filter(Boolean)
-        .join(",");
-
-    // 2️⃣ Set hidden field
-    const hidden = document.getElementById("symptoms-hidden");
-    hidden.value = normalized;
-
-    // 3️⃣ Rebuild tags UI
-    rebuildTags("symptoms", normalized);
-
-    // 4️⃣ Autosave
+    const textarea = document.getElementById("symptoms");
+    textarea.value = text;
     autoSave();
 }
 
@@ -292,7 +278,7 @@ document.addEventListener("click", e => {
 <script>
 function saveTemplate() {
 
-    const content = document.getElementById("symptoms-hidden").value.trim();
+    const content = document.getElementById("symptoms").value.trim();
 
     if (!content) {
         alert("Pehle symptoms likho");

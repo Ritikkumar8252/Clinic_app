@@ -12,12 +12,13 @@ function sendSaveRequest() {
     const payload = {};
 
     // Tags (hidden inputs)
-    ["symptoms", "diagnosis", "advice"].forEach(field => {
-        const el = document.getElementById(field + "-hidden");
+    ["symptoms", "Diagnosis", "Advice", "lab_tests"].forEach(id => {
+        const el = document.getElementById(id);
         if (el && el.value.trim()) {
-            payload[field] = el.value.trim();
+            payload[id] = el.value.trim();
         }
     });
+
 
     // Vitals
     ["bp", "pulse", "spo2", "temperature", "weight", "follow_up_date"]
