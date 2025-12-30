@@ -34,6 +34,7 @@
 <!-- ================= MAIN GRID ================= -->
 <div class="consult-container">
 
+
     <!-- ========== LEFT PANEL ========= -->
     <div class="patient-side">
 
@@ -77,15 +78,31 @@
         <!-- Symptoms -->
         <div class="box shadow-card print-prescription">
             <h3>Symptoms</h3>
+            <div class="symptom-actions">
+                <button class="btn-grey" type="button" onclick="openSymptomTemplateBox()">
+                    Templates
+                </button>
+            </div>
+
+            <div id="symptomTemplateBox" class="symptom-template-box"></div>
+
+            <button
+                type="button"
+                class="btn-grey"
+                style="margin-bottom: 8px"
+                onclick="saveTemplate()">
+                Save Symptoms as Template
+            </button>
+
 
             <div class="tags-wrapper">
                 <div class="tags" id="symptoms-tags"></div>
                 <input id="symptoms-input" class="tags-input"
-                       placeholder="Type symptom + Enter">
+                    placeholder="Type symptom + Enter">
             </div>
 
             <input type="hidden" id="symptoms-hidden"
-                   value="{{ appt.symptoms or '' }}">
+                value="{{ appt.symptoms or '' }}">
         </div>
 
         <!-- Diagnosis -->
@@ -204,5 +221,106 @@
 <script src="{{ url_for('static', filename='js/appointments/consultation/autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/tags.js') }}"></script>
 <script src="{{ url_for('static', filename='js/appointments/consultation/prescription.js') }}"></script>
+<!-- <script src="{{ url_for('static', filename='js/consult_symptoms.js') }}"></script> -->
+
+<script>
+function applySymptomTemplate(text) {
+
+    // 1️⃣ Normalize text → comma separated
+    // supports newline, bullet, dot
+    const normalized = text
+        .split(/\n|,|•|-/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join(",");
+
+    // 2️⃣ Set hidden field
+    const hidden = document.getElementById("symptoms-hidden");
+    hidden.value = normalized;
+
+    // 3️⃣ Rebuild tags UI
+    rebuildTags("symptoms", normalized);
+
+    // 4️⃣ Autosave
+    autoSave();
+}
+
+</script>
+<script>
+function openSymptomTemplateBox() {
+
+    fetch("/symptom-templates/search")
+        .then(r => r.json())
+        .then(data => {
+
+            const box = document.getElementById("symptomTemplateBox");
+            box.innerHTML = "";
+
+            if (data.length === 0) {
+                box.innerHTML = "<div class='template-item'>No templates</div>";
+            }
+
+            data.forEach(t => {
+                const div = document.createElement("div");
+                div.className = "template-item";
+                div.innerText = t.name;
+
+                div.onclick = () => {
+                    applySymptomTemplate(t.content);
+                    box.style.display = "none";
+                };
+
+                box.appendChild(div);
+            });
+
+            box.style.display = "block";
+        });
+}
+
+// click outside close (same as prescription)
+document.addEventListener("click", e => {
+    const box = document.getElementById("symptomTemplateBox");
+    if (!box) return;
+
+    if (!box.contains(e.target) &&
+        !e.target.closest(".symptom-actions")) {
+        box.style.display = "none";
+    }
+});
+</script>
+
+<script>
+function saveTemplate() {
+
+    const content = document.getElementById("symptoms-hidden").value.trim();
+
+    if (!content) {
+        alert("Pehle symptoms likho");
+        return;
+    }
+
+    const name = prompt("Template name?");
+    if (!name) return;
+
+    fetch("/symptom-templates/save", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: name,
+            content: content
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.error) {
+            alert(res.error);
+        } else {
+            alert("Symptom template saved");
+        }
+    });
+}
+</script>
 
 {% endblock %}

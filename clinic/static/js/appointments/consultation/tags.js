@@ -49,3 +49,47 @@ document.addEventListener("DOMContentLoaded", () => {
     initTagInput("diagnosis");
     initTagInput("advice");
 });
+// ======================================
+// REBUILD TAGS FROM STORED VALUE
+// ======================================
+function rebuildTags(field, value) {
+
+    const tagsBox = document.getElementById(field + "-tags");
+    const hidden = document.getElementById(field + "-hidden");
+
+    if (!tagsBox || !hidden) return;
+
+    // clear existing tags
+    tagsBox.innerHTML = "";
+
+    if (!value) return;
+
+    // normalize (CSV)
+    const items = value
+        .split(",")
+        .map(v => v.trim())
+        .filter(Boolean);
+
+    items.forEach(text => {
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.dataset.val = text;
+        tag.innerHTML = `${text}<span class="remove">✕</span>`;
+
+        tag.querySelector(".remove").onclick = () => {
+            tag.remove();
+            updateHidden();
+            autoSave();
+        };
+
+        tagsBox.appendChild(tag);
+    });
+
+    hidden.value = items.join(",");
+
+    function updateHidden() {
+        hidden.value = [...tagsBox.children]
+            .map(t => t.dataset.val)
+            .join(",");
+    }
+}

@@ -350,3 +350,21 @@ class PrescriptionTemplateItem(db.Model):
     dose = db.Column(db.String(100))
     duration_days = db.Column(db.Integer)
     instructions = db.Column(db.String(200))
+
+# =========================
+# SYMPTOMS TEMPLATE
+# =========================
+class SymptomTemplate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    clinic_owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        index=True
+    )
+
+    name = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

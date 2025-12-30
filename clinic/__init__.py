@@ -14,6 +14,7 @@ from .routes.home import home_bp
 from dotenv import load_dotenv
 from clinic.commands.debug import clinic_debug
 from clinic.routes.templates import templates_bp
+from clinic.routes.symptom_templates import  symptom_templates_bp
 
 load_dotenv()
 
@@ -86,4 +87,5 @@ def create_app():
     app.register_blueprint(settings_bp)
     app.cli.add_command(clinic_debug)
     app.register_blueprint(templates_bp)
+    app.register_blueprint( symptom_templates_bp)
     return app

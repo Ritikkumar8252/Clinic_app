@@ -149,22 +149,27 @@ function applyTemplateFromServer(id) {
     fetch(`/templates/${id}`)
         .then(r => r.json())
         .then(data => {
+
             const body = document.getElementById("medBody");
+            if (!body) return;
+
+            // clear table
             body.innerHTML = "";
 
             data.items.forEach(item => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td><input value="${item.medicine}"></td>
+                    <td><input value="${item.medicine || ""}"></td>
                     <td><input value="${item.dose || ""}"></td>
                     <td><input value="${item.days || ""}"></td>
                     <td><input value="${item.notes || ""}"></td>
-                    <td><button onclick="removeRow(this)">x</button></td>
+                    <td><button class="del-btn" onclick="removeRow(this)">x</button></td>
                 `;
                 body.appendChild(tr);
             });
         });
 }
+
 function saveAsTemplate() {
 
     if (window.prescriptionLocked === "true") {
