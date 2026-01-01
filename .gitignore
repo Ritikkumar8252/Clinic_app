@@ -18,3 +18,7 @@ instance/
 static/uploads/
 static/patient_images/
 static/records/
+
+# OS
+.DS_Store
+Thumbs.db
