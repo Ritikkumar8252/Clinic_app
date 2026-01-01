@@ -23,6 +23,9 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
+    # ✅ REQUIRED FOR RENDER / PROXIES
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
     # ---------------- SECRET KEY ----------------
     app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
