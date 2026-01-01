@@ -21,31 +21,18 @@ ROLE_LABELS = {
 # -----------------------------
 # CLINIC OWNER RESOLUTION
 # -----------------------------
-def get_current_clinic_owner_id():
+def get_current_clinic_id():
     """
-    Resolve clinic owner (doctor) ID.
-    HARD FAILS on invalid state.
+    Resolve current clinic_id from session.
+    HARD FAIL if missing.
     """
 
-    user_id = session.get("user_id")
-    if not user_id:
-        abort(401, "Login required")
+    clinic_id = session.get("clinic_id")
+    if not clinic_id:
+        abort(401, "Clinic not found in session")
 
-    user = User.query.get(user_id)
-    if not user:
-        abort(401, "Invalid session")
+    return clinic_id
 
-    # Doctor = clinic owner
-    if user.role == "doctor":
-        return user.id
-
-    # Staff roles
-    if user.role in ("reception", "lab", "pharmacy"):
-        if not user.created_by:
-            abort(403, "Staff not linked to any clinic")
-        return user.created_by
-
-    abort(403, "Unauthorized role")
 
 
 # -----------------------------
@@ -57,46 +44,40 @@ def generate_invoice_number():
     Uses per-clinic sequence.
     """
 
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
-    # Lock sequence row (important for concurrency)
     seq = (
         InvoiceSequence.query
-        .filter_by(clinic_owner_id=clinic_owner_id)
+        .filter_by(clinic_id=clinic_id)
         .with_for_update()
         .first()
     )
 
     if not seq:
         seq = InvoiceSequence(
-            clinic_owner_id=clinic_owner_id,
+            clinic_id=clinic_id,
             last_number=0
         )
         db.session.add(seq)
-        db.session.flush()  # ensure row exists before increment
+        db.session.flush()
 
     seq.last_number += 1
-    invoice_no = f"INV-{seq.last_number:04d}"
+    return f"INV-{seq.last_number:04d}"
 
-    return invoice_no
 
 
 # -----------------------------
 # AUDIT LOGGING (LEGAL SAFE)
 # -----------------------------
-def log_action(action, clinic_owner_id=None, user_id=None):
+def log_action(action, user_id=None):
     """
     Log security / business actions.
     Always include clinic context.
     """
 
     try:
-        if not clinic_owner_id:
-            # fallback (safe)
-            clinic_owner_id = get_current_clinic_owner_id()
-
         log = AuditLog(
-            clinic_owner_id=clinic_owner_id,
+            clinic_id=get_current_clinic_id(),
             user_id=user_id or session.get("user_id"),
             action=action,
             ip_address=request.remote_addr if request else None,
@@ -108,5 +89,4 @@ def log_action(action, clinic_owner_id=None, user_id=None):
         db.session.commit()
 
     except Exception:
-        # Logging must NEVER break main flow
         db.session.rollback()

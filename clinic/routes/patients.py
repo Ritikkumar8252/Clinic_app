@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from ..extensions import db
 from ..models import Patient, Invoice, Appointment, MedicalRecord ,Prescription
 from clinic.routes.auth import login_required, role_required
-from clinic.utils import get_current_clinic_owner_id
+from clinic.utils import get_current_clinic_id
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -21,10 +21,10 @@ def patients():
     q = request.args.get("q", "")
     date_filter = request.args.get("date", "")
 
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     query = Patient.query.filter_by(
-    clinic_owner_id=clinic_owner_id,
+    clinic_id=clinic_id,
     is_deleted=False
     )
 
@@ -51,7 +51,7 @@ def patients():
 @role_required( "reception")
 def add_patient():
     from_page = request.args.get("from_page")
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     if request.method == "POST":
         name = request.form.get("name")
@@ -74,7 +74,7 @@ def add_patient():
         # -------- PATIENT NUMBER (CLINIC WISE) --------
         last_patient = (
             Patient.query
-            .filter_by(clinic_owner_id=clinic_owner_id)
+            .filter_by(clinic_id=clinic_id)
             .order_by(Patient.patient_no.desc())
             .first()
         )
@@ -94,7 +94,7 @@ def add_patient():
             image_file.save(save_path)
 
         new_patient = Patient(
-            clinic_owner_id=clinic_owner_id,
+            clinic_id=clinic_id,
             patient_no=patient_no,
             name=name,
             age=age,
@@ -130,11 +130,11 @@ def add_patient():
 @login_required
 @role_required( "reception")
 def delete_patient(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     patient = Patient.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     patient.is_deleted = True
@@ -151,11 +151,11 @@ def delete_patient(id):
 @login_required
 @role_required( "reception")
 def edit_patient(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     patient = Patient.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     if request.method == "POST":
@@ -184,11 +184,11 @@ def edit_patient(id):
 @login_required
 @role_required("reception", "doctor")
 def patient_profile(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     patient = Patient.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id,
+        clinic_id=clinic_id,
         is_deleted=False
     ).first_or_404()
 
@@ -210,7 +210,7 @@ def patient_profile(id):
         .join(Patient)
         .filter(
             Patient.id == patient.id,
-            Patient.clinic_owner_id == clinic_owner_id,
+            Patient.clinic_id == clinic_id,
             Appointment.is_deleted == False,
             Prescription.finalized == True
         )
@@ -233,11 +233,11 @@ def patient_profile(id):
 @login_required
 @role_required( "doctor")
 def upload_record(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     patient = Patient.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     if request.method == "POST":
@@ -253,6 +253,7 @@ def upload_record(id):
             file.save(filepath)
 
             record = MedicalRecord(
+                clinic_id=clinic_id,
                 patient_id=patient.id,
                 filename=filename
             )
@@ -277,13 +278,13 @@ def upload_record(id):
 @login_required
 @role_required( "doctor")
 def delete_record(record_id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     record = MedicalRecord.query.get_or_404(record_id)
 
     patient = Patient.query.filter_by(
         id=record.patient_id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     file_path = os.path.join(
@@ -310,11 +311,11 @@ def delete_record(record_id):
 @login_required
 @role_required( "doctor")
 def generate_certificate(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     patient = Patient.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     return f"Certificate generation is coming soon for: {patient.name}"
@@ -327,11 +328,11 @@ def generate_certificate(id):
 @login_required
 @role_required( "doctor")
 def patient_visits(patient_id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     patient = Patient.query.filter_by(
         id=patient_id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     visits = (
@@ -359,11 +360,11 @@ def patient_visits(patient_id):
 @login_required
 @role_required("doctor")
 def restore_patient(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     patient = Patient.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id,
+        clinic_id=clinic_id,
         is_deleted=True
     ).first_or_404()
 

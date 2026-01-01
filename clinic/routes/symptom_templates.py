@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from clinic.extensions import db
 from clinic.models import SymptomTemplate
 from clinic.routes.auth import login_required, role_required
-from clinic.utils import get_current_clinic_owner_id
+from clinic.utils import get_current_clinic_id
 from clinic.extensions import csrf
 
 symptom_templates_bp = Blueprint(
@@ -30,10 +30,10 @@ def save_symptom_template():
     if not name or not content:
         return jsonify({"error": "Name and content required"}), 400
 
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     exists = SymptomTemplate.query.filter_by(
-        clinic_owner_id=clinic_owner_id,
+        clinic_id=clinic_id,
         name=name
     ).first()
 
@@ -41,7 +41,7 @@ def save_symptom_template():
         return jsonify({"error": "Template already exists"}), 409
 
     template = SymptomTemplate(
-        clinic_owner_id=clinic_owner_id,
+        clinic_id=clinic_id,
         name=name,
         content=content
     )
@@ -59,10 +59,10 @@ def save_symptom_template():
 @role_required("doctor")
 def search_symptom_templates():
     q = request.args.get("q", "").strip()
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     query = SymptomTemplate.query.filter_by(
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     )
 
     if q:
@@ -93,11 +93,11 @@ def update_symptom_template(id):
     if not data:
         return jsonify({"error": "Invalid JSON"}), 400
 
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     template = SymptomTemplate.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     name = data.get("name", "").strip()
@@ -118,11 +118,11 @@ def update_symptom_template(id):
 @role_required("doctor")
 @csrf.exempt
 def delete_symptom_template(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     template = SymptomTemplate.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     db.session.delete(template)

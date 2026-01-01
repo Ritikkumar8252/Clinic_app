@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app,abort
 from clinic.extensions import db, mail
-from clinic.models import User, PasswordResetToken
+from clinic.models import User, PasswordResetToken,Clinic
 from clinic.utils import log_action
 from flask_mail import Message
 from functools import wraps
@@ -87,14 +87,12 @@ def login():
         session["user_id"] = user.id
         session["user_email"] = user.email
         session["role"] = user.role
+        session["clinic_id"] = user.clinic_id  # ⭐ MOST IMPORTANT
 
-        log_action("LOGIN_SUCCESS", user.id)
-
+        log_action("LOGIN_SUCCESS")
 
         return redirect(url_for("dashboard_bp.dashboard"))
-
     return render_template("auth/login.html")
-
 
 # ---------------- SIGNUP ----------------
 @auth_bp.route("/signup", methods=["GET", "POST"])
@@ -122,9 +120,20 @@ def signup():
             user = User(fullname=fullname, email=email, role="doctor")
             user.set_password(password)
             db.session.add(user)
+            db.session.flush()   # 🔑 get user.id
+
+            # clinic already auto-created by migration using user.id
+            # 2️⃣ Create clinic
+            clinic = Clinic(
+                name=f"{fullname}'s Clinic",
+                owner_id=user.id
+            )
+            db.session.add(clinic)
+            db.session.flush()  # get clinic.id
+            user.clinic_id = clinic.id
             db.session.commit()
 
-            log_action("SIGNUP", user.id)
+            log_action("SIGNUP")
 
         except Exception as e:
             db.session.rollback()
@@ -184,7 +193,7 @@ def forgot_password():
 
         mail.send(msg)
 
-        log_action("PASSWORD_RESET_LINK_SENT", user.id)
+        log_action("PASSWORD_RESET_LINK_SENT")
 
         flash("Password reset link sent to your email.", "success")
         return redirect(url_for("auth_bp.login"))
@@ -220,7 +229,7 @@ def reset_password(token):
         reset.used = True
         db.session.commit()
 
-        log_action("PASSWORD_RESET_SUCCESS", user.id)
+        log_action("PASSWORD_RESET_SUCCESS")
 
         session.clear()
         flash("Password reset successful. Please login.", "success")
@@ -232,7 +241,7 @@ def reset_password(token):
 # ---------------- LOGOUT ----------------
 @auth_bp.route("/logout")
 def logout():
-    log_action("LOGOUT", session.get("user_id"))
+    log_action("LOGOUT")
     session.clear()
     flash("Logged out successfully.", "success")
     return redirect(url_for("auth_bp.login"))

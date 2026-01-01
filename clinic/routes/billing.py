@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file
 from clinic.extensions import db
 from clinic.models import Patient, Invoice, InvoiceItem, Payment
-from clinic.utils import generate_invoice_number, get_current_clinic_owner_id
+from clinic.utils import generate_invoice_number, get_current_clinic_id
 from datetime import datetime
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
@@ -14,7 +14,7 @@ billing_bp = Blueprint("billing_bp", __name__, url_prefix="/billing")
 
 # ---------------- SECURE FETCH (CLINIC SAFE) ----------------
 def get_secure_invoice(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     return (
         Invoice.query
@@ -23,7 +23,7 @@ def get_secure_invoice(id):
             Invoice.id == id,
             Invoice.is_deleted == False,
             Patient.is_deleted == False,
-            Patient.clinic_owner_id == clinic_owner_id
+            Invoice.clinic_id == clinic_id
         )
         .first_or_404()
     )
@@ -35,7 +35,7 @@ def get_secure_invoice(id):
 @login_required
 @role_required( "reception", "doctor")
 def billing():
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     q = request.args.get("search", "").strip()
     status = request.args.get("status", "").strip()
@@ -44,7 +44,7 @@ def billing():
     Invoice.query
     .join(Patient)
     .filter(
-        Patient.clinic_owner_id == clinic_owner_id,
+        Patient.clinic_id == clinic_id,
         Invoice.is_deleted == False,
         Patient.is_deleted == False
         )
@@ -68,7 +68,7 @@ def billing():
         Invoice.query
         .join(Patient)
         .filter(
-            Patient.clinic_owner_id == clinic_owner_id,
+            Patient.clinic_id == clinic_id,
             Invoice.status != "Paid",
             Invoice.is_deleted == False,
             Patient.is_deleted == False
@@ -89,13 +89,20 @@ def billing():
 @login_required
 @role_required("reception")
 def create_invoice():
-    clinic_owner_id = get_current_clinic_owner_id()
-    patients = Patient.query.filter_by(clinic_owner_id = clinic_owner_id,
+    clinic_id = get_current_clinic_id()
+    patients = Patient.query.filter_by(clinic_id = clinic_id,
                                     is_deleted=False).all()
 
     if request.method == "POST":
+        patient = Patient.query.filter_by(
+            id=request.form["patient_id"],
+            clinic_id=clinic_id,
+            is_deleted=False
+        ).first_or_404()
+
         invoice = Invoice(
-            patient_id=request.form["patient_id"],
+            clinic_id=clinic_id,
+            patient_id=patient.id,
             invoice_number=generate_invoice_number(),
             created_at=datetime.utcnow(),
             description=request.form.get("description", ""),
@@ -103,6 +110,7 @@ def create_invoice():
             status="Unpaid",
             is_locked=False
         )
+
         db.session.add(invoice)
         db.session.commit()
 
@@ -113,6 +121,7 @@ def create_invoice():
             if name.strip():
                 db.session.add(
                     InvoiceItem(
+                        clinic_id=clinic_id,
                         invoice_id=invoice.id,
                         item_name=name.strip(),
                         amount=float(amt or 0)
@@ -147,7 +156,7 @@ def view_invoice(id):
 @login_required
 @role_required("reception")
 def edit_invoice(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
     inv = get_secure_invoice(id)
 
     if inv.is_locked:
@@ -167,6 +176,7 @@ def edit_invoice(id):
             if name.strip():
                 db.session.add(
                     InvoiceItem(
+                        clinic_id=clinic_id,
                         invoice_id=inv.id,
                         item_name=name.strip(),
                         amount=float(amt or 0)
@@ -177,7 +187,7 @@ def edit_invoice(id):
         flash("Invoice updated.", "success")
         return redirect(url_for("billing_bp.view_invoice", id=id))
 
-    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id).all()
+    patients = Patient.query.filter_by(clinic_id=clinic_id).all()
     return render_template("billing/edit_invoice.html", inv=inv, patients=patients)
 
 
@@ -233,6 +243,7 @@ def add_payment(id):
         return redirect(url_for("billing_bp.view_invoice", id=id))
 
     payment = Payment(
+        clinic_id=get_current_clinic_id(),
         invoice_id=inv.id,
         amount=amt,
         paid_at=datetime.utcnow()

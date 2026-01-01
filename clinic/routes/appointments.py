@@ -4,7 +4,7 @@ from ..models import Appointment, Patient,Prescription, PrescriptionItem,Prescri
 from datetime import datetime
 from io import BytesIO
 from clinic.routes.auth import login_required, role_required
-from clinic.utils import get_current_clinic_owner_id, log_action
+from clinic.utils import get_current_clinic_id, log_action
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
@@ -19,7 +19,7 @@ appointments_bp = Blueprint("appointments_bp", __name__)
 # SECURE HELPERS (CLINIC SAFE)
 # ------------------------------------------------
 def get_secure_appointment(id):
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     return (
         Appointment.query
@@ -28,7 +28,7 @@ def get_secure_appointment(id):
             Appointment.id == id,
             Appointment.is_deleted == False,
             Patient.is_deleted == False,
-            Patient.clinic_owner_id == clinic_owner_id
+            Patient.clinic_id == clinic_id
         )
         .first_or_404()
     )
@@ -41,7 +41,7 @@ def get_secure_appointment(id):
 @login_required
 @role_required( "reception", "doctor")
 def appointments():
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     tab = request.args.get("tab", "queue")
     search = request.args.get("search", "").strip()
@@ -56,7 +56,7 @@ def appointments():
     Appointment.query
     .join(Patient)
     .filter(
-        Patient.clinic_owner_id == clinic_owner_id,
+        Appointment.clinic_id == clinic_id,
         Appointment.is_deleted == False,
         Patient.is_deleted == False
         )
@@ -99,8 +99,8 @@ def appointments():
 @login_required
 @role_required("reception")
 def add_appointment():
-    clinic_owner_id = get_current_clinic_owner_id()
-    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id,
+    clinic_id = get_current_clinic_id()
+    patients = Patient.query.filter_by(clinic_id=clinic_id,
                                        is_deleted=False).all()
 
     if request.method == "POST":
@@ -111,10 +111,11 @@ def add_appointment():
 
         patient = Patient.query.filter_by(
             id=patient_id,
-            clinic_owner_id=clinic_owner_id
+            clinic_id=clinic_id
         ).first_or_404()
 
         appt = Appointment(
+            clinic_id=clinic_id,
             patient_id=patient.id,
             type=visit_type,
             date=date,
@@ -182,8 +183,8 @@ def edit_appointment(id):
 @login_required
 @role_required("doctor")
 def walkin():
-    clinic_owner_id = get_current_clinic_owner_id()
-    patients = Patient.query.filter_by(clinic_owner_id=clinic_owner_id,
+    clinic_id = get_current_clinic_id()
+    patients = Patient.query.filter_by(clinic_id=clinic_id,
                                        is_deleted=False).all()
 
     if request.method == "POST":
@@ -208,14 +209,14 @@ def walkin():
             # generate patient number
             last_patient = (
                 Patient.query
-                .filter_by(clinic_owner_id=clinic_owner_id)
+                .filter_by(clinic_id=clinic_id)
                 .order_by(Patient.patient_no.desc())
                 .first()
             )
             patient_no = (last_patient.patient_no + 1) if last_patient else 1
 
             patient = Patient(
-                clinic_owner_id=clinic_owner_id,
+                clinic_id=clinic_id,
                 patient_no=patient_no,
                 name=name,
                 phone=phone,
@@ -235,7 +236,7 @@ def walkin():
         else:
             patient = Patient.query.filter_by(
                 id=int(patient_id),
-                clinic_owner_id=clinic_owner_id
+                clinic_id=clinic_id
             ).first_or_404()
 
             patient.last_visit = datetime.now().date()
@@ -246,6 +247,7 @@ def walkin():
         now = datetime.now()
 
         appt = Appointment(
+            clinic_id=clinic_id, 
             patient_id=patient.id,
             type="Walk-in",
             date=now.date(),
@@ -302,11 +304,11 @@ def cancel(id):
 @role_required("doctor")
 def consult(id):
     appt = get_secure_appointment(id)
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     patient = Patient.query.filter_by(
         id=appt.patient_id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     if request.method == "POST":
@@ -418,10 +420,10 @@ def prescription_pdf(id):
         flash("Finalize prescription before downloading", "warning")
         return redirect(url_for("appointments_bp.consult", id=id))
 
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
     patient = Patient.query.filter_by(
         id=appt.patient_id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     buffer = BytesIO()

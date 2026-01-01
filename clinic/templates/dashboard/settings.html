@@ -213,20 +213,21 @@
                 <div class="card">
                     <h2>Clinic Details</h2>
 
-                    <form >
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="clinic_save">
 
                         <label>Clinic Name</label>
-                        <input type="text" name="clinic_name" value="{{ user.clinic_name }}">
+                        <input type="text" name="clinic_name" value="{{ clinic.name }}">
 
                         <label>Speciality</label>
                         <input type="text" name="speciality" value="{{ user.speciality }}">
 
                         <label>Phone</label>
-                        <input type="text" name="clinic_phone" value="{{ user.clinic_phone }}">
+                        <input type="text" name="clinic_phone" value="{{ clinic.phone }}">
 
                         <label>Address</label>
-                        <textarea name="clinic_address">{{ user.clinic_address }}</textarea>
+                        <textarea name="clinic_address">{{ clinic.address }}</textarea>
 
                         <button class="btn-primary">Save Clinic Settings</button>
                     </form>

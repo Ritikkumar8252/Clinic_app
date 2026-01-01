@@ -10,10 +10,10 @@ def clinic_debug():
 
     rows = (
         db.session.query(
-            Patient.clinic_owner_id,
+            Patient.clinic_id,
             db.func.count(Patient.id)
         )
-        .group_by(Patient.clinic_owner_id)
+        .group_by(Patient.clinic_id)
         .all()
     )
 
@@ -25,7 +25,7 @@ def clinic_debug():
     print("\n--- ORPHAN PATIENTS ---")
     orphans = (
         Patient.query
-        .outerjoin(User, Patient.clinic_owner_id == User.id)
+        .outerjoin(User, Patient.clinic_id == User.id)
         .filter(User.id == None)
         .all()
     )
@@ -34,4 +34,4 @@ def clinic_debug():
         print("No orphan patients found ✅")
     else:
         for p in orphans:
-            print(f"Patient ID {p.id} | {p.name} | clinic_owner_id={p.clinic_owner_id}")
+            print(f"Patient ID {p.id} | {p.name} | clinic_id={p.clinic_id}")

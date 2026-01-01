@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, session, redirect, url_for
-from clinic.models import User, Patient, Appointment, Invoice
+from clinic.models import User, Patient, Appointment, Invoice,Clinic
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from clinic.extensions import db
 from clinic.routes.auth import login_required, role_required
-from clinic.utils import ROLE_LABELS, get_current_clinic_owner_id
+from clinic.utils import ROLE_LABELS, get_current_clinic_id
 
 
 dashboard_bp = Blueprint("dashboard_bp", __name__)
@@ -13,12 +13,11 @@ dashboard_bp = Blueprint("dashboard_bp", __name__)
 @login_required
 def dashboard():
     
-
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
     # ✅ TOTAL PATIENTS (USER-SPECIFIC)
     total_patients = (
     Patient.query
-    .filter_by(clinic_owner_id=clinic_owner_id)
+    .filter_by(clinic_id=clinic_id)
     .count()
 )
     # ✅ TODAY'S APPOINTMENTS (USER-SPECIFIC)
@@ -27,7 +26,7 @@ def dashboard():
         Appointment.query
         .join(Patient)
         .filter(
-            Patient.clinic_owner_id == clinic_owner_id,            Appointment.date == today
+            Patient.clinic_id == clinic_id,            Appointment.date == today
         )
         .count()
     )
@@ -37,7 +36,7 @@ def dashboard():
         Invoice.query
         .join(Patient)
         .filter(
-            Patient.clinic_owner_id == clinic_owner_id,            Invoice.status != "Paid"
+            Patient.clinic_id == clinic_id,            Invoice.status != "Paid"
         )
         .count()
     )
@@ -46,14 +45,14 @@ def dashboard():
     total_invoices = (
         Invoice.query
         .join(Patient)
-        .filter(Patient.clinic_owner_id == clinic_owner_id)
+        .filter(Patient.clinic_id == clinic_id)
         .count()
     )
 
     # ✅ RECENT PATIENTS (USER-SPECIFIC)
     recent_patients = (
         Patient.query
-        .filter_by(clinic_owner_id=clinic_owner_id)
+        .filter_by(clinic_id=clinic_id)
         .order_by(Patient.id.desc())
         .limit(3)
         .all()
@@ -68,7 +67,7 @@ def dashboard():
             func.count(Patient.id)
         )
         .filter(
-            Patient.clinic_owner_id == clinic_owner_id,            Patient.created_at >= start_date
+            Patient.clinic_id == clinic_id,            Patient.created_at >= start_date
         )
         .group_by(func.date(Patient.created_at))
         .order_by(func.date(Patient.created_at))

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from ..extensions import db
 from ..models import PrescriptionTemplate, PrescriptionTemplateItem
 from clinic.routes.auth import login_required, role_required
-from clinic.utils import get_current_clinic_owner_id
+from clinic.utils import get_current_clinic_id
 from clinic.extensions import csrf
 
 templates_bp = Blueprint("templates_bp", __name__)
@@ -20,10 +20,10 @@ def save_template():
     if not data or not data.get("name"):
         return jsonify({"error": "Invalid data"}), 400
 
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     template = PrescriptionTemplate(
-        clinic_owner_id=clinic_owner_id,
+        clinic_id=clinic_id,
         name=data["name"],
         symptoms=data.get("symptoms", ""),
         diagnosis=data.get("diagnosis", "")
@@ -59,11 +59,11 @@ def save_template():
 def search_templates():
 
     q = request.args.get("q", "").lower()
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     templates = (
             PrescriptionTemplate.query
-            .filter_by(clinic_owner_id=clinic_owner_id)
+            .filter_by(clinic_id=clinic_id)
             .order_by(PrescriptionTemplate.created_at.desc())
             .all()
         )
@@ -82,11 +82,11 @@ def search_templates():
 @role_required("doctor")
 def get_template(id):
 
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     template = PrescriptionTemplate.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     return jsonify({
@@ -110,10 +110,10 @@ def get_template(id):
 @role_required("doctor")
 def template_manager():
 
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     templates = PrescriptionTemplate.query.filter_by(
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).order_by(PrescriptionTemplate.created_at.desc()).all()
 
     return render_template(
@@ -131,11 +131,11 @@ def template_manager():
 @csrf.exempt
 def delete_template(id):
 
-    clinic_owner_id = get_current_clinic_owner_id()
+    clinic_id = get_current_clinic_id()
 
     template = PrescriptionTemplate.query.filter_by(
         id=id,
-        clinic_owner_id=clinic_owner_id
+        clinic_id=clinic_id
     ).first_or_404()
 
     db.session.delete(template)

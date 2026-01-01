@@ -3,24 +3,48 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 """
-RULE:
-Every table must contain clinic_owner_id
-OR be reachable through a table that contains it.
+FINAL RULE:
+Every business table must contain clinic_id
+OR be reachable through a table that contains clinic_id.
 
-Never bypass this rule.
+clinic_id is the ONLY tenant boundary.
+Never mix clinic_id with clinic_id.
 """
+class Clinic(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    name = db.Column(db.String(200), nullable=False)
+    phone = db.Column(db.String(50))
+    address = db.Column(db.String(300))
+
+    owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        unique=True   # one doctor = one clinic
+    )
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # =========================
 # USER / DOCTOR / RECEPTION
 # =========================
 class User(db.Model):
     __tablename__ = "user"
-
     id = db.Column(db.Integer, primary_key=True)
+
+    clinic_id = db.Column(
+        db.Integer,
+        db.ForeignKey("clinic.id"),
+        nullable=True
+    )
 
     fullname = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    profile_photo = db.Column(db.String(255))
+    aadhar = db.Column(db.String(255))
+    mrc_certificate = db.Column(db.String(255))
+    clinic_license = db.Column(db.String(255))
 
     # doctor = clinic owner + admin
     # reception | lab | pharmacy = staff
@@ -43,9 +67,7 @@ class User(db.Model):
     )
 
     # Clinic details (doctor only)
-    clinic_name = db.Column(db.String(200))
-    clinic_phone = db.Column(db.String(50))
-    clinic_address = db.Column(db.String(300))
+    
     speciality = db.Column(db.String(100))
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -63,15 +85,18 @@ class User(db.Model):
 # =========================
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-
-    # 👇 ALWAYS DOCTOR ID
-    # clinic owner (doctor)
-    clinic_owner_id = db.Column(
+    clinic_id = db.Column(
         db.Integer,
-        db.ForeignKey("user.id"),
+        db.ForeignKey("clinic.id"),
         nullable=False,
         index=True
     )
+
+    __table_args__ = (
+    db.UniqueConstraint("clinic_id", "patient_no"),
+    )
+
+    
     patient_no = db.Column(db.Integer, nullable=False, index=True)
 
     name = db.Column(db.String(100), nullable=False)
@@ -97,15 +122,18 @@ class Patient(db.Model):
     appointments = db.relationship("Appointment", backref="patient", lazy=True)
     records = db.relationship("MedicalRecord", backref="patient", lazy=True)
     invoices = db.relationship("Invoice", backref="patient", lazy=True)
-    __table_args__ = (
-        db.UniqueConstraint("clinic_owner_id", "patient_no"),
-    )
-
+    
 # =========================
 # APPOINTMENT / CONSULTATION
 # =========================
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    clinic_id = db.Column(
+        db.Integer,
+        db.ForeignKey("clinic.id"),
+        nullable=False,
+        index=True
+    )
 
     patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable=False)
 
@@ -148,9 +176,15 @@ class Appointment(db.Model):
 class MedicalRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
+    clinic_id = db.Column(
+        db.Integer,
+        db.ForeignKey("clinic.id"),
+        nullable=False,
+        index=True
+    )
+
     patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable=False)
     filename = db.Column(db.String(200), nullable=False)
-
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -159,6 +193,12 @@ class MedicalRecord(db.Model):
 # =========================
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    clinic_id = db.Column(
+        db.Integer,
+        db.ForeignKey("clinic.id"),
+        nullable=False,
+        index=True
+    )
 
     patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable=False)
 
@@ -183,7 +223,12 @@ class Invoice(db.Model):
 # =========================
 class InvoiceItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-
+    clinic_id = db.Column(
+        db.Integer,
+        db.ForeignKey("clinic.id"),
+        nullable=False,
+        index=True
+    )
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoice.id"), nullable=False)
     item_name = db.Column(db.String(200), nullable=False)
     amount = db.Column(db.Float, nullable=False)
@@ -193,13 +238,13 @@ class InvoiceItem(db.Model):
 class InvoiceSequence(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
-    clinic_owner_id = db.Column(
-        db.Integer,
-        db.ForeignKey("user.id"),
-        nullable=False,
-        unique=True,
-        index=True
+    clinic_id = db.Column(
+    db.Integer,
+    db.ForeignKey("clinic.id"),
+    nullable=False,
+    unique=True
     )
+
 
     last_number = db.Column(db.Integer, default=0)
 
@@ -209,7 +254,12 @@ class InvoiceSequence(db.Model):
 # =========================
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-
+    clinic_id = db.Column(
+        db.Integer,
+        db.ForeignKey("clinic.id"),
+        nullable=False,
+        index=True
+    )
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoice.id"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
 
@@ -224,9 +274,9 @@ class AuditLog(db.Model):
     __tablename__ = "audit_log"
 
     id = db.Column(db.Integer, primary_key=True)
-    clinic_owner_id = db.Column(
+    clinic_id = db.Column(
         db.Integer,
-        db.ForeignKey("user.id"),
+        db.ForeignKey("clinic.id"),
         nullable=False,
         index=True
     )
@@ -310,17 +360,18 @@ class PrescriptionItem(db.Model):
 # =========================
 class PrescriptionTemplate(db.Model):
     __table_args__ = (
-        db.UniqueConstraint("clinic_owner_id", "name"),
+        db.UniqueConstraint("clinic_id", "name"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
 
-    clinic_owner_id = db.Column(
+    clinic_id = db.Column(
         db.Integer,
-        db.ForeignKey("user.id"),
+        db.ForeignKey("clinic.id"),
         nullable=False,
-        index=True
+        index =True
     )
+
 
     name = db.Column(db.String(200), nullable=False)
     symptoms = db.Column(db.Text)     # "fever,cold,cough"
@@ -357,12 +408,12 @@ class PrescriptionTemplateItem(db.Model):
 class SymptomTemplate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
-    clinic_owner_id = db.Column(
+    clinic_id = db.Column(
         db.Integer,
-        db.ForeignKey("user.id"),
-        nullable=False,
-        index=True
+        db.ForeignKey("clinic.id"),
+        nullable=False
     )
+
 
     name = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
