@@ -1,8 +1,8 @@
-"""initial schema with structured prescription
+"""initial postgres schema
 
-Revision ID: ac3ced79df81
+Revision ID: b745eee5f961
 Revises: 
-Create Date: 2025-12-19 03:58:40.505348
+Create Date: 2026-01-01 06:47:28.944983
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ac3ced79df81'
+revision = 'b745eee5f961'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -81,6 +81,7 @@ def upgrade():
     sa.Column('age', sa.Integer(), nullable=True),
     sa.Column('gender', sa.String(length=20), nullable=True),
     sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('is_deleted', sa.Boolean(), nullable=True),
     sa.Column('disease', sa.String(length=120), nullable=False),
     sa.Column('last_visit', sa.Date(), nullable=True),
     sa.Column('status', sa.String(length=20), nullable=True),
@@ -96,8 +97,35 @@ def upgrade():
     )
     with op.batch_alter_table('patient', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_patient_clinic_owner_id'), ['clinic_owner_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_patient_is_deleted'), ['is_deleted'], unique=False)
         batch_op.create_index(batch_op.f('ix_patient_patient_no'), ['patient_no'], unique=False)
         batch_op.create_index(batch_op.f('ix_patient_phone'), ['phone'], unique=False)
+
+    op.create_table('prescription_template',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('clinic_owner_id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=200), nullable=False),
+    sa.Column('symptoms', sa.Text(), nullable=True),
+    sa.Column('diagnosis', sa.Text(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['clinic_owner_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('clinic_owner_id', 'name')
+    )
+    with op.batch_alter_table('prescription_template', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_prescription_template_clinic_owner_id'), ['clinic_owner_id'], unique=False)
+
+    op.create_table('symptom_template',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('clinic_owner_id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=200), nullable=False),
+    sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['clinic_owner_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('symptom_template', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_symptom_template_clinic_owner_id'), ['clinic_owner_id'], unique=False)
 
     op.create_table('appointment',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -105,11 +133,12 @@ def upgrade():
     sa.Column('type', sa.String(length=50), nullable=True),
     sa.Column('date', sa.Date(), nullable=False),
     sa.Column('time', sa.Time(), nullable=False),
+    sa.Column('is_deleted', sa.Boolean(), nullable=True),
     sa.Column('status', sa.String(length=20), nullable=True),
     sa.Column('symptoms', sa.Text(), nullable=True),
     sa.Column('diagnosis', sa.Text(), nullable=True),
-    sa.Column('prescription', sa.Text(), nullable=True),
     sa.Column('advice', sa.Text(), nullable=True),
+    sa.Column('lab_tests', sa.Text(), nullable=True),
     sa.Column('bp', sa.String(length=20), nullable=True),
     sa.Column('pulse', sa.String(length=20), nullable=True),
     sa.Column('spo2', sa.String(length=20), nullable=True),
@@ -121,11 +150,15 @@ def upgrade():
     sa.ForeignKeyConstraint(['patient_id'], ['patient.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    with op.batch_alter_table('appointment', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_appointment_is_deleted'), ['is_deleted'], unique=False)
+
     op.create_table('invoice',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('patient_id', sa.Integer(), nullable=False),
     sa.Column('invoice_number', sa.String(length=50), nullable=False),
     sa.Column('description', sa.String(length=255), nullable=True),
+    sa.Column('is_deleted', sa.Boolean(), nullable=True),
     sa.Column('total_amount', sa.Float(), nullable=True),
     sa.Column('status', sa.String(length=20), nullable=True),
     sa.Column('is_locked', sa.Boolean(), nullable=True),
@@ -134,12 +167,25 @@ def upgrade():
     sa.ForeignKeyConstraint(['patient_id'], ['patient.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    with op.batch_alter_table('invoice', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_invoice_is_deleted'), ['is_deleted'], unique=False)
+
     op.create_table('medical_record',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('patient_id', sa.Integer(), nullable=False),
     sa.Column('filename', sa.String(length=200), nullable=False),
     sa.Column('uploaded_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['patient_id'], ['patient.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('prescription_template_item',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('template_id', sa.Integer(), nullable=False),
+    sa.Column('medicine_name', sa.String(length=200), nullable=False),
+    sa.Column('dose', sa.String(length=100), nullable=True),
+    sa.Column('duration_days', sa.Integer(), nullable=True),
+    sa.Column('instructions', sa.String(length=200), nullable=True),
+    sa.ForeignKeyConstraint(['template_id'], ['prescription_template.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('invoice_item',
@@ -189,12 +235,28 @@ def downgrade():
     op.drop_table('prescription')
     op.drop_table('payment')
     op.drop_table('invoice_item')
+    op.drop_table('prescription_template_item')
     op.drop_table('medical_record')
+    with op.batch_alter_table('invoice', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_invoice_is_deleted'))
+
     op.drop_table('invoice')
+    with op.batch_alter_table('appointment', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_appointment_is_deleted'))
+
     op.drop_table('appointment')
+    with op.batch_alter_table('symptom_template', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_symptom_template_clinic_owner_id'))
+
+    op.drop_table('symptom_template')
+    with op.batch_alter_table('prescription_template', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_prescription_template_clinic_owner_id'))
+
+    op.drop_table('prescription_template')
     with op.batch_alter_table('patient', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_patient_phone'))
         batch_op.drop_index(batch_op.f('ix_patient_patient_no'))
+        batch_op.drop_index(batch_op.f('ix_patient_is_deleted'))
         batch_op.drop_index(batch_op.f('ix_patient_clinic_owner_id'))
 
     op.drop_table('patient')

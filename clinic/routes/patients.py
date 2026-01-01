@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from ..extensions import db
-from ..models import Patient, Invoice, Appointment, MedicalRecord
+from ..models import Patient, Invoice, Appointment, MedicalRecord ,Prescription
 from clinic.routes.auth import login_required, role_required
 from clinic.utils import get_current_clinic_owner_id
 from datetime import datetime
@@ -182,7 +182,7 @@ def edit_patient(id):
 # =====================================================
 @patients_bp.route("/patient/<int:id>")
 @login_required
-@role_required( "reception", "doctor")
+@role_required("reception", "doctor")
 def patient_profile(id):
     clinic_owner_id = get_current_clinic_owner_id()
 
@@ -190,19 +190,41 @@ def patient_profile(id):
         id=id,
         clinic_owner_id=clinic_owner_id,
         is_deleted=False
-
     ).first_or_404()
 
-    apps = Appointment.query.filter_by(patient_id=patient.id,
-                                       is_deleted=False).all()
+    # All appointments (non-deleted)
+    apps = (
+        Appointment.query
+        .filter_by(
+            patient_id=patient.id,
+            is_deleted=False
+        )
+        .order_by(Appointment.date.desc())
+        .all()
+    )
+
+    # ✅ FINALIZED PRESCRIPTIONS ONLY
+    prescriptions = (
+        Prescription.query
+        .join(Appointment)
+        .join(Patient)
+        .filter(
+            Patient.id == patient.id,
+            Patient.clinic_owner_id == clinic_owner_id,
+            Appointment.is_deleted == False,
+            Prescription.finalized == True
+        )
+        .order_by(Appointment.date.desc())
+        .all()
+    )
 
     return render_template(
         "patients/patient_profile.html",
         patient=patient,
         apps=apps,
+        prescriptions=prescriptions,
         from_patient_profile=True
     )
-
 
 # =====================================================
 # UPLOAD MEDICAL RECORD
