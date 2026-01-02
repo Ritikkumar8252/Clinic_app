@@ -38,6 +38,14 @@ def create_app():
 
     if DATABASE_URL:
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+
+        # 🔒 IMPORTANT: prevent Neon SSL connection drops
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "pool_pre_ping": True,     # check connection before use
+            "pool_recycle": 300,       # recycle every 5 minutes
+            "pool_size": 5,
+            "max_overflow": 10,
+        }
     else:
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///site.db"
 

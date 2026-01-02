@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app,abort
 from clinic.extensions import db, mail
-from clinic.models import User, PasswordResetToken,Clinic
+from clinic.models import User, PasswordResetToken, Clinic
 from clinic.utils import log_action
 from flask_mail import Message
 from functools import wraps
@@ -81,6 +81,10 @@ def login():
             return redirect(url_for("auth_bp.login"))
 
         # ---- SUCCESS ----
+        if not user.clinic_id:
+            flash("Clinic not linked to this account.", "danger")
+            return redirect(url_for("auth_bp.login"))
+
         session.clear()
         session.permanent = True
 
@@ -122,7 +126,6 @@ def signup():
             db.session.add(user)
             db.session.flush()   # 🔑 get user.id
 
-            # clinic already auto-created by migration using user.id
             # 2️⃣ Create clinic
             clinic = Clinic(
                 name=f"{fullname}'s Clinic",
@@ -130,6 +133,7 @@ def signup():
             )
             db.session.add(clinic)
             db.session.flush()  # get clinic.id
+            # 3️⃣ Link doctor → clinic
             user.clinic_id = clinic.id
             db.session.commit()
 

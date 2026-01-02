@@ -77,7 +77,7 @@ def log_action(action, user_id=None):
 
     try:
         log = AuditLog(
-            clinic_id=get_current_clinic_id(),
+            clinic_id=session.get("clinic_id"),
             user_id=user_id or session.get("user_id"),
             action=action,
             ip_address=request.remote_addr if request else None,
