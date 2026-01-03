@@ -141,7 +141,7 @@ def signup():
 
         except Exception as e:
             db.session.rollback()
-            print("SIGNUP ERROR:", e)
+            current_app.logger.exception("SIGNUP ERROR")
             flash("Something went wrong. Try again.", "danger")
             return redirect(url_for("auth_bp.signup"))
 
@@ -243,7 +243,8 @@ def reset_password(token):
 
 
 # ---------------- LOGOUT ----------------
-@auth_bp.route("/logout")
+@auth_bp.route("/logout",  methods=["POST"])
+@login_required
 def logout():
     log_action("LOGOUT")
     session.clear()

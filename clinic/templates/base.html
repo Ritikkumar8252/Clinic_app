@@ -28,8 +28,30 @@
     user-select: none;
     cursor: default;
 }
+/* Logout button styled like sidebar links */
+.logout-btn {
+    all: unset;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 16px;
+    color: black;
+    cursor: pointer;
+    font-size: 14px;
+}
 
-    </style>
+.logout-btn i {
+    font-size: 16px;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: black;
+}
+
+
+</style>
 </head>
 
 <body>
@@ -55,19 +77,21 @@
                 <a href="{{ url_for('billing_bp.billing') }}"><i class="bi bi-receipt"></i> Billing</a>
             </li>
 
-            {% if session.get('role') == 'admin' %}
-            <li class="{{ 'active' if '/admin' in request.path else '' }}">
-                <a href="{{ url_for('admin_bp.admin_panel') }}"><i class="bi bi-shield-lock"></i> Admin Panel</a>
-            </li>
-            {% endif %}
+            
 
             <li class="{{ 'active' if '/settings' in request.path else '' }}">
                 <a href="{{ url_for('settings_bp.settings') }}"><i class="bi bi-gear"></i> Settings</a>
             </li>
 
             <li>
-                <a class="logout" href="{{ url_for('auth_bp.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                <form method="POST" action="{{ url_for('auth_bp.logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="logout-btn">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </form>
             </li>
+
         </ul>
     </aside>
 

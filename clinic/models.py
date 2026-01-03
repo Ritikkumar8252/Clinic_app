@@ -321,7 +321,8 @@ class Prescription(db.Model):
         db.Integer,
         db.ForeignKey("appointment.id"),
         nullable=False,
-        unique=True
+        unique=True,
+        index=True
     )
     items = db.relationship(
     "PrescriptionItem",

@@ -244,7 +244,8 @@ def walkin():
         # =====================
         # CREATE APPOINTMENT
         # =====================
-        now = datetime.now()
+        now = datetime.utcnow()
+
 
         appt = Appointment(
             clinic_id=clinic_id, 
@@ -335,9 +336,16 @@ def consult(id):
     
     # BUILD MEDICINES FROM DB
 
-    prescription = Prescription.query.filter_by(
-        appointment_id=appt.id
-    ).first()
+    prescription = (
+        Prescription.query
+        .join(Appointment)
+        .filter(
+            Prescription.appointment_id == appt.id,
+            Appointment.clinic_id == get_current_clinic_id()
+        )
+        .first()
+    )
+
 
     medicines = []
 
@@ -367,7 +375,7 @@ def consult(id):
 def autosave(id):
     appt = get_secure_appointment(id)
     if appt.prescription_locked:
-        return jsonify({"status": "locked"}), 403
+        return jsonify({"status": "locked"}), 200
 
 
     if not request.is_json:
@@ -518,9 +526,16 @@ def prescription_pdf(id):
     pdf.drawString(2 * cm, y, "Prescription")
     y -= 18
 
-    prescription = Prescription.query.filter_by(
-        appointment_id=appt.id
-    ).first()
+    prescription = (
+        Prescription.query
+        .join(Appointment)
+        .filter(
+            Prescription.appointment_id == appt.id,
+            Appointment.clinic_id == get_current_clinic_id()
+        )
+        .first()
+    )
+
 
     pdf.setFont("Helvetica", 11)
     line_height = 16
@@ -617,9 +632,15 @@ def finalize_prescription(id):
         flash("Prescription already finalized.", "warning")
         return redirect(url_for("appointments_bp.consult", id=id))
 
-    prescription = Prescription.query.filter_by(
-        appointment_id=appt.id
-    ).first()
+    prescription = (
+        Prescription.query
+        .join(Appointment)
+        .filter(
+            Prescription.appointment_id == appt.id,
+            Appointment.clinic_id == get_current_clinic_id()
+        )
+        .first()
+    )
 
     if not prescription or not prescription.items:
         flash("No medicines added to prescription.", "danger")
@@ -660,9 +681,15 @@ def save_prescription(id):
     appt = get_secure_appointment(id)
 
     # 🔐 Always lock using prescription (source of truth)
-    prescription = Prescription.query.filter_by(
-        appointment_id=appt.id
-    ).first()
+    prescription = (
+        Prescription.query
+        .join(Appointment)
+        .filter(
+            Prescription.appointment_id == appt.id,
+            Appointment.clinic_id == get_current_clinic_id()
+        )
+        .first()
+    )
 
     if prescription and prescription.finalized:
         log_action("PRESCRIPTION_EDIT_BLOCKED")
@@ -695,7 +722,7 @@ def save_prescription(id):
                 prescription_id=prescription.id,
                 medicine_name=med,
                 dose=item.get("dose"),
-                duration_days=item.get("days"),
+                duration_days=int(item["days"]) if str(item.get("days")).isdigit() else None,
                 instructions=item.get("notes")
             )
         )

@@ -182,9 +182,10 @@ function applyTemplateFromServer(id) {
 function saveAsTemplate() {
 
     if (window.prescriptionLocked === "true") {
-    document.querySelectorAll(".btn-save, #addRowBtn, .del-btn")
-        .forEach(el => el.disabled = true);
+        alert("Finalize ke baad template save nahi hota");
+        return;
     }
+
 
     const items = collectPrescriptionItems();
     if (items.length === 0) {

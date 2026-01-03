@@ -131,7 +131,7 @@
 
             <div class="voice-field">
                 <textarea
-                    id="Diagnosis"
+                    id="diagnosis"
                     rows="4"
                     placeholder="Patient Diagnosis..."
                     oninput="autoSave()"
@@ -226,16 +226,16 @@
 
             <div class="voice-field">
                 <textarea
-                    id="Advice"
+                    id="advice"
                     rows="4"
                     placeholder="Patient Advice..."
                     oninput="autoSave()"
-                >{{ appt.Advice or '' }}</textarea>
+                >{{ appt.advice or '' }}</textarea>
 
                 <button
                     type="button"
                     class="mic-btn"
-                    onclick="startVoice('Advice', this)">
+                    onclick="startVoice('advice', this)">
                     🎤
                 </button>
             </div>

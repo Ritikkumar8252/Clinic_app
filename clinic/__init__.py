@@ -28,7 +28,12 @@ def create_app():
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
     # ---------------- SECRET KEY ----------------
-    app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    if not SECRET_KEY:
+        raise RuntimeError("SECRET_KEY not set")
+
+    app.secret_key = SECRET_KEY
+
 
     # ---------------- INSTANCE FOLDER ----------------
     os.makedirs(app.instance_path, exist_ok=True)
@@ -99,4 +104,12 @@ def create_app():
     app.cli.add_command(clinic_debug)
     app.register_blueprint(templates_bp)
     app.register_blueprint( symptom_templates_bp)
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
+
     return app
