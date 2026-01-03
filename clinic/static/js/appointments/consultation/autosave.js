@@ -12,7 +12,7 @@ function sendSaveRequest() {
     const payload = {};
 
     // Tags (hidden inputs)
-    ["symptoms", "Diagnosis", "Advice", "lab_tests"].forEach(id => {
+    ["symptoms", "diagnosis", "advice", "lab_tests"].forEach(id => {
         const el = document.getElementById(id);
         if (el && el.value.trim()) {
             payload[id] = el.value.trim();

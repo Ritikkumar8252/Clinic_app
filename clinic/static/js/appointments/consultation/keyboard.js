@@ -1,5 +1,10 @@
 document.addEventListener("keydown", function (e) {
 
+    // 🔒 STOP ALL KEYBOARD ACTIONS AFTER FINALIZE
+    if (window.prescriptionLocked === "true") {
+        return;
+    }
+
     const active = document.activeElement;
     if (!active) return;
 
@@ -44,7 +49,7 @@ document.addEventListener("keydown", function (e) {
     // ---------------------------------------
     if (e.key === "Enter" && e.ctrlKey) {
         const addBtn = document.getElementById("addRowBtn");
-        if (addBtn) {
+        if (addBtn && !addBtn.disabled) {
             e.preventDefault();
             addBtn.click();
         }

@@ -94,7 +94,7 @@ async function finalizeAndPrint(e) {
         return false;
     }
 
-    // 1️⃣ SAVE MEDICINES (DB SOURCE OF TRUTH)
+    // 1️⃣ SAVE MEDICINES (only if not finalized)
     const saveRes = await fetch(`/save_prescription/${window.apptId}`, {
         method: "POST",
         headers: {
@@ -103,16 +103,15 @@ async function finalizeAndPrint(e) {
         body: JSON.stringify({ items })
     });
 
-    if (!saveRes.ok) {
+    // 🔐 If already finalized → ignore silently
+    if (saveRes.status === 403) {
+        // already finalized, do not show error
+    } else if (!saveRes.ok) {
         alert("Failed to save medicines");
         return false;
     }
 
-    // 2️⃣ BUILD FINAL SNAPSHOT TEXT
-    const finalText = buildPrescriptionText(items);
-    document.getElementById("finalPrescription").value = finalText;
-
-    // 3️⃣ FINALIZE (LOCKS PRESCRIPTION)
+    // 2️⃣ FINALIZE (backend locks prescription)
     const form = e.target;
     const finalizeRes = await fetch(form.action, {
         method: "POST",
@@ -124,10 +123,11 @@ async function finalizeAndPrint(e) {
         return false;
     }
 
-    // 4️⃣ DOWNLOAD PDF (GUARANTEED)
-    window.open(`/prescription/${window.apptId}`, "_blank");
+    // 3️⃣ OPEN PDF
+    window.location.href = `/prescription/${window.apptId}`;
     return false;
 }
+
 // templates
 function openTemplateBox() {
     fetch(`/templates/search`)
@@ -182,8 +182,8 @@ function applyTemplateFromServer(id) {
 function saveAsTemplate() {
 
     if (window.prescriptionLocked === "true") {
-        alert("Finalize ke baad template save nahi hota");
-        return;
+    document.querySelectorAll(".btn-save, #addRowBtn, .del-btn")
+        .forEach(el => el.disabled = true);
     }
 
     const items = collectPrescriptionItems();
@@ -208,7 +208,7 @@ function saveAsTemplate() {
         body: JSON.stringify({
             name,
             symptoms,
-            diagnosis: document.getElementById("Diagnosis").value,
+            diagnosis: document.getElementById("diagnosis").value,
 
             items
         })
