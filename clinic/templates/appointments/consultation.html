@@ -13,6 +13,9 @@
         <h2>Consultation</h2>
         <p>{{ patient.name }} • {{ patient.gender }}, {{ patient.age }} yrs</p>
     </div>
+    <div id="autosaveStatus" class="autosave-status">
+        Saved ✓
+    </div>
 
     <div class="top-actions">
         <button class="btn-save" onclick="sendSaveRequest()">💾 Save</button>
@@ -135,7 +138,7 @@
                     rows="4"
                     placeholder="Patient Diagnosis..."
                     oninput="autoSave()"
-                >{{ appt.Diagnosis or '' }}</textarea>
+                >{{ appt.diagnosis or '' }}</textarea>
 
                 <button
                     type="button"
@@ -353,6 +356,50 @@ function saveTemplate() {
         }
     });
 }
+</script>
+<script>
+let saveTimer = null;
+
+function showSaving() {
+    const el = document.getElementById("autosaveStatus");
+    if (!el) return;
+    el.textContent = "Saving…";
+    el.classList.add("saving");
+}
+
+function showSaved() {
+    const el = document.getElementById("autosaveStatus");
+    if (!el) return;
+
+    const now = new Date();
+    const time = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+    el.textContent = `Saved ✓ at ${time}`;
+    el.classList.remove("saving");
+}
+
+// 🔁 hook into existing autosave
+const originalAutoSave = window.autoSave;
+window.autoSave = function () {
+    showSaving();
+
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+        if (originalAutoSave) originalAutoSave();
+        showSaved();
+    }, 600);
+};
+</script>
+<!------------ prevent rare data loss -->
+<script>
+window.addEventListener("beforeunload", function () {
+    try {
+        sendSaveRequest();
+    } catch (e) {}
+});
 </script>
 
 {% endblock %}

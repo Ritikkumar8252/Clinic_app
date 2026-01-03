@@ -381,3 +381,16 @@ input::placeholder {
         display: none !important;
     }
 }
+.autosave-status {
+    font-size: 13px;
+    color: #059669;
+    background: #ecfdf5;
+    padding: 6px 12px;
+    border-radius: 20px;
+    margin-right: 12px;
+    white-space: nowrap;
+}
+.autosave-status.saving {
+    color: #92400e;
+    background: #fff7ed;
+}
