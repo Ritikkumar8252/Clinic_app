@@ -112,4 +112,45 @@ def create_app():
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         return response
 
+        # =====================================================
+    # GLOBAL ERROR HANDLERS (STEP 1 – CRASH SAFETY)
+    # =====================================================
+    import logging
+    from flask import render_template, request, session
+
+    # -------- LOGGER SETUP --------
+    if not app.debug:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s | %(levelname)s | %(message)s"
+        )
+
+    def log_error(error):
+        app.logger.error(
+            f"""
+            ERROR: {error}
+            PATH: {request.path}
+            METHOD: {request.method}
+            USER_ID: {session.get('user_id')}
+            CLINIC_ID: {session.get('clinic_id')}
+            """,
+            exc_info=True
+        )
+
+    # -------- 404 --------
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template("errors/404.html"), 404
+
+    # -------- 403 --------
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template("errors/403.html"), 403
+
+    # -------- 500 --------
+    @app.errorhandler(500)
+    def server_error(e):
+        log_error(e)
+        return render_template("errors/500.html"), 500
+
     return app

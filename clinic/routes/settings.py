@@ -1,6 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
+import csv
+from io import StringIO
+from clinic.models import Patient, Appointment, Prescription, Invoice,User,Clinic
+from clinic.utils import get_current_clinic_id
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app, Response
 from clinic.extensions import db
-from clinic.models import User,Clinic
 from clinic.routes.auth import login_required, role_required
 from werkzeug.utils import secure_filename
 import os
@@ -49,9 +52,6 @@ def settings():
                 photo.save(save_path)
 
                 user.profile_photo = f"uploads/doctors/profile/{filename}"
-
-                photo.save(save_path)
-                user.profile_photo = f"uploads/{filename}"
 
             db.session.commit()
             flash("Profile updated successfully.")
@@ -156,3 +156,107 @@ def add_staff():
 
     flash(f"{role.capitalize()} added successfully", "success")
     return redirect(url_for("settings_bp.settings"))
+
+# ---------Export Patients--------------
+@settings_bp.route("/export/patients")
+@login_required
+@role_required("doctor")
+def export_patients():
+    clinic_id = get_current_clinic_id()
+
+    patients = Patient.query.filter_by(
+        clinic_id=clinic_id,
+        is_deleted=False
+    ).all()
+
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(["Patient No", "Name", "Age", "Gender", "Phone", "Disease", "Last Visit"])
+
+    for p in patients:
+        writer.writerow([
+            p.patient_no,
+            p.name,
+            p.age,
+            p.gender,
+            p.phone,
+            p.disease,
+            p.last_visit
+        ])
+
+    return Response(
+        si.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=patients.csv"
+        }
+    )
+# ---------Export Prescriptions--------------
+@settings_bp.route("/export/prescriptions")
+@login_required
+@role_required("doctor")
+def export_prescriptions():
+    clinic_id = get_current_clinic_id()
+
+    rows = (
+        db.session.query(
+            Appointment.id,
+            Patient.name,
+            Prescription.final_text,
+            Prescription.finalized_at
+        )
+        .join(Patient)
+        .join(Prescription)
+        .filter(
+            Appointment.clinic_id == clinic_id,
+            Prescription.finalized == True
+        )
+        .all()
+    )
+
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(["Appointment ID", "Patient Name", "Prescription", "Date"])
+
+    for r in rows:
+        writer.writerow(r)
+
+    return Response(
+        si.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=prescriptions.csv"
+        }
+    )
+# ---------Export Invoices--------------
+@settings_bp.route("/export/invoices")
+@login_required
+@role_required("doctor")
+def export_invoices():
+    clinic_id = get_current_clinic_id()
+
+    invoices = Invoice.query.filter_by(
+        clinic_id=clinic_id,
+        is_deleted=False
+    ).all()
+
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(["Invoice No", "Patient ID", "Amount", "Status", "Date"])
+
+    for inv in invoices:
+        writer.writerow([
+            inv.invoice_number,
+            inv.patient_id,
+            inv.total_amount,
+            inv.status,
+            inv.created_at
+        ])
+
+    return Response(
+        si.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=invoices.csv"
+        }
+    )
