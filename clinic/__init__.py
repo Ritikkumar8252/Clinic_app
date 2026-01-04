@@ -76,7 +76,7 @@ def create_app():
         SESSION_COOKIE_SECURE=True,   # IN PRODUCTION = True
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_NAME="clinic_session",
-        PERMANENT_SESSION_LIFETIME=timedelta(minutes=60),
+        PERMANENT_SESSION_LIFETIME=timedelta(hours=6),
         SESSION_REFRESH_EACH_REQUEST=True,
         WTF_CSRF_TIME_LIMIT=None
     )

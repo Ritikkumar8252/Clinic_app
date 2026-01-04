@@ -212,7 +212,10 @@ def walkin():
 
     if request.method == "POST":
         patient_id = request.form.get("patient_id")
-
+        # 🚨 VALIDATION FIRST
+        if not patient_id:
+            flash("Please select a patient or choose New Patient", "danger")
+            return redirect(url_for("appointments_bp.walkin"))
         # =====================
         # NEW PATIENT FLOW
         # =====================

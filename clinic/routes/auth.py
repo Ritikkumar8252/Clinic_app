@@ -14,9 +14,15 @@ auth_bp = Blueprint("auth_bp", __name__)
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if "user_id" not in session:
-            flash("Please log in first.", "warning")
+        user_id = session.get("user_id")
+        if not user_id:
             return redirect(url_for("auth_bp.login"))
+
+        user = db.session.get(User, user_id)
+        if not user:
+            session.clear()
+            return redirect(url_for("auth_bp.login"))
+
         return f(*args, **kwargs)
     return wrapper
 
@@ -85,7 +91,8 @@ def login():
             flash("Clinic not linked to this account.", "danger")
             return redirect(url_for("auth_bp.login"))
 
-        session.clear()
+        session.pop("login_attempts", None)
+        session.pop("login_locked_until", None)
         session.permanent = True
 
         session["user_id"] = user.id
@@ -247,7 +254,11 @@ def reset_password(token):
 @login_required
 def logout():
     log_action("LOGOUT")
-    session.clear()
+    session.pop("user_id", None)
+    session.pop("user_email", None)
+    session.pop("role", None)
+    session.pop("clinic_id", None)
+
     flash("Logged out successfully.", "success")
     return redirect(url_for("auth_bp.login"))
 
