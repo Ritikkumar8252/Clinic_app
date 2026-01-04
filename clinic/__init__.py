@@ -48,8 +48,12 @@ def create_app():
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
             "pool_pre_ping": True,     # check connection before use
             "pool_recycle": 300,       # recycle every 5 minutes
-            "pool_size": 5,
-            "max_overflow": 10,
+            "pool_size": 400,
+            "max_overflow": 60,
+            "pool_timeout": 30,
+            "connect_args": {
+            "sslmode": "require"
+            }
         }
     else:
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///site.db"

@@ -42,6 +42,12 @@ def get_secure_appointment(id):
 @role_required( "reception", "doctor")
 def appointments():
     clinic_id = get_current_clinic_id()
+    page_queue = request.args.get("page_queue", 1, type=int)
+    page_inprogress = request.args.get("page_inprogress", 1, type=int)
+    page_completed = request.args.get("page_completed", 1, type=int)
+    page_cancelled = request.args.get("page_cancelled", 1, type=int)
+
+    PER_PAGE = 20
 
     tab = request.args.get("tab", "queue")
     search = request.args.get("search", "").strip()
@@ -76,10 +82,27 @@ def appointments():
         date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
         base_query = base_query.filter(Appointment.date == date_obj)
 
-    queue = base_query.filter(Appointment.status == "Queue").all()
-    inprogress = base_query.filter(Appointment.status == "In Progress").all()
-    completed = base_query.filter(Appointment.status == "Completed").all()
-    cancelled = base_query.filter(Appointment.status == "Cancelled").all()
+    queue = (
+        base_query
+        .filter(Appointment.status == "Queue")
+        .paginate(page=page_queue, per_page=PER_PAGE, error_out=False)
+    )
+    inprogress = (
+        base_query
+        .filter(Appointment.status == "In Progress")
+        .paginate(page=page_inprogress, per_page=PER_PAGE, error_out=False)
+    )
+    completed = (
+        base_query
+        .filter(Appointment.status == "Completed")
+        .paginate(page=page_completed, per_page=PER_PAGE, error_out=False)
+    )
+
+    cancelled = (
+        base_query
+        .filter(Appointment.status == "Cancelled")
+        .paginate(page=page_cancelled, per_page=PER_PAGE, error_out=False)
+    )
 
     return render_template(
         "appointments/appointments.html",

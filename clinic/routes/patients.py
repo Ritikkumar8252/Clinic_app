@@ -39,7 +39,14 @@ def patients():
         date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
         query = query.filter(Patient.last_visit == date_obj)
 
-    patients = query.order_by(Patient.patient_no.desc()).all()
+    page = request.args.get("page", 1, type=int)
+
+    patients = (
+        query
+        .order_by(Patient.patient_no.desc())
+        .paginate(page=page, per_page=20, error_out=False)
+    )
+
     return render_template("patients/patients.html", patients=patients)
 
 

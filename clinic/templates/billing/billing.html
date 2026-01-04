@@ -246,48 +246,71 @@ td, tr {
     </thead>
 
     <tbody>
-    {% for inv in invoices %}
-        {% set paid = inv.payments | sum(attribute='amount') %}
-        {% set balance = inv.total_amount - paid %}
+    {% if invoices.items %}    
+        {% for inv in invoices.items %}
+            {% set paid = inv.payments | sum(attribute='amount') %}
+            {% set balance = inv.total_amount - paid %}
 
-        <tr>
-            <td>{{ inv.invoice_number }}</td>
-            <td>{{ inv.patient.name }}</td>
-            <td>{{ inv.description or '-' }}</td>
-            <td>₹ {{ "%.2f"|format(inv.total_amount) }}</td>
-            <td>
-                <span class="status-badge {{ 'paid' if inv.status == 'Paid' else 'unpaid' }}">
-                    {{ inv.status }}
-                </span>
-            </td>
-            <td>₹ {{ "%.2f"|format(balance) }}</td>
+            <tr>
+                <td>{{ inv.invoice_number }}</td>
+                <td>{{ inv.patient.name }}</td>
+                <td>{{ inv.description or '-' }}</td>
+                <td>₹ {{ "%.2f"|format(inv.total_amount) }}</td>
+                <td>
+                    <span class="status-badge {{ 'paid' if inv.status == 'Paid' else 'unpaid' }}">
+                        {{ inv.status }}
+                    </span>
+                </td>
+                <td>₹ {{ "%.2f"|format(balance) }}</td>
 
-            <td>
-                <div class="action-menu">
-                    <button type="button" class="menu-btn">⋮</button>
-                    <div class="menu-dropdown">
-                        <a href="{{ url_for('billing_bp.view_invoice', id=inv.id) }}">👁 View</a>
-                        <a href="{{ url_for('billing_bp.download_invoice', id=inv.id) }}">📄 PDF</a>
+                <td>
+                    <div class="action-menu">
+                        <button type="button" class="menu-btn">⋮</button>
+                        <div class="menu-dropdown">
+                            <a href="{{ url_for('billing_bp.view_invoice', id=inv.id) }}">👁 View</a>
+                            <a href="{{ url_for('billing_bp.download_invoice', id=inv.id) }}">📄 PDF</a>
 
-                        {% if not inv.is_locked %}
-                        <a href="{{ url_for('billing_bp.delete_invoice', id=inv.id) }}"
-                           onclick="return confirm('Delete invoice?')">
-                           🗑 Delete
-                        </a>
-                        {% endif %}
+                            {% if not inv.is_locked %}
+                            <a href="{{ url_for('billing_bp.delete_invoice', id=inv.id) }}"
+                            onclick="return confirm('Delete invoice?')">
+                            🗑 Delete
+                            </a>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-            </td>
-        </tr>
+                </td>
+            </tr>
+        {% endfor %}
     {% else %}
         <tr>
             <td colspan="7" style="text-align:center;padding:16px;">
                 No invoices found
             </td>
         </tr>
-    {% endfor %}
+    {% endif %}
     </tbody>
 </table>
+<div class="pagination">
+    {% if invoices.has_prev %}
+        <a href="{{ url_for(
+            'billing_bp.billing',
+            page=invoices.prev_num,
+            search=request.args.get('search'),
+            status=request.args.get('status')
+        ) }}">← Prev</a>
+    {% endif %}
+
+    <span>Page {{ invoices.page }} of {{ invoices.pages }}</span>
+
+    {% if invoices.has_next %}
+        <a href="{{ url_for(
+            'billing_bp.billing',
+            page=invoices.next_num,
+            search=request.args.get('search'),
+            status=request.args.get('status')
+        ) }}">Next →</a>
+    {% endif %}
+</div>
 
 <script>
 document.addEventListener("click", () => {

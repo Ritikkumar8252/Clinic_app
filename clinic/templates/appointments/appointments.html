@@ -230,7 +230,15 @@
             </thead>
 
             <tbody>
-            {% for a in (queue if tab=='queue' else inprogress if tab=='inprogress' else completed if tab=='completed' else cancelled) %}
+            {% set data =
+                queue.items if tab=='queue'
+                else inprogress.items if tab=='inprogress'
+                else completed.items if tab=='completed'
+                else cancelled.items
+            %}
+            {% if data %}
+                {% for a in data %}
+
                 <tr
                     tabindex="0"
                     data-start="{{ url_for('appointments_bp.start', id=a.id) }}"
@@ -273,12 +281,49 @@
                         </div>
                     </td>
                 </tr>
+                {% endfor %}
             {% else %}
                 <tr><td colspan="6" class="empty-state">No appointments found</td></tr>
-            {% endfor %}
+            {% endif %}
             </tbody>
         </table>
     </div>
+</div>
+{% set pager =
+    queue if tab=='queue'
+    else inprogress if tab=='inprogress'
+    else completed if tab=='completed'
+    else cancelled
+%}
+
+<div class="pagination">
+    {% if pager.has_prev %}
+        <a href="{{ url_for(
+            'appointments_bp.appointments',
+            tab=tab,
+            page_queue=pager.prev_num if tab=='queue' else request.args.get('page_queue'),
+            page_inprogress=pager.prev_num if tab=='inprogress' else request.args.get('page_inprogress'),
+            page_completed=pager.prev_num if tab=='completed' else request.args.get('page_completed'),
+            page_cancelled=pager.prev_num if tab=='cancelled' else request.args.get('page_cancelled'),
+            search=search,
+            date=date_filter
+        ) }}">← Prev</a>
+    {% endif %}
+
+    <span>Page {{ pager.page }} of {{ pager.pages }}</span>
+
+    {% if pager.has_next %}
+        <a href="{{ url_for(
+            'appointments_bp.appointments',
+            tab=tab,
+            page_queue=pager.next_num if tab=='queue' else request.args.get('page_queue'),
+            page_inprogress=pager.next_num if tab=='inprogress' else request.args.get('page_inprogress'),
+            page_completed=pager.next_num if tab=='completed' else request.args.get('page_completed'),
+            page_cancelled=pager.next_num if tab=='cancelled' else request.args.get('page_cancelled'),
+            search=search,
+            date=date_filter
+        ) }}">Next →</a>
+    {% endif %}
 </div>
 
 <script>

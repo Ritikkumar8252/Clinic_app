@@ -204,8 +204,9 @@ input {
     </thead>
 
     <tbody id="patientTable">
-        {% if patients %}
-            {% for p in patients %}
+        {% if patients.items %}
+            {% for p in patients.items %}
+
             <tr>
                 <td>{{ p.patient_no }}</td>
 
@@ -241,6 +242,19 @@ input {
         {% endif %}
     </tbody>
 </table>
+</div>
+<div class="pagination">
+    {% if patients.has_prev %}
+        <a href="{{ url_for('patients_bp.patients', page=patients.prev_num,
+    q=request.args.get('q'),date=request.args.get('date')) }}">← Prev</a>
+    {% endif %}
+
+    <span>Page {{ patients.page }} of {{ patients.pages }}</span>
+
+    {% if patients.has_next %}
+        <a href="{{ url_for('patients_bp.patients', page=patients.next_num,q=request.args.get('q'),
+    date=request.args.get('date')) }}">Next →</a>
+    {% endif %}
 </div>
 
 <script src="{{ url_for('static', filename='js/patients/patient_search.js') }}"></script>

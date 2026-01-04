@@ -62,7 +62,14 @@ def billing():
     if status:
         query = query.filter(Invoice.status == status)
 
-    invoices = query.order_by(Invoice.created_at.desc()).all()
+    page = request.args.get("page", 1, type=int)
+    PER_PAGE = 20
+
+    invoices = (
+        query
+        .order_by(Invoice.created_at.desc())
+        .paginate(page=page, per_page=PER_PAGE, error_out=False)
+    )
 
     due_count = (
         Invoice.query

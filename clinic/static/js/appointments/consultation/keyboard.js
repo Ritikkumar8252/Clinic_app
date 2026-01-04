@@ -1,4 +1,14 @@
 document.addEventListener("keydown", function (e) {
+        // ---------------------------------------
+    // CTRL + SHIFT + ENTER → FINALIZE & PRINT
+    // ---------------------------------------
+    if (e.key === "Enter" && e.ctrlKey && e.shiftKey) {
+        const finalizeBtn = document.querySelector(".btn-pres");
+        if (finalizeBtn) {
+            e.preventDefault();
+            finalizeBtn.click();
+        }
+    }
 
     // 🔒 STOP ALL KEYBOARD ACTIONS AFTER FINALIZE
     if (window.prescriptionLocked === "true") {
