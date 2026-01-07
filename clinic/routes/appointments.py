@@ -448,9 +448,13 @@ def autosave(id):
 @role_required("reception", "doctor")
 def prescription_pdf(id):
     mode = request.args.get("mode", "full")  # lab | full
-
     appt = get_secure_appointment(id)
-
+    prescription = (
+        Prescription.query
+        .filter_by(appointment_id=appt.id)
+        .first()
+    )
+    
     # 🔒 Block lab print AFTER finalization
     if mode == "lab" and appt.prescription_locked:
         flash("Lab print not allowed after finalization", "warning")
@@ -569,6 +573,7 @@ def prescription_pdf(id):
     if mode == "lab":
         pdf.save()
         buffer.seek(0)
+        log_action("LAB_PRINT")
         return send_file(
             buffer,
             mimetype="application/pdf",
@@ -582,17 +587,6 @@ def prescription_pdf(id):
         pdf.setFont("Helvetica-Bold", 12)
         pdf.drawString(2 * cm, y, "Prescription")
         y -= 18
-
-        prescription = (
-            Prescription.query
-            .join(Appointment)
-            .filter(
-                Prescription.appointment_id == appt.id,
-                Appointment.clinic_id == get_current_clinic_id()
-            )
-            .first()
-        )
-
 
         pdf.setFont("Helvetica", 11)
         line_height = 16
@@ -655,7 +649,7 @@ def prescription_pdf(id):
     # ---------------- FINALIZE ----------------
     pdf.save()
     buffer.seek(0)
-
+    log_action("PRESCRIPTION_PRINT")
     return send_file(
         buffer,
         mimetype="application/pdf",

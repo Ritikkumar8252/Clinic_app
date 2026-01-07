@@ -127,6 +127,11 @@ class Patient(db.Model):
 # APPOINTMENT / CONSULTATION
 # =========================
 class Appointment(db.Model):
+    __table_args__ = (
+        db.Index("idx_appt_clinic_date", "clinic_id", "date"),
+        db.Index("idx_appt_clinic_status", "clinic_id", "status"),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     clinic_id = db.Column(
         db.Integer,
@@ -342,14 +347,14 @@ class Prescription(db.Model):
 # =========================
 # PRESCRIPTION ITEMS
 # =========================
-
 class PrescriptionItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     prescription_id = db.Column(
         db.Integer,
         db.ForeignKey("prescription.id"),
-        nullable=False
+        nullable=False,
+        index=True
     )
 
     medicine_name = db.Column(db.String(200), nullable=False)

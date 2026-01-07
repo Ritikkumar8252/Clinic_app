@@ -405,5 +405,18 @@ window.addEventListener("beforeunload", function () {
     } catch (e) {}
 });
 </script>
+<script>
+if (window.prescriptionLocked === "true") {
+    document.querySelectorAll("input, textarea").forEach(el => {
+        el.disabled = true;
+    });
+
+    document.querySelectorAll("button").forEach(btn => {
+        if (!btn.classList.contains("btn-grey")) {
+            btn.disabled = true;
+        }
+    });
+}
+</script>
 
 {% endblock %}
