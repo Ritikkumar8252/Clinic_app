@@ -97,8 +97,20 @@ body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var
       </div>
     </div>
   </div>
+  {% if appt.lab_tests %}
+  <div class="section">
+    <h4>Lab Tests</h4>
+    <div class="box">
+      <div class="instructions" style="white-space: pre-line;">
+        {{ appt.lab_tests }}
+      </div>
+    </div>
+  </div>
+{% endif %}
 
   <!-- medicines -->
+  {% if request.args.get("mode") != "lab" %}
+
   <div class="section">
     <h4>Prescription</h4>
     <div class="box">
@@ -128,8 +140,9 @@ body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var
       </table>
     </div>
   </div>
-
+  {% endif %}
   <!-- advice + follow up -->
+  {% if request.args.get("mode") != "lab" %}
   <div class="section" style="display:flex;gap:14px;flex-wrap:wrap">
     <div style="flex:1" class="box">
       <div class="small-muted">ADVICE / INSTRUCTIONS</div>
@@ -142,8 +155,9 @@ body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var
       <div class="small-muted" style="margin-top:8px">ICD-10: {{ appt.icd10 or "-" }}</div>
     </div>
   </div>
-
+  {% endif %}
   <!-- footer: doctor -->
+  {% if request.args.get("mode") != "lab" %}
   <div class="footer">
     <div>
       <div class="small-muted">Generated</div>
@@ -155,7 +169,7 @@ body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var
       <div class="small-muted">Signature</div>
     </div>
   </div>
-
+  {% endif %}
   <!-- actions (print, pdf) -->
   <div style="margin-top:14px;text-align:right" class="actions">
     <a class="btn btn-print" href="#" onclick="window.print();return false">Print / Save as PDF</a>

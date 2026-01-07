@@ -23,7 +23,11 @@
         <a class="btn-complete" href="{{ url_for('appointments_bp.complete', id=appt.id) }}">
             ✔ Finish
         </a>
-
+        <a class="btn-grey"
+        href="{{ url_for('appointments_bp.prescription_pdf', id=appt.id) }}?mode=lab"
+        {% if appt.prescription_locked %}style="display:none"{% endif %}>
+            🧪 Lab Print
+        </a>
         <form method="POST"
               action="{{ url_for('appointments_bp.finalize_prescription', id=appt.id) }}"
               onsubmit="return finalizeAndPrint(event)">

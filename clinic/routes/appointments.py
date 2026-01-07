@@ -447,12 +447,20 @@ def autosave(id):
 @login_required
 @role_required("reception", "doctor")
 def prescription_pdf(id):
+    mode = request.args.get("mode", "full")  # lab | full
 
     appt = get_secure_appointment(id)
 
-    if not appt.prescription_locked:
+    # 🔒 Block lab print AFTER finalization
+    if mode == "lab" and appt.prescription_locked:
+        flash("Lab print not allowed after finalization", "warning")
+        return redirect(url_for("appointments_bp.consult", id=id))
+
+    # 🔒 Full print requires finalization
+    if mode == "full" and not appt.prescription_locked:
         flash("Finalize prescription before downloading", "warning")
         return redirect(url_for("appointments_bp.consult", id=id))
+
 
     clinic_id = get_current_clinic_id()
     patient = Patient.query.filter_by(
@@ -545,46 +553,6 @@ def prescription_pdf(id):
             pdf.drawString(2.2 * cm, y, f"- {d.strip()}")
             y -= 14
         y -= 10
-
-    # ---------------- MEDICINES ----------------
-    check_space()
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(2 * cm, y, "Prescription")
-    y -= 18
-
-    prescription = (
-        Prescription.query
-        .join(Appointment)
-        .filter(
-            Prescription.appointment_id == appt.id,
-            Appointment.clinic_id == get_current_clinic_id()
-        )
-        .first()
-    )
-
-
-    pdf.setFont("Helvetica", 11)
-    line_height = 16
-
-    if prescription and prescription.items:
-        for item in prescription.items:
-            check_space()
-            line = item.medicine_name
-            if item.dose:
-                line += f" | {item.dose}"
-            if item.duration_days:
-                line += f" | {item.duration_days} days"
-            if item.instructions:
-                line += f" | {item.instructions}"
-
-            pdf.drawString(2 * cm, y, line)
-            y -= line_height
-    else:
-        pdf.drawString(2 * cm, y, "No medicines prescribed")
-        y -= 16
-
-    y -= 10
-
     # ---------------- LAB TESTS ----------------
     if hasattr(appt, "lab_tests") and appt.lab_tests:
         check_space()
@@ -597,7 +565,58 @@ def prescription_pdf(id):
             pdf.drawString(2.2 * cm, y, f"- {line.strip()}")
             y -= 14
         y -= 10
+    # 🧪 LAB PRINT → STOP HERE
+    if mode == "lab":
+        pdf.save()
+        buffer.seek(0)
+        return send_file(
+            buffer,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"Lab_Request_{patient.name}.pdf"
+        )
 
+    # ---------------- MEDICINES ----------------
+    if mode != "lab":
+        check_space()
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(2 * cm, y, "Prescription")
+        y -= 18
+
+        prescription = (
+            Prescription.query
+            .join(Appointment)
+            .filter(
+                Prescription.appointment_id == appt.id,
+                Appointment.clinic_id == get_current_clinic_id()
+            )
+            .first()
+        )
+
+
+        pdf.setFont("Helvetica", 11)
+        line_height = 16
+
+        if prescription and prescription.items:
+            for item in prescription.items:
+                check_space()
+                line = item.medicine_name
+                if item.dose:
+                    line += f" | {item.dose}"
+                if item.duration_days:
+                    line += f" | {item.duration_days} days"
+                if item.instructions:
+                    line += f" | {item.instructions}"
+
+                pdf.drawString(2 * cm, y, line)
+                y -= line_height
+        else:
+            pdf.drawString(2 * cm, y, "No medicines prescribed")
+            y -= 16
+
+        y -= 10
+
+    
     # ---------------- ADVICE ----------------
     if appt.advice:
         check_space()
