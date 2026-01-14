@@ -1,4 +1,5 @@
-from flask import request, session, abort
+from datetime import date, datetime, time
+from flask import request, session, abort, redirect, url_for, flash
 from clinic.extensions import db
 from clinic.models import (
     User,
@@ -8,6 +9,16 @@ from clinic.models import (
     InvoiceSequence
 )
 
+# -----------------
+def is_clinic_active(clinic):
+    if clinic.subscription_status == "active":
+        return True
+
+    if clinic.subscription_status == "trial":
+        if clinic.trial_ends_at and clinic.trial_ends_at >= datetime.utcnow():
+            return True
+
+    return False
 # -----------------------------
 # ROLE LABELS (UI USE)
 # -----------------------------
@@ -90,3 +101,38 @@ def log_action(action, user_id=None):
 
     except Exception:
         db.session.rollback()
+
+# ----------------------------
+
+from clinic.subscription_plans import PLANS
+def can_add_patient(clinic):
+    plan = PLANS.get(clinic.plan, {})
+    limit = plan.get("patients_per_day")
+
+    if limit is None:
+        return True
+
+    today_start = datetime.combine(date.today(), time.min)
+    today_end = datetime.combine(date.today(), time.max)
+
+    today_count = Patient.query.filter(
+        Patient.clinic_id == clinic.id,
+        Patient.created_at.between(today_start, today_end)
+    ).count()
+
+
+    return today_count < limit
+
+
+def can_add_staff(clinic):
+    plan = PLANS.get(clinic.plan, {})
+    limit = plan.get("staff_limit")
+
+    if limit is None:
+        return True
+
+    staff_count = User.query.filter_by(
+        clinic_id=clinic.id
+    ).filter(User.role != "doctor").count()
+
+    return staff_count < limit

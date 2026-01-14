@@ -182,25 +182,56 @@
                 <div class="card">
                     <h2>Subscription</h2>
 
-                    <p><strong>Current Plan:</strong> Free Trial</p>
+                    <p>
+                        <strong>Current Plan:</strong>
+                        {% if subscription_status == "trial" %}
+                            Free Trial ({{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }} left)
+                        {% elif subscription_status == "expired" %}
+                            <span class="text-danger">Expired</span>
+                        {% else %}
+                            {{ subscription_status|capitalize }}
+                        {% endif %}
+                    </p>
+                    {% if subscription_status == "expired" %}
+                    <div class="alert alert-danger">
+                        Your trial has expired. Please upgrade to continue using appointments,
+                        prescriptions, and billing.
+                    </div>
+                    {% endif %}
+
 
                     <div class="plans-container">
                         <div class="plan-card">
                             <h4>Basic</h4>
                             <p>₹199 / month</p>
-                            <button class="btn-select">Choose</button>
+                            <form method="POST" action="{{ url_for('settings_bp.change_plan') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="plan" value="basic">
+                                <button class="btn-select">Choose</button>
+                            </form>
+
                         </div>
 
                         <div class="plan-card">
                             <h4>Pro</h4>
                             <p>₹499 / month</p>
-                            <button class="btn-select">Choose</button>
+                            <form method="POST" action="{{ url_for('settings_bp.change_plan') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="plan" value="pro">
+                                <button class="btn-select">Choose</button>
+                            </form>
+
                         </div>
 
                         <div class="plan-card">
                             <h4>Clinic+</h4>
                             <p>₹999 / month</p>
-                            <button class="btn-select">Choose</button>
+                            <form method="POST" action="{{ url_for('settings_bp.change_plan') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="plan" value="clinic+">
+                                <button class="btn-select">Choose</button>
+                            </form>
+
                         </div>
                     </div>
                 </div>

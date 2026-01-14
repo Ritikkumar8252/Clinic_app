@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+
+import clinic
 from ..extensions import db
-from ..models import Patient, Invoice, Appointment, MedicalRecord ,Prescription
+from ..models import Clinic, Patient, Invoice, Appointment, MedicalRecord ,Prescription
 from clinic.routes.auth import login_required, role_required
-from clinic.utils import get_current_clinic_id
+from clinic.utils import get_current_clinic_id,can_add_patient
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -59,6 +61,13 @@ def patients():
 def add_patient():
     from_page = request.args.get("from_page")
     clinic_id = get_current_clinic_id()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if request.endpoint == "patients_bp.add_patient":
+        clinic = Clinic.query.get(session.get("clinic_id"))
+        if clinic and not can_add_patient(clinic):
+            flash("Daily patient limit reached. Upgrade your plan.", "warning")
+            return redirect(url_for("settings_bp.settings"))
 
     if request.method == "POST":
         name = request.form.get("name")

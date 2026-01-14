@@ -1,7 +1,7 @@
-from flask import Flask
+from flask import Flask, url_for, flash, redirect, session
 from flask_migrate import Migrate
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 from .extensions import db, mail, csrf
 from . import models
 from .routes.auth import auth_bp
@@ -15,6 +15,11 @@ from dotenv import load_dotenv
 from clinic.commands.debug import clinic_debug
 from clinic.routes.templates import templates_bp
 from clinic.routes.symptom_templates import  symptom_templates_bp
+from flask import request
+from clinic.models import Clinic
+from clinic.utils import is_clinic_active
+from clinic.subscription_plans import PLANS
+# from clinic.routes.payments import payments_bp
 
 load_dotenv()
 
@@ -26,7 +31,7 @@ def create_app():
     # ✅ REQUIRED FOR RENDER / PROXIES
     from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-
+    
     # ---------------- SECRET KEY ----------------
     SECRET_KEY = os.environ.get("SECRET_KEY")
     if not SECRET_KEY:
@@ -108,6 +113,7 @@ def create_app():
     app.cli.add_command(clinic_debug)
     app.register_blueprint(templates_bp)
     app.register_blueprint( symptom_templates_bp)
+    # app.register_blueprint(payments_bp)
 
     @app.after_request
     def add_security_headers(response):
@@ -156,5 +162,79 @@ def create_app():
     def server_error(e):
         log_error(e)
         return render_template("errors/500.html"), 500
+    
+    # ---------- TRIAL / SUBSCRIPTION ----------
+    @app.before_request
+    def enforce_subscription():
 
+        # ---------- PUBLIC ROUTES ----------
+        if (
+            request.path in ("/login", "/logout", "/signup", "/forgot-password")
+            or request.path.startswith("/reset-password")
+            or request.path.startswith("/static")
+        ):
+            return
+
+        clinic_id = session.get("clinic_id")
+        if not clinic_id:
+            return
+
+        clinic = Clinic.query.get(clinic_id)
+        if not clinic:
+            return
+
+        # ---------- AUTO EXPIRE TRIAL ----------
+        if (
+            clinic.subscription_status == "trial"
+            and clinic.trial_ends_at
+            and clinic.trial_ends_at < datetime.utcnow()
+        ):
+            clinic.subscription_status = "expired"
+            db.session.commit()
+
+        # ---------- ALLOW SETTINGS PAGE ONLY ----------
+        if (
+            request.endpoint == "settings_bp.settings"
+            and request.method == "GET"
+        ):
+            return
+
+        # ---------- BLOCK IF INACTIVE ----------
+        if not is_clinic_active(clinic):
+            flash(
+                "Your trial has expired. Please upgrade to continue.",
+                "danger"
+            )
+            return redirect(url_for("settings_bp.settings"))
+        
+        # ---- BLOCK BILLING FOR TRIAL / NO BILLING PLAN ----
+        if request.blueprint == "billing_bp":
+            plan = clinic.plan
+            if not PLANS.get(plan, {}).get("billing", False):
+                flash("Billing is not available on your current plan.", "warning")
+                return redirect(url_for("settings_bp.settings"))
+            
+    @app.context_processor
+    def inject_subscription_status():
+        clinic_id = session.get("clinic_id")
+        if not clinic_id:
+            return {}
+
+        clinic = Clinic.query.get(clinic_id)
+        if not clinic:
+            return {}
+
+        days_left = None
+        expired = False
+
+        if clinic.subscription_status == "trial" and clinic.trial_ends_at:
+            delta = clinic.trial_ends_at - datetime.utcnow()
+            days_left = max(delta.days, 0)
+            expired = delta.total_seconds() <= 0
+
+        return {
+            "subscription_status": clinic.subscription_status,
+            "trial_days_left": days_left,
+            "trial_expired": expired,
+        }
     return app

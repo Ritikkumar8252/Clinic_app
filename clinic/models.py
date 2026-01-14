@@ -22,7 +22,25 @@ class Clinic(db.Model):
         db.ForeignKey("user.id"),
         unique=True   # one doctor = one clinic
     )
+    
+    # SUBSCRIPTION / TRIAL
+    # -------------------------------
+  
+    subscription_status = db.Column(
+        db.String(20),
+        default="trial"  
+        # trial | active | expired | suspended
+    )
 
+    plan = db.Column(
+        db.String(50),
+        default="trial"
+        # trial | basic | pro (future)
+    )
+    trial_started_at = db.Column(db.DateTime)
+    trial_ends_at = db.Column(db.DateTime)
+    subscription_ends_at = db.Column(db.DateTime)  
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # =========================
@@ -423,5 +441,33 @@ class SymptomTemplate(db.Model):
 
     name = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# -------------------------------
+# SUBSCRIPTION / TRIAL
+# -------------------------------
+class Subscription(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    clinic_id = db.Column(
+        db.Integer,
+        db.ForeignKey("clinic.id"),
+        nullable=False,
+        index=True
+    )
+
+    plan = db.Column(db.String(50), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+
+    status = db.Column(db.String(20), nullable=False)
+    # pending | active | failed | expired
+
+    provider = db.Column(db.String(20))
+    provider_order_id = db.Column(db.String(100))
+    provider_payment_id = db.Column(db.String(100))
+
+    started_at = db.Column(db.DateTime)
+    ends_at = db.Column(db.DateTime)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

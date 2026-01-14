@@ -136,7 +136,11 @@ def signup():
             # 2️⃣ Create clinic
             clinic = Clinic(
                 name=f"{fullname}'s Clinic",
-                owner_id=user.id
+                owner_id=user.id,
+                trial_started_at=datetime.utcnow(),
+                trial_ends_at=datetime.utcnow() + timedelta(days=10),
+                subscription_status="trial",
+                plan="trial"
             )
             db.session.add(clinic)
             db.session.flush()  # get clinic.id

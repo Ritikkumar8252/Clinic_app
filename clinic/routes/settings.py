@@ -1,12 +1,15 @@
 import csv
 from io import StringIO
+import clinic
 from clinic.models import Patient, Appointment, Prescription, Invoice,User,Clinic
-from clinic.utils import get_current_clinic_id
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app, Response
+from clinic.subscription_plans import PLANS
+from clinic.utils import can_add_staff, get_current_clinic_id, log_action
+from flask import Blueprint, abort, render_template, request, redirect, url_for, flash, session, current_app, Response
 from clinic.extensions import db
 from clinic.routes.auth import login_required, role_required
 from werkzeug.utils import secure_filename
 import os
+from datetime import datetime
 
 settings_bp = Blueprint("settings_bp", __name__, url_prefix="/settings")
 
@@ -24,6 +27,10 @@ def settings():
     user = User.query.get_or_404(session["user_id"])
     clinic_id = session.get("clinic_id")
     clinic = Clinic.query.get_or_404(clinic_id)
+    trial_days_left = None
+    if clinic.subscription_status == "trial" and clinic.trial_ends_at:
+        delta = clinic.trial_ends_at - datetime.utcnow()
+        trial_days_left = max(delta.days, 0)
     if request.method == "POST":
 
         # -------- PROFILE UPDATE ----------
@@ -122,10 +129,8 @@ def settings():
             flash("Clinic details updated successfully.")
             return redirect(url_for("settings_bp.settings"))
 
-
-
-
-    return render_template("dashboard/settings.html", user=user,clinic=clinic)
+    return render_template("dashboard/settings.html", user=user,clinic=clinic,
+                           trial_days_left=trial_days_left)
 
 # ----------------resceptionist ADD-------
 @settings_bp.route("/add-staff", methods=["POST"])
@@ -134,7 +139,11 @@ def settings():
 def add_staff():
 
     email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
 
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
     # 🚫 DUPLICATE EMAIL CHECK
     if User.query.filter_by(email=email).first():
         flash("Email already exists. Use a different email.", "danger")
@@ -260,3 +269,21 @@ def export_invoices():
             "Content-Disposition": "attachment; filename=invoices.csv"
         }
     )
+# --------change plan
+@settings_bp.route("/change-plan", methods=["POST"])
+@login_required
+@role_required("doctor")
+def change_plan():
+    clinic = Clinic.query.get_or_404(session["clinic_id"])
+    plan = request.form.get("plan")
+
+    if plan not in PLANS:
+        abort(400, "Invalid plan")
+    clinic.plan = plan  
+    clinic.trial_ends_at = None
+
+    db.session.commit()
+    log_action(f"PLAN_CHANGED_TO_{plan.upper()}")
+
+    flash("Plan activated successfully.", "success")
+    return redirect(url_for("settings_bp.settings"))
