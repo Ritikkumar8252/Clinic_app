@@ -8,6 +8,7 @@ from clinic.models import (
     AuditLog,
     InvoiceSequence
 )
+from clinic.subscription_plans import PLANS
 
 # -----------------
 def is_clinic_active(clinic):

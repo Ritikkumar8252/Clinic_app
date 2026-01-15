@@ -1,7 +1,7 @@
 PLANS = {
     "trial": {
         "patients_per_day": 20,
-        "staff_limit": 0,
+        "staff_limit": 1,
         "billing": False,
     },
     "basic": {

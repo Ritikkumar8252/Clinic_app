@@ -132,31 +132,36 @@ def settings():
     return render_template("dashboard/settings.html", user=user,clinic=clinic,
                            trial_days_left=trial_days_left)
 
-# ----------------resceptionist ADD-------
+# ---------------- STAFF ADD ----------------
 @settings_bp.route("/add-staff", methods=["POST"])
 @login_required
 @role_required("doctor")
 def add_staff():
 
-    email = request.form["email"].strip().lower()
-    clinic = Clinic.query.get(session["clinic_id"])
+    clinic_id = session.get("clinic_id")
+    doctor_id = session.get("user_id")
 
+    email = request.form["email"].strip().lower()
+    role = request.form["role"]
+
+    clinic = Clinic.query.get_or_404(clinic_id)
+
+    # 🚫 STAFF LIMIT CHECK
     if not can_add_staff(clinic):
         flash("Staff limit reached. Upgrade your plan.", "warning")
         return redirect(url_for("settings_bp.settings"))
+
     # 🚫 DUPLICATE EMAIL CHECK
     if User.query.filter_by(email=email).first():
         flash("Email already exists. Use a different email.", "danger")
         return redirect(url_for("settings_bp.settings"))
 
-    role = request.form["role"]
-    clinic_id = session.get("clinic_id")
     user = User(
         fullname=request.form["fullname"],
         email=email,
         role=role,
         clinic_id=clinic_id,
-        created_by=session["user_id"]
+        created_by=doctor_id
     )
     user.set_password(request.form["password"])
 
@@ -165,6 +170,7 @@ def add_staff():
 
     flash(f"{role.capitalize()} added successfully", "success")
     return redirect(url_for("settings_bp.settings"))
+
 
 # ---------Export Patients--------------
 @settings_bp.route("/export/patients")
@@ -281,7 +287,7 @@ def change_plan():
         abort(400, "Invalid plan")
     clinic.plan = plan  
     clinic.trial_ends_at = None
-
+    clinic.subscription_status = "active"
     db.session.commit()
     log_action(f"PLAN_CHANGED_TO_{plan.upper()}")
 
