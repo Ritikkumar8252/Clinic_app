@@ -132,7 +132,7 @@ def settings():
     return render_template("dashboard/settings.html", user=user,clinic=clinic,
                            trial_days_left=trial_days_left)
 
-# ----------------resceptionist ADD-------
+# ----------------STAFF ADD-------
 @settings_bp.route("/add-staff", methods=["POST"])
 @login_required
 @role_required("doctor")
@@ -164,6 +164,480 @@ def add_staff():
     db.session.commit()
 
     flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ----------------STAFF ADD-------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    email = request.form["email"].strip().lower()
+    clinic = Clinic.query.get(session["clinic_id"])
+
+    if not can_add_staff(clinic):
+        flash("Staff limit reached. Upgrade your plan.", "warning")
+        return redirect(url_for("settings_bp.settings"))
+    # 🚫 DUPLICATE EMAIL CHECK
+    if User.query.filter_by(email=email).first():
+        flash("Email already exists. Use a different email.", "danger")
+        return redirect(url_for("settings_bp.settings"))
+
+    role = request.form["role"]
+    clinic_id = session.get("clinic_id")
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=session["user_id"]
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully", "success")
+    return redirect(url_for("settings_bp.settings"))
+# ---------------- STAFF ADD ----------------
+@settings_bp.route("/add-staff", methods=["POST"])
+@login_required
+@role_required("doctor")
+def add_staff():
+
+    clinic_id = session.get("clinic_id")
+    doctor_id = session.get("user_id")
+
+    email = request.form["email"].strip().lower()
+    role = request.form["role"]
+
+    clinic = Clinic.query.get_or_404(clinic_id)
+
+    # 🚫 1. STAFF LIMIT CHECK (FIRST)
+    if not can_add_staff(clinic):
+        flash(
+            "Staff limit reached. Please upgrade your plan to add more staff.",
+            "warning"
+        )
+        return redirect(url_for("settings_bp.settings"))
+
+    # 🚫 2. DUPLICATE EMAIL CHECK (GLOBAL)
+    if User.query.filter_by(email=email).first():
+        flash(
+            "Email already exists. Use a different email.",
+            "danger"
+        )
+        return redirect(url_for("settings_bp.settings"))
+
+    # ✅ 3. CREATE STAFF USER
+    user = User(
+        fullname=request.form["fullname"],
+        email=email,
+        role=role,
+        clinic_id=clinic_id,
+        created_by=doctor_id
+    )
+    user.set_password(request.form["password"])
+
+    db.session.add(user)
+    db.session.commit()
+
+    flash(f"{role.capitalize()} added successfully.", "success")
     return redirect(url_for("settings_bp.settings"))
 
 # ---------Export Patients--------------
