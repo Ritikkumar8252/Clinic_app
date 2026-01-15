@@ -146,16 +146,23 @@ def add_staff():
 
     clinic = Clinic.query.get_or_404(clinic_id)
 
-    # 🚫 STAFF LIMIT CHECK
+    # 🚫 1. STAFF LIMIT CHECK (FIRST)
     if not can_add_staff(clinic):
-        flash("Staff limit reached. Upgrade your plan.", "warning")
+        flash(
+            "Staff limit reached. Please upgrade your plan to add more staff.",
+            "warning"
+        )
         return redirect(url_for("settings_bp.settings"))
 
-    # 🚫 DUPLICATE EMAIL CHECK
+    # 🚫 2. DUPLICATE EMAIL CHECK (GLOBAL)
     if User.query.filter_by(email=email).first():
-        flash("Email already exists. Use a different email.", "danger")
+        flash(
+            "Email already exists. Use a different email.",
+            "danger"
+        )
         return redirect(url_for("settings_bp.settings"))
 
+    # ✅ 3. CREATE STAFF USER
     user = User(
         fullname=request.form["fullname"],
         email=email,
@@ -168,7 +175,7 @@ def add_staff():
     db.session.add(user)
     db.session.commit()
 
-    flash(f"{role.capitalize()} added successfully", "success")
+    flash(f"{role.capitalize()} added successfully.", "success")
     return redirect(url_for("settings_bp.settings"))
 
 
