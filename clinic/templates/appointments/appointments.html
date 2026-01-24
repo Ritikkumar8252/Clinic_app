@@ -176,6 +176,161 @@
     padding: 40px;
     color: #6b7280;
 }
+/* =================================================
+   APPOINTMENTS – RESPONSIVE LAYER
+   Desktop unchanged | Mobile optimized
+================================================= */
+
+/* ---------- GLOBAL SAFETY ---------- */
+* {
+    box-sizing: border-box;
+}
+
+/* ---------- LARGE SCREENS (DESKTOP / MAC) ---------- */
+@media (min-width: 1280px) {
+    .table-scroll {
+        max-height: calc(100vh - 340px);
+    }
+}
+
+/* ---------- TABLETS / IPADS ---------- */
+@media (max-width: 1024px) {
+
+    /* Header stacks */
+    .appt-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .appt-header h2 {
+        font-size: 22px;
+    }
+
+    .appt-header > div:last-child {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Filter wraps */
+    .filter-form {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .search-box {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .date-box {
+        width: 160px;
+    }
+
+    .table-scroll {
+        max-height: calc(100vh - 380px);
+    }
+}
+
+/* ---------- PHONES ---------- */
+@media (max-width: 640px) {
+
+    /* Header */
+    .appt-header h2 {
+        font-size: 20px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+    }
+
+    .appt-header > div:last-child {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .appt-header .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Filter bar stacked */
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .search-box,
+    .date-box,
+    .filter-form button,
+    .btn-reset {
+        width: 100%;
+    }
+
+    /* Tabs scrollable */
+    .appt-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 6px;
+    }
+
+    .tab {
+        flex-shrink: 0;
+    }
+
+    /* Table scroll */
+    .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: none;
+    }
+
+    .appointments-table {
+        min-width: 760px;
+    }
+
+    /* Dropdown menu bigger for touch */
+    .dropdown-menu {
+        min-width: 200px;
+        right: -6px;
+    }
+
+    .dropdown-menu a {
+        padding: 14px 18px;
+        font-size: 15px;
+    }
+
+    /* Pagination stacked */
+    .pagination {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: center;
+        margin-top: 14px;
+    }
+}
+
+/* ---------- VERY SMALL PHONES ---------- */
+@media (max-width: 380px) {
+
+    .appt-header h2 {
+        font-size: 18px;
+    }
+
+    .appointments-table th,
+    .appointments-table td {
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    .dropdown-menu {
+        min-width: 180px;
+    }
+}
+
 </style>
 
 <div class="appt-page">

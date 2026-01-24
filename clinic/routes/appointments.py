@@ -15,9 +15,9 @@ from sqlalchemy import or_
 
 appointments_bp = Blueprint("appointments_bp", __name__)
 
-# ------------------------------------------------
+# -----------------------------------------------
 # SECURE HELPERS (CLINIC SAFE)
-# ------------------------------------------------
+# -----------------------------------------------
 def get_secure_appointment(id):
     clinic_id = get_current_clinic_id()
 

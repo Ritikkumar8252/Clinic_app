@@ -197,6 +197,186 @@ select {
     color: #9ca3af;
     font-size: 14px;
 }
+/* =================================================
+   PATIENT PROFILE – RESPONSIVE LAYER
+================================================= */
+
+/* ---------- GLOBAL SAFETY ---------- */
+* {
+    box-sizing: border-box;
+}
+
+/* =================================================
+   PROFILE CARD RESPONSIVE
+================================================= */
+
+/* Tablets & below */
+@media (max-width: 1024px) {
+
+    .profile-card {
+        grid-template-columns: 120px 1fr;
+        gap: 24px;
+        padding: 24px;
+    }
+
+    .profile-photo {
+        width: 120px;
+        height: 120px;
+    }
+
+    .profile-details {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 20px;
+    }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+
+    /* Profile card becomes vertical */
+    .profile-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 22px 18px;
+    }
+
+    .profile-photo {
+        margin: 0 auto;
+        width: 110px;
+        height: 110px;
+    }
+
+    .profile-card h2 {
+        font-size: 22px;
+    }
+
+    .tag {
+        align-self: center;
+    }
+
+    /* Details stacked */
+    .profile-details {
+        grid-template-columns: 1fr;
+        text-align: left;
+    }
+
+    /* Address section fix */
+    .profile-card > .profile-details {
+        grid-column: auto;
+        margin-top: 14px;
+    }
+}
+
+/* =================================================
+   TOP BAR RESPONSIVE
+================================================= */
+@media (max-width: 640px) {
+
+    .top-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .right-buttons {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .right-buttons .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* =================================================
+   RIGHT SIDE SECTIONS
+================================================= */
+@media (max-width: 640px) {
+
+    .section-box {
+        padding: 18px;
+    }
+
+    .section-title {
+        font-size: 16px;
+    }
+}
+
+/* =================================================
+   TABLE (PAST APPOINTMENTS)
+================================================= */
+@media (max-width: 640px) {
+
+    .styled-table {
+        min-width: 620px;
+    }
+
+    .section-box:has(.styled-table) {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* =================================================
+   PRESCRIPTIONS
+================================================= */
+@media (max-width: 640px) {
+
+    .prescription-item {
+        padding: 14px;
+    }
+
+    .prescription-text {
+        font-size: 14px;
+    }
+}
+
+/* =================================================
+   MEDICAL RECORDS
+================================================= */
+@media (max-width: 640px) {
+
+    .record-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .record-info {
+        max-width: 100%;
+    }
+
+    .record-actions {
+        width: 100%;
+    }
+
+    .record-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* =================================================
+   VERY SMALL PHONES
+================================================= */
+@media (max-width: 380px) {
+
+    .profile-card h2 {
+        font-size: 20px;
+    }
+
+    .profile-details p {
+        font-size: 14px;
+    }
+
+    .prescription-text {
+        font-size: 13px;
+    }
+}
+
 </style>
 
 <!-- TOP BAR -->

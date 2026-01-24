@@ -148,6 +148,149 @@ input {
 .table-container.scrolled thead th {
     box-shadow: 0 3px 8px rgba(0,0,0,0.12);
 }
+/* =================================================
+   PATIENTS PAGE – FULL RESPONSIVE LAYER
+================================================= */
+
+/* ---------- GLOBAL SAFETY ---------- */
+* {
+    box-sizing: border-box;
+}
+
+/* ---------- LARGE SCREENS (DESKTOP / MAC) ---------- */
+@media (min-width: 1280px) {
+    .table-container {
+        max-height: calc(100vh - 300px);
+    }
+}
+
+/* ---------- TABLETS / IPADS ---------- */
+@media (max-width: 1024px) {
+
+    /* Header stacks */
+    .top-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .right-buttons {
+        width: 100%;
+    }
+
+    .btn-add {
+        width: fit-content;
+    }
+
+    /* Filter bar wraps */
+    .controls-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .search-box {
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .date-box {
+        width: 160px;
+    }
+
+    .table-container {
+        max-height: calc(100vh - 360px);
+    }
+}
+
+/* ---------- PHONES ---------- */
+@media (max-width: 640px) {
+
+    /* Page title */
+    .page-title {
+        font-size: 22px;
+        margin-bottom: 8px;
+    }
+
+    /* Header */
+    .doctor-title {
+        font-size: 18px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+    }
+
+    .btn-add {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Filter bar stacked */
+    .controls-bar {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .search-box,
+    .date-box,
+    .controls-bar button,
+    .btn-reset {
+        width: 100%;
+    }
+
+    /* Table horizontal scroll */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: none;
+    }
+
+    .patients-table {
+        min-width: 720px;
+    }
+
+    /* Action buttons compact */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: nowrap;
+    }
+
+    .action-buttons a {
+        font-size: 12px;
+        padding: 6px 8px;
+    }
+
+    /* Pagination stacked */
+    .pagination {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: center;
+        margin-top: 14px;
+    }
+}
+
+/* ---------- VERY SMALL PHONES ---------- */
+@media (max-width: 380px) {
+
+    .doctor-title {
+        font-size: 16px;
+    }
+
+    .patients-table th,
+    .patients-table td {
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    .action-buttons a {
+        font-size: 11px;
+        padding: 5px 7px;
+    }
+}
 
 </style>
 

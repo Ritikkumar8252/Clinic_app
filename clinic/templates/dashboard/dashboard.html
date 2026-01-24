@@ -60,6 +60,129 @@ img {
     margin-left: 8px;
 }
 
+/* ==============================
+   Mobile responsiveness (table only)
+   No layout changes on desktop
+============================== */
+@media (max-width: 768px) {
+
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+    }
+
+    .styled-table {
+        min-width: 600px; /* forces horizontal scroll instead of breaking layout */
+    }
+
+    /* Optional: improve touch scrolling feel */
+    .table-wrapper::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 6px;
+    }
+}
+/* =================================================
+   DASHBOARD – FULL RESPONSIVE LAYER
+   Safe for Desktop, Mac, iPad, Tablet, Mobile
+   No layout redesign
+================================================= */
+
+/* ---------- BASE ---------- */
+* {
+    box-sizing: border-box;
+}
+
+.dashboard-container {
+    width: 100%;
+    padding: 16px;
+}
+
+/* ---------- LARGE SCREENS (PC / MAC) ---------- */
+@media (min-width: 1280px) {
+    .dashboard-container {
+        max-width: 1280px;
+        margin: 0 auto;
+    }
+}
+
+/* ---------- TABLETS / IPADS ---------- */
+@media (max-width: 1024px) {
+
+    .page-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .stats-section {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .chart-wrapper {
+        padding: 14px;
+    }
+}
+
+/* ---------- PHONES ---------- */
+/* =================================================
+   MOVE SEARCH BAR BELOW TABLE TITLE (MOBILE ONLY)
+================================================= */
+@media (max-width: 640px) {
+
+    .table-header {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* Push search bar to bottom */
+    .table-header .search-bar {
+        order: 2;
+        width: 100%;
+    }
+
+    /* Keep title on top */
+    .table-header .section-title {
+        order: 1;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
+
+    .search-bar button {
+        white-space: nowrap;
+    }
+}
+
+
+/* ---------- VERY SMALL PHONES ---------- */
+@media (max-width: 380px) {
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .stat-card .label {
+        font-size: 12px;
+    }
+
+    .stat-card .value {
+        font-size: 20px;
+    }
+}
 
 
 </style>

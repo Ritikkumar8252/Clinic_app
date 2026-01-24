@@ -394,3 +394,215 @@ input::placeholder {
     color: #92400e;
     background: #fff7ed;
 }
+
+/* =================================================
+   CONSULT PAGE – RESPONSIVE LAYER
+   Desktop unchanged | Mobile optimized
+================================================= */
+
+/* ---------- GLOBAL SAFETY ---------- */
+* {
+    box-sizing: border-box;
+}
+
+/* =================================================
+   TOP BAR
+================================================= */
+
+/* Tablets & below */
+@media (max-width: 1024px) {
+
+    .consult-topbar {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .top-info h2 {
+        font-size: 22px;
+    }
+
+    .top-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+
+    .consult-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .top-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .top-actions button,
+    .top-actions a,
+    .top-actions form button {
+        width: 100%;
+        text-align: center;
+    }
+
+    #autosaveStatus {
+        align-self: flex-end;
+        font-size: 12px;
+    }
+}
+
+/* =================================================
+   MAIN GRID
+================================================= */
+
+/* Tablets */
+@media (max-width: 1024px) {
+
+    .consult-container {
+        grid-template-columns: 260px 1fr;
+        gap: 16px;
+    }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+
+    .consult-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+/* =================================================
+   LEFT PANEL (PATIENT SIDE)
+================================================= */
+
+/* Tablets */
+@media (max-width: 1024px) {
+
+    .patient-card img {
+        width: 90px;
+        height: 90px;
+    }
+
+    .patient-name {
+        font-size: 18px;
+    }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+
+    .patient-side {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .patient-card,
+    .vitals-card,
+    .followup-card {
+        padding: 14px;
+    }
+
+    .patient-card {
+        grid-column: 1 / -1;
+        text-align: center;
+    }
+
+    .patient-card img {
+        margin: 0 auto;
+    }
+
+    .vital-row {
+        gap: 6px;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+
+    .patient-side {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =================================================
+   CONSULT MAIN AREA
+================================================= */
+
+@media (max-width: 640px) {
+
+    .consult-main .box {
+        padding: 14px;
+    }
+
+    .consult-main h3 {
+        font-size: 16px;
+    }
+}
+
+/* =================================================
+   TEXTAREAS & INPUTS
+================================================= */
+
+@media (max-width: 640px) {
+
+    textarea {
+        font-size: 14px;
+    }
+
+    input {
+        font-size: 14px;
+    }
+}
+
+/* =================================================
+   PRESCRIPTION TABLE
+================================================= */
+
+@media (max-width: 640px) {
+
+    .med-table {
+        min-width: 720px;
+    }
+
+    .box:has(.med-table) {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #addRowBtn {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+/* =================================================
+   TEMPLATE POPUPS
+================================================= */
+
+@media (max-width: 640px) {
+
+    .template-popup {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+}
+
+/* =================================================
+   VOICE BUTTONS
+================================================= */
+
+@media (max-width: 640px) {
+
+    .mic-btn {
+        font-size: 18px;
+        padding: 6px 10px;
+    }
+}
