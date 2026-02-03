@@ -44,6 +44,10 @@ def create_app():
     os.makedirs(app.instance_path, exist_ok=True)
 
     # ---------------- DATABASE (SQLite → PostgreSQL auto) ----------------
+        # ---------------- FORCE SQLITE FOR LOCAL DEVELOPMENT ----------------
+    if os.environ.get("FLASK_ENV") == "development":
+        os.environ.pop("DATABASE_URL", None)
+
     DATABASE_URL = os.environ.get("DATABASE_URL")
 
     if DATABASE_URL:

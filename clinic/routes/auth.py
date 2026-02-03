@@ -8,7 +8,7 @@ import secrets
 from datetime import datetime, timedelta
 import time
 
-auth_bp = Blueprint("auth_bp", __name__)
+auth_bp = Blueprint("auth_bp", __name__)   # Blueprint → auth module ko alag rakhne ke liye
 
 # ---------------- LOGIN REQUIRED ----------------
 def login_required(f):

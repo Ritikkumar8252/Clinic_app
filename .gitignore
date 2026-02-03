@@ -22,3 +22,5 @@ static/records/
 # OS
 .DS_Store
 Thumbs.db
+#  vs code
+.vscode/
