@@ -426,15 +426,37 @@
                         </span>
                     </td>
                     <td style="text-align:center;">
-                        <div class="dropdown">
-                            <button class="menu-btn">⋮</button>
-                            <div class="dropdown-menu">
-                                <a href="{{ url_for('patients_bp.patient_profile', id=a.patient.id) }}">View Patient</a>
-                                <a href="{{ url_for('appointments_bp.start', id=a.id) }}">Start Consultation</a>
-                                <a href="{{ url_for('appointments_bp.cancel', id=a.id) }}" class="danger">Cancel Appointment</a>
-                            </div>
+                    <div class="dropdown">
+                        <button class="menu-btn">⋮</button>
+
+                        <div class="dropdown-menu">
+
+                            <!-- COMMON -->
+                            <a href="{{ url_for('patients_bp.patient_profile', id=a.patient.id) }}">
+                                View Patient
+                            </a>
+
+                            {% if tab == 'completed' %}
+                                <!-- ✅ COMPLETED ONLY -->
+                                <a href="{{ url_for('appointments_bp.prescription_pdf', id=a.id) }}">
+                                    Print Prescription
+                                </a>
+
+                            {% elif tab == 'queue' or tab == 'inprogress' %}
+                                <!-- 🔄 ACTIVE APPOINTMENTS -->
+                                <a href="{{ url_for('appointments_bp.start', id=a.id) }}">
+                                    Start Consultation
+                                </a>
+                                <a href="{{ url_for('appointments_bp.cancel', id=a.id) }}"
+                                class="danger">
+                                    Cancel Appointment
+                                </a>
+                            {% endif %}
+
                         </div>
-                    </td>
+                    </div>
+                </td>
+
                 </tr>
                 {% endfor %}
             {% else %}

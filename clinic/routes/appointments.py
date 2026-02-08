@@ -316,7 +316,7 @@ def complete(id):
 
 @appointments_bp.route("/cancel/<int:id>")
 @login_required
-@role_required("reception")
+@role_required("reception", "doctor")
 def cancel(id):
     appt = get_secure_appointment(id)
     appt.status = "Cancelled"
