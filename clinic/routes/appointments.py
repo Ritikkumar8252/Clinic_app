@@ -459,6 +459,267 @@ def autosave(id):
     return jsonify({"status": "saved"}), 200
 
 
+# ------------------------------------------------
+# PRESCRIPTION PDF (FULL & FINAL)
+# ------------------------------------------------
+@appointments_bp.route("/prescription/<int:id>")
+@login_required
+@role_required("reception", "doctor")
+def prescription_pdf(id):
+
+    mode = request.args.get("mode", "full")  # lab | full
+    appt = get_secure_appointment(id)
+
+    # ---------------- DOCTOR ----------------
+    doctor = User.query.filter_by(
+        id=session.get("user_id"),
+        clinic_id=get_current_clinic_id()
+    ).first()
+
+    doctor_name = (
+        doctor.fullname
+        if doctor and doctor.fullname
+        else doctor.email
+        if doctor
+        else "Doctor"
+    )
+
+    today_str = datetime.now().strftime("%d-%m-%Y")
+
+    # ---------------- PRESCRIPTION ----------------
+    prescription = Prescription.query.filter_by(
+        appointment_id=appt.id
+    ).first()
+
+    # 🔒 Block rules
+    if mode == "lab" and appt.prescription_locked:
+        flash("Lab print not allowed after finalization", "warning")
+        return redirect(url_for("appointments_bp.consult", id=id))
+
+    if mode == "full" and not appt.prescription_locked:
+        flash("Finalize prescription before downloading", "warning")
+        return redirect(url_for("appointments_bp.consult", id=id))
+
+    # ---------------- PATIENT ----------------
+    patient = Patient.query.filter_by(
+        id=appt.patient_id,
+        clinic_id=get_current_clinic_id()
+    ).first_or_404()
+
+    # ---------------- PDF SETUP ----------------
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+
+    width, height = A4
+
+    LEFT = 2 * cm
+    RIGHT = width - 2 * cm
+    TOP = height - 2 * cm
+    BOTTOM = 2 * cm
+
+    y = TOP
+    pdf.setFont("Helvetica", 11)
+
+    def new_page():
+        nonlocal y
+        pdf.setFont("Helvetica", 9)
+        pdf.drawRightString(RIGHT, BOTTOM - 10, f"Page {pdf.getPageNumber()}")
+        pdf.showPage()
+        pdf.setFont("Helvetica", 11)
+        y = TOP
+
+    def check_space(space=80):
+        nonlocal y
+        if y < BOTTOM + space:
+            new_page()
+
+    # ---------------- CLINIC HEADER ----------------
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawCentredString(width / 2, y, "YOUR CLINIC NAME")
+    y -= 22
+
+    pdf.setFont("Helvetica", 11)
+    pdf.drawCentredString(width / 2, y, "General Physician | Reg No: XXXXX")
+    y -= 16
+
+    pdf.drawCentredString(
+        width / 2,
+        y,
+        "Address Line 1, City - Pincode | Ph: 9XXXXXXXXX"
+    )
+    y -= 20
+
+    pdf.line(LEFT, y, RIGHT, y)
+    y -= 25
+
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(LEFT, y, f"Doctor: {doctor_name}")
+    pdf.drawRightString(RIGHT, y, f"Date: {today_str}")
+    y -= 25
+
+    # ---------------- PATIENT DETAILS ----------------
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(LEFT, y, "Patient Details")
+    y -= 14
+
+    pdf.setFont("Helvetica", 11)
+    pdf.drawString(LEFT, y, f"Name: {patient.name}")
+    pdf.drawString(10 * cm, y, f"Age/Gender: {patient.age} / {patient.gender}")
+    y -= 14
+
+    pdf.drawString(LEFT, y, f"Patient ID: {patient.patient_no}")
+    pdf.drawRightString(RIGHT, y, f"Visit Type: {appt.type}")
+    y -= 20
+
+    # ---------------- VITALS ----------------
+    vitals = [
+        ("BP", appt.bp),
+        ("Pulse", appt.pulse),
+        ("SpO2", appt.spo2),
+        ("Temperature", appt.temperature),
+        ("Weight", appt.weight),
+    ]
+
+    if any(v for _, v in vitals):
+        check_space()
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(LEFT, y, "Vitals")
+        y -= 16
+
+        pdf.setFont("Helvetica", 11)
+        for label, value in vitals:
+            if value:
+                pdf.drawString(LEFT + 5, y, f"{label}: {value}")
+                y -= 14
+        y -= 10
+
+    # ---------------- SYMPTOMS ----------------
+    if appt.symptoms:
+        check_space()
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(LEFT, y, "Symptoms")
+        y -= 16
+
+        pdf.setFont("Helvetica", 11)
+        for s in appt.symptoms.split(","):
+            pdf.drawString(LEFT + 5, y, f"- {s.strip()}")
+            y -= 14
+        y -= 10
+
+    # ---------------- DIAGNOSIS ----------------
+    if appt.diagnosis:
+        check_space()
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(LEFT, y, "Diagnosis")
+        y -= 16
+
+        pdf.setFont("Helvetica", 11)
+        for d in appt.diagnosis.split(","):
+            pdf.drawString(LEFT + 5, y, f"- {d.strip()}")
+            y -= 14
+        y -= 10
+
+    # ---------------- LAB TESTS ----------------
+    if appt.lab_tests:
+        check_space()
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(LEFT, y, "Lab Tests")
+        y -= 16
+
+        pdf.setFont("Helvetica", 11)
+        for line in appt.lab_tests.split("\n"):
+            pdf.drawString(LEFT + 5, y, f"- {line.strip()}")
+            y -= 14
+        y -= 10
+
+    if mode == "lab":
+        pdf.setPageCompression(0)
+        pdf.save()
+        buffer.seek(0)
+        log_action("LAB_PRINT")
+        return send_file(buffer, mimetype="application/pdf", as_attachment=False)
+
+    # ---------------- RX ----------------
+    check_space()
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(LEFT, y, "℞")
+    y -= 18
+
+    # ---------------- MEDICINES ----------------
+    check_space()
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(LEFT, y, "Medicine")
+    pdf.drawString(8.5 * cm, y, "Dose")
+    pdf.drawString(11.5 * cm, y, "Duration")
+    pdf.drawString(14 * cm, y, "Instructions")
+    y -= 10
+
+    pdf.line(LEFT, y, RIGHT, y)
+    y -= 10
+
+    pdf.setFont("Helvetica", 11)
+
+    if prescription and prescription.items:
+        for item in prescription.items:
+            check_space()
+            pdf.drawString(LEFT, y, item.medicine_name)
+            pdf.drawString(8.5 * cm, y, item.dose or "-")
+            pdf.drawString(11.5 * cm, y, f"{item.duration_days or '-'} days")
+            pdf.drawString(14 * cm, y, item.instructions or "-")
+            y -= 14
+    else:
+        pdf.drawString(LEFT, y, "No medicines prescribed")
+        y -= 14
+
+    y -= 10
+
+    # ---------------- ADVICE ----------------
+    if appt.advice:
+        check_space()
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(LEFT, y, "Advice")
+        y -= 14
+
+        pdf.setFont("Helvetica", 11)
+        for idx, a in enumerate(appt.advice.split(","), start=1):
+            pdf.drawString(LEFT + 5, y, f"{idx}. {a.strip()}")
+            y -= 14
+        y -= 10
+
+    # ---------------- FOLLOW UP ----------------
+    if appt.follow_up_date:
+        check_space()
+        pdf.setFont("Helvetica-Bold", 11)
+        pdf.drawString(LEFT, y, "Follow-up On:")
+        pdf.setFont("Helvetica", 11)
+        pdf.drawString(LEFT + 80, y, appt.follow_up_date.strftime("%d-%m-%Y"))
+        y -= 20
+
+    # ---------------- FOOTER ----------------
+    check_space(60)
+    pdf.line(LEFT, y, RIGHT, y)
+    y -= 12
+
+    pdf.setFont("Helvetica", 9)
+    pdf.drawString(
+        LEFT,
+        y,
+        "This is a computer-generated prescription and is valid without a physical signature."
+    )
+
+    pdf.drawRightString(
+        RIGHT,
+        y,
+        "Powered by Clinic Management System"
+    )
+
+    # ---------------- FINALIZE ----------------
+    pdf.setPageCompression(0)
+    pdf.save()
+    buffer.seek(0)
+
+    log_action("PRESCRIPTION_PRINT")
+    return send_file(buffer, mimetype="application/pdf", as_attachment=False)
 
 # ------------------------------------------------
 # PRESCRIPTION PDF (FULL & FINAL)
@@ -469,6 +730,20 @@ def autosave(id):
 def prescription_pdf(id):
     mode = request.args.get("mode", "full")  # lab | full
     appt = get_secure_appointment(id)
+    doctor = User.query.filter_by(
+    id=session.get("user_id"),
+    clinic_id=get_current_clinic_id()
+    ).first()
+
+    doctor_name = (
+        doctor.fullname
+        if doctor and doctor.fullname
+        else doctor.email
+        if doctor
+        else "Doctor"
+    )
+
+
     prescription = (
         Prescription.query
         .filter_by(appointment_id=appt.id)
@@ -509,26 +784,47 @@ def prescription_pdf(id):
         if y < space:
             new_page()
 
-    # ---------------- HEADER ----------------
-    pdf.setFont("Helvetica-Bold", 20)
-    pdf.drawString(2 * cm, y, "Your Clinic Name")
+    # ---------------- CLINIC HEADER ----------------
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawCentredString(width / 2, y, "YOUR CLINIC NAME")
+    y -= 22
 
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(2 * cm, y - 18, "General Physician")
+    pdf.setFont("Helvetica", 11)
+    pdf.drawCentredString(width / 2, y, "General Physician | Reg No: XXXXX")
+    y -= 16
 
-    pdf.line(2 * cm, y - 40, width - 2 * cm, y - 40)
-    y -= 70
+    pdf.drawCentredString(width / 2, y, "Address Line 1, City - Pincode | Ph: 9XXXXXXXXX")
+    y -= 20
+
+    pdf.line(2 * cm, y, width - 2 * cm, y)
+    y -= 25
+
+    # Doctor + Date row
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(2 * cm, y, f"Doctor: {doctor_name}")
+    pdf.drawRightString(
+        width - 2 * cm,
+        y,
+        f"Date: {datetime.now().strftime('%d-%m-%Y')}"
+    )
+    y -= 25
+
+
 
     # ---------------- PATIENT INFO ----------------
-    pdf.setFont("Helvetica-Bold", 14)
-    pdf.drawString(2 * cm, y, "Patient Information")
-    y -= 20
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(2 * cm, y, "Patient Details")
+    y -= 14
 
     pdf.setFont("Helvetica", 11)
     pdf.drawString(2 * cm, y, f"Name: {patient.name}")
+    pdf.drawString(10 * cm, y, f"Age/Gender: {patient.age} / {patient.gender}")
     y -= 14
-    pdf.drawString(2 * cm, y, f"Age: {patient.age} | Gender: {patient.gender}")
-    y -= 25
+
+    pdf.drawString(2 * cm, y, f"Patient ID: {patient.patient_no}")
+    pdf.drawRightString(width - 2 * cm, y, f"Visit Type: {appt.type}")
+    y -= 20
+
 
     # ---------------- VITALS ----------------
     vitals = [
@@ -597,36 +893,36 @@ def prescription_pdf(id):
         return send_file(
             buffer,
             mimetype="application/pdf",
-            as_attachment=True,
-            download_name=f"Lab_Request_{patient.name}.pdf"
+            as_attachment=False,  # true fordor downaload, false for open in browser
+            # download_name=f"Lab_Request_{patient.name}.pdf"     # use for only  download
         )
+    # ---------------- RX ----------------
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(2 * cm, y, "℞")
+    y -= 18
 
     # ---------------- MEDICINES ----------------
     if mode != "lab":
         check_space()
-        pdf.setFont("Helvetica-Bold", 12)
-        pdf.drawString(2 * cm, y, "Prescription")
-        y -= 18
+        pdf.setFont("Helvetica-Bold", 11)
+        pdf.drawString(2 * cm, y, "Medicine")
+        pdf.drawString(9 * cm, y, "Dose")
+        pdf.drawString(12 * cm, y, "Duration")
+        pdf.drawString(15 * cm, y, "Instructions")
+        y -= 10
+
+        pdf.line(2 * cm, y, width - 2 * cm, y)
+        y -= 10
 
         pdf.setFont("Helvetica", 11)
-        line_height = 16
 
-        if prescription and prescription.items:
-            for item in prescription.items:
-                check_space()
-                line = item.medicine_name
-                if item.dose:
-                    line += f" | {item.dose}"
-                if item.duration_days:
-                    line += f" | {item.duration_days} days"
-                if item.instructions:
-                    line += f" | {item.instructions}"
-
-                pdf.drawString(2 * cm, y, line)
-                y -= line_height
-        else:
-            pdf.drawString(2 * cm, y, "No medicines prescribed")
-            y -= 16
+        for item in prescription.items:
+            check_space()
+            pdf.drawString(2 * cm, y, item.medicine_name)
+            pdf.drawString(9 * cm, y, item.dose or "-")
+            pdf.drawString(12 * cm, y, f"{item.duration_days or '-'} days")
+            pdf.drawString(15 * cm, y, item.instructions or "-")
+            y -= 14
 
         y -= 10
 
@@ -636,35 +932,44 @@ def prescription_pdf(id):
         check_space()
         pdf.setFont("Helvetica-Bold", 12)
         pdf.drawString(2 * cm, y, "Advice")
-        y -= 18
+        y -= 14
 
         pdf.setFont("Helvetica", 11)
-        for a in appt.advice.split(","):
-            pdf.drawString(2.2 * cm, y, f"- {a.strip()}")
+        for idx, a in enumerate(appt.advice.split(","), start=1):
+            pdf.drawString(2.2 * cm, y, f"{idx}. {a.strip()}")
             y -= 14
         y -= 10
+
 
     # ---------------- FOLLOW UP ----------------
     if appt.follow_up_date:
         check_space()
-        pdf.setFont("Helvetica-Bold", 12)
-        pdf.drawString(2 * cm, y, "Follow-up Date")
-        y -= 18
-
+        pdf.setFont("Helvetica-Bold", 11)
+        pdf.drawString(2 * cm, y, "Follow-up On:")
         pdf.setFont("Helvetica", 11)
-        pdf.drawString(2.2 * cm, y, str(appt.follow_up_date))
+        pdf.drawString(5 * cm, y, appt.follow_up_date.strftime("%d-%m-%Y"))
         y -= 20
 
+
     # ---------------- FOOTER ----------------
-    check_space()
+    check_space(60)
     pdf.line(2 * cm, y, width - 2 * cm, y)
-    y -= 14
-    pdf.setFont("Helvetica", 10)
+    y -= 12
+
+    pdf.setFont("Helvetica", 9)
     pdf.drawString(
         2 * cm,
         y,
-        "This prescription is electronically generated and does not require a signature."
+        "This is a computer-generated prescription and is valid without a physical signature."
     )
+    y -= 12
+
+    pdf.drawRightString(
+        width - 2 * cm,
+        y,
+        "Powered by Clinic Management System"
+    )
+
 
     # ---------------- FINALIZE ----------------
     pdf.save()
@@ -673,8 +978,8 @@ def prescription_pdf(id):
     return send_file(
         buffer,
         mimetype="application/pdf",
-        as_attachment=True,
-        download_name=f"Prescription_{patient.name}.pdf"
+        as_attachment=False,  # true fordor downaload, false for open in browser
+        # download_name=f"Prescription_{patient.name}.pdf"    # use for only  download
     )
 
 
