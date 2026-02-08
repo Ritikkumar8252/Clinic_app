@@ -61,29 +61,25 @@
         <div class="vitals-card shadow-card print-prescription">
             <h4>Vitals</h4>
 
-            <div class="vital-row"><label>BP</label>
-                <input id="bp" value="{{ appt.bp or '' }}" oninput="autoSave()">
+            {% for v in active_vitals %}
+            <div class="vital-row">
+                <label>{{ v.replace("_", " ").title() }}</label>
+                <input
+                    id="{{ v }}"
+                    value="{{ appt | attr(v) or '' }}"
+                    oninput="autoSave()">
             </div>
-            <div class="vital-row"><label>Pulse</label>
-                <input id="pulse" value="{{ appt.pulse or '' }}" oninput="autoSave()">
-            </div>
-            <div class="vital-row"><label>SPO2</label>
-                <input id="spo2" value="{{ appt.spo2 or '' }}" oninput="autoSave()">
-            </div>
-            <div class="vital-row"><label>Temp</label>
-                <input id="temperature" value="{{ appt.temperature or '' }}" oninput="autoSave()">
-            </div>
-            <div class="vital-row"><label>Weight</label>
-                <input id="weight" value="{{ appt.weight or '' }}" oninput="autoSave()">
-            </div>
+            {% endfor %}
         </div>
+
+
 
         <div class="followup-card shadow-card print-prescription">
             <h4>Follow Up</h4>
 
             <input id="follow_up_date"
                 type="date"
-                value="{{ appt.follow_up_date }}"
+                value="{{ appt.follow_up_date or '' }}"   
                 oninput="autoSave()">
         </div>
 

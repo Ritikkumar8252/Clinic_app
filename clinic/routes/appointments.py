@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, send_file,jsonify
 from ..extensions import db
-from ..models import Appointment, Patient,Prescription, PrescriptionItem,PrescriptionTemplateItem,PrescriptionTemplate
+from ..models import User,Appointment, Patient,Prescription, PrescriptionItem,PrescriptionTemplateItem,PrescriptionTemplate
 from datetime import datetime
 from io import BytesIO
 from clinic.routes.auth import login_required, role_required
@@ -333,6 +333,25 @@ def consult(id):
     appt = get_secure_appointment(id)
     clinic_id = get_current_clinic_id()
 
+    doctor = User.query.get(session["user_id"])
+    speciality = (doctor.speciality or "").strip().lower()
+
+    SPECIALITY_VITALS = {
+        "general physician": ["bp", "pulse", "spo2", "temperature", "weight"],
+        "cardiologist": ["bp", "pulse", "spo2", "weight"],
+        "diabetologist": ["weight"],
+        "orthopedic": ["weight"],
+        "gynecologist": ["bp", "weight"],
+        "pediatrician": ["weight", "temperature"],
+        "pulmonologist": ["spo2"]
+    }
+
+    active_vitals = SPECIALITY_VITALS.get(
+        speciality,
+        ["bp", "pulse", "spo2", "temperature", "weight"]  # safe fallback
+    )
+
+
     patient = Patient.query.filter_by(
         id=appt.patient_id,
         clinic_id=clinic_id
@@ -388,7 +407,8 @@ def consult(id):
         "appointments/consultation.html",
         appt=appt,
         patient=patient,
-        medicines=medicines
+        medicines=medicines,
+        active_vitals=active_vitals
     )
 
 

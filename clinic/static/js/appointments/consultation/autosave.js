@@ -1,5 +1,8 @@
 let saveTimeout = null;
 
+/* ===============================
+   UI STATUS
+================================ */
 function showSaving() {
     const el = document.getElementById("autosaveStatus");
     if (!el) return;
@@ -21,6 +24,9 @@ function showSaved() {
     el.classList.remove("saving");
 }
 
+/* ===============================
+   AUTOSAVE TRIGGER
+================================ */
 function autoSave() {
     showSaving();
 
@@ -28,12 +34,17 @@ function autoSave() {
     saveTimeout = setTimeout(sendSaveRequest, 800);
 }
 
+/* ===============================
+   BUILD & SEND PAYLOAD
+================================ */
 function sendSaveRequest() {
+    // 🔒 Do nothing if finalized
     if (window.prescriptionLocked === "true") return;
     if (!window.autosaveUrl) return;
 
     const payload = {};
 
+    /* ---------- TEXT FIELDS ---------- */
     ["symptoms", "diagnosis", "advice", "lab_tests"].forEach(id => {
         const el = document.getElementById(id);
         if (el && el.value.trim()) {
@@ -41,26 +52,38 @@ function sendSaveRequest() {
         }
     });
 
-    ["bp", "pulse", "spo2", "temperature", "weight", "follow_up_date"]
-        .forEach(id => {
-            const el = document.getElementById(id);
-            if (el && el.value.trim()) {
-                payload[id] = el.value.trim();
-            }
-        });
+    /* ---------- FOLLOW UP DATE ---------- */
+    const followUp = document.getElementById("follow_up_date");
+    if (followUp && followUp.value) {
+        payload["follow_up_date"] = followUp.value;
+    }
 
+    /* ---------- DYNAMIC VITALS ---------- */
+    document.querySelectorAll(".vital-row input").forEach(el => {
+        if (!el.id) return;
+        if (!el.value.trim()) return;
+
+        payload[el.id] = el.value.trim();
+    });
+
+    // nothing to save
     if (Object.keys(payload).length === 0) return;
 
+    /* ---------- SEND ---------- */
     fetch(window.autosaveUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify(payload)
     })
     .then(() => {
         showSaved();
-        showToast(); // keep your existing toast
+        if (typeof showToast === "function") {
+            showToast();
+        }
     })
     .catch(() => {
-        // silent fail (doctor should not panic)
+        // silent fail (doctor should never panic)
     });
 }
